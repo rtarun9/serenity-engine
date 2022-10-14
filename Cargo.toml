@@ -9,4 +9,5 @@ edition = "2021"
 winit = "0.26"
 env_logger = "0.9"
 log = "0.4"
-wgpu = "0.13"
+wgpu = { version = "0.13", features = ["spirv"]}
+tokio = { version = "1", features = ["full"] }

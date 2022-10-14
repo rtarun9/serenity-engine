@@ -1,1 +1,4 @@
 /target
+
+# Shader bytecode while using SPIRV
+*.cso
