@@ -5,6 +5,7 @@ use winit::{
     window::WindowBuilder,
 };
 
+mod camera;
 mod renderer;
 
 // Initial window dimensions
@@ -16,16 +17,17 @@ async fn main() {
     // Enable logging to indicate any wgpu errors
     env_logger::init();
 
-    // Get winit event loop and window
+    // Get the winit event loop
     let event_loop = EventLoop::new();
 
-    // Get primary monitor so we can center the window
+    // Get the primary monitor size so we can center the window
     let monitor_size = event_loop
         .available_monitors()
         .next()
         .expect("Failed to get monitor")
         .size();
 
+    // Create the centered winit window
     let window = WindowBuilder::new()
         .with_title("serenity-engine")
         .with_inner_size(PhysicalSize::new(WINDOW_WIDTH, WINDOW_HEIGHT))
@@ -39,7 +41,7 @@ async fn main() {
     let mut renderer = renderer::Renderer::new(&window).await;
 
     // Using a moving closure as argument to the event_loop.run function
-    // Moving closures are lambdas (anonymous functions) that take ownership of all variables it uses
+    // Move closures are lambdas (anonymous functions) that take ownership of all variables it uses
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent {
             ref event,

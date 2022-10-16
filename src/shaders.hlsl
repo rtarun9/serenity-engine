@@ -1,33 +1,38 @@
-static const float2 VERTEX_POSITIONS[3] =  
+struct VertexInput
 {
-    float2(0.5f, -0.5f),
-    float2(-0.5f, -0.5f),
-    float2(0.0f, 0.5f)
-};
-
-static const float3 VERTEX_COLORS[3] =
-{
-    float3(0.0f, 0.0f, 1.0f),
-    float3(1.0f, 0.0f, 0.0f),
-    float3(0.0f, 1.0f, 0.0f),
+    float3 position : POSITION;
+    float2 texture_coords : TEXTURE_COORDS;
 };
 
 struct VertexOutput
 {
     float4 position : SV_Position;
-    float3 color : COLOR;
+    float2 texture_coords : TEXTURE_COORDS;
 };
 
-VertexOutput vs_main(uint vertex_index : SV_VertexID)
+struct CameraBuffer
+{
+    row_major matrix view_projection_matrix;
+};
+
+[[vk::push_constant]]
+ConstantBuffer<CameraBuffer> camera_buffer : register(b0);
+
+VertexOutput vs_main(VertexInput input)
 {
     VertexOutput output;
-    output.position = float4(VERTEX_POSITIONS[vertex_index], 0.0f, 1.0f);
-    output.color = VERTEX_COLORS[vertex_index];    
+    output.position = mul(float4(input.position, 1.0f), camera_buffer.view_projection_matrix);
+    output.texture_coords = input.texture_coords;    
 
     return output;
 }
 
+Texture2D<float4> diffuse_texture: register(t0);
+SamplerState anisotropic_sampler: register(s0);
+
 float4 ps_main(VertexOutput input) : SV_Target 
 {
-    return float4(input.color, 1.0f);
+    float3 color = diffuse_texture.Sample(anisotropic_sampler, input.texture_coords).xyz;
+
+    return float4(color, 1.0f);
 }
