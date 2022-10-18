@@ -6,16 +6,21 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-winit = "0.27.4"
-env_logger = "0.9"
-log = "0.4"
-wgpu = { version = "0.14", features = ["spirv"]}
-tokio = { version = "1", features = ["full"] }
-bytemuck = { version = "1.4", features = [ "derive" ] }
-cgmath = "0.18"
+raw-window-handle = "0.4.3"
 
-[dependencies.image]
-version = "0.24"
-default-features = false
-features = ["png", "jpeg"]
- 
+[dependencies.sdl2]
+    version = "0.35"
+    default-features = false
+    features = ["static-link","use-vcpkg", "raw-window-handle"]
+
+[dependencies.windows]
+version = "0.42.0"
+features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Direct3D_Fxc",
+    "Win32_Graphics_Direct3D11",
+    "Win32_Graphics_Dxgi_Common",
+    "Win32_System_LibraryLoader",
+    "Win32_System_WindowsProgramming",
+    "Win32_UI_WindowsAndMessaging",
+]
