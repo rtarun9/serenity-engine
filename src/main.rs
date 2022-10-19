@@ -1,15 +1,18 @@
 use raw_window_handle::{HasRawWindowHandle, RawWindowHandle};
 use sdl2::{event::Event, keyboard::Keycode};
 use windows::{
-    core::Interface,
+    core::*,
     Win32::Foundation::*,
     Win32::Graphics::{
-        self,
-        Direct3D::*,
+        Direct3D::{Fxc::*, ID3DBlob, *},
         Direct3D11::*,
         Dxgi::{Common::*, *},
     },
 };
+
+use crate::shader::*;
+
+mod shader;
 
 fn main() {
     // Initialize SDL2 and create window.
@@ -19,8 +22,11 @@ fn main() {
         .video()
         .expect("Failed to get SDL2 video subsystem.");
 
+    let width = 1080u32;
+    let height = 720u32;
+
     let window = video_subsystem
-        .window("serenity-engine", 1080, 720)
+        .window("serenity-engine", width, height)
         .allow_highdpi()
         .position_centered()
         .build()
@@ -119,8 +125,8 @@ fn main() {
 
     // Create the swapchain (implements one or more surfaces for storing rendered data before presenting to output).
     let swapchain_desc = DXGI_SWAP_CHAIN_DESC1 {
-        Width: 0,
-        Height: 0,
+        Width: width,
+        Height: height,
         Format: DXGI_FORMAT_R8G8B8A8_UNORM,
         Stereo: BOOL(0),
         SampleDesc: DXGI_SAMPLE_DESC {
@@ -148,6 +154,65 @@ fn main() {
             .CreateSwapChainForHwnd(&device, HWND(hwnd as isize), &swapchain_desc, None, None)
             .expect("Failed to create DXGI swapchain")
     };
+
+    // Create the render target that we will render into.
+    let back_buffer: ID3D11Texture2D = unsafe {
+        swapchain
+            .GetBuffer(0)
+            .expect("Failed to get swapchain back buffer at index 0.")
+    };
+
+    let render_target_view: ID3D11RenderTargetView = unsafe {
+        device
+            .CreateRenderTargetView(&back_buffer, None)
+            .expect("Failed to create RTV.")
+    };
+
+    // Create the depth buffer.
+
+    let depth_buffer_desc = D3D11_TEXTURE2D_DESC {
+        Width: width,
+        Height: height,
+        MipLevels: 1,
+        ArraySize: 1,
+        Format: DXGI_FORMAT_D32_FLOAT,
+        SampleDesc: DXGI_SAMPLE_DESC {
+            Count: 1,
+            Quality: 0,
+        },
+        Usage: D3D11_USAGE_DEFAULT,
+        BindFlags: D3D11_BIND_DEPTH_STENCIL,
+        CPUAccessFlags: D3D11_CPU_ACCESS_FLAG(0),
+        MiscFlags: D3D11_RESOURCE_MISC_FLAG(0),
+    };
+
+    let depth_texture: ID3D11Texture2D = unsafe {
+        device
+            .CreateTexture2D(&depth_buffer_desc, None)
+            .expect("Failed to create D3D11 Depth Texture.")
+    };
+
+    // Create the depth stencil view for the texture.
+    let depth_stencil_view_desc = D3D11_DEPTH_STENCIL_VIEW_DESC {
+        Format: DXGI_FORMAT_D32_FLOAT,
+        ViewDimension: D3D11_DSV_DIMENSION_TEXTURE2D,
+        Flags: 0,
+        Anonymous: D3D11_DEPTH_STENCIL_VIEW_DESC_0 {
+            Texture2D: D3D11_TEX2D_DSV { MipSlice: 0 },
+        },
+    };
+
+    let depth_stencil_view: ID3D11DepthStencilView = unsafe {
+        device
+            .CreateDepthStencilView(&depth_texture, Some(&depth_stencil_view_desc))
+            .expect("Failed to create depth stencil view.")
+    };
+
+    // Create shaders.
+    let vertex_shader = create_vertex_shader(&device, "shaders/hello_triangle.hlsl");
+    let pixel_shader = create_pixel_shader(&device, "shaders/hello_triangle.hlsl");
+
+    println!("Starting Game Loop 🚀");
 
     // Main game loop.
     'game_loop: loop {

@@ -5,12 +5,14 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+# Looks like SDL will not work with raw-window-handle version 0.5.0. Hence using version 0.4.3.
 [dependencies]
 raw-window-handle = "0.4.3"
+widestring = "1.0.2"
 
 [dependencies.sdl2]
-    version = "0.35"
-    default-features = false
+    version = "0.35.2"
+    default-features = true
     features = ["static-link","use-vcpkg", "raw-window-handle"]
 
 [dependencies.windows]
