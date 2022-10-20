@@ -208,9 +208,43 @@ fn main() {
             .expect("Failed to create depth stencil view.")
     };
 
+    // Create index buffer.
+    let index_buffer_data: [u32; 3] = [0, 1, 2];
+    let index_buffer_desc = D3D11_BUFFER_DESC {
+        ByteWidth: (index_buffer_data.len() * std::mem::size_of::<u32>()) as u32,
+        Usage: D3D11_USAGE_IMMUTABLE,
+        BindFlags: D3D11_BIND_INDEX_BUFFER,
+        CPUAccessFlags: D3D11_CPU_ACCESS_FLAG(0),
+        MiscFlags: D3D11_RESOURCE_MISC_FLAG(0),
+        StructureByteStride: 0,
+    };
+
+    // Specify the subresource to point to index buffer data.
+    let index_buffer_subresource_desc = D3D11_SUBRESOURCE_DATA {
+        pSysMem: index_buffer_data.as_ptr() as *const std::ffi::c_void,
+        SysMemPitch: 0,
+        SysMemSlicePitch: 0,
+    };
+
+    let index_buffer = unsafe {
+        device
+            .CreateBuffer(&index_buffer_desc, Some(&index_buffer_subresource_desc))
+            .expect("Failed to create index buffer")
+    };
+
     // Create shaders.
     let vertex_shader = create_vertex_shader(&device, "shaders/hello_triangle.hlsl");
     let pixel_shader = create_pixel_shader(&device, "shaders/hello_triangle.hlsl");
+
+    // Create viewport
+    let viewport = D3D11_VIEWPORT {
+        TopLeftX: 0.0,
+        TopLeftY: 0.0,
+        Width: width as f32,
+        Height: height as f32,
+        MinDepth: 0.0,
+        MaxDepth: 1.0,
+    };
 
     println!("Starting Game Loop 🚀");
 
@@ -227,6 +261,35 @@ fn main() {
                     }
                 }
                 _ => {}
+            }
+        }
+
+        // Begin render commands.
+        unsafe {
+            let clear_color = [0.2, 0.2, 0.2, 1.0] as [f32; 4];
+
+            device_context.ClearRenderTargetView(&render_target_view, clear_color.as_ptr());
+            device_context.ClearDepthStencilView(&depth_stencil_view, 1, 1.0, 1);
+
+            device_context.OMSetRenderTargets(
+                Some(&[Some(render_target_view.clone())]),
+                &depth_stencil_view,
+            );
+            device_context.IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+            device_context.IASetIndexBuffer(&index_buffer, DXGI_FORMAT_R32_UINT, 0);
+
+            device_context.VSSetShader(&vertex_shader, None);
+            device_context.PSSetShader(&pixel_shader, None);
+
+            device_context.RSSetViewports(Some(&[viewport]));
+
+            device_context.DrawIndexedInstanced(3, 1, 0, 0, 0);
+
+            match swapchain.Present(1, 0) {
+                S_OK => {}
+                _ => {
+                    panic!("Swapchain Present failed!")
+                }
             }
         }
     }

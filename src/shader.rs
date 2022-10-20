@@ -8,7 +8,8 @@ use windows::{
     },
 };
 
-// This file will be mostly unsafe, and will include lot of type conversions.
+// This file will be mostly unsafe, and will include lot of type conversions between strings, CString and UTF16CStrings. There will be some manually null terminations as well.
+// Some assumptions taken are : entry point of VS shaders must be vs_main, and for PS shaders ps_main, and so on.
 // Provides public safe functions for compiling shaders, where these functions return a ID3D11XShader.
 enum ShaderType {
     Vertex(String),
@@ -25,6 +26,7 @@ pub fn create_vertex_shader(device: &ID3D11Device5, shader_path: &str) -> ID3D11
 
     let vs_bytecode = unsafe { vs_bytecode.GetBufferPointer() as *const u8 };
 
+    // Using std::slice::from_raw_parts to get a slice from a pointer and the length.
     let vs_bytecode = unsafe { std::slice::from_raw_parts(vs_bytecode, bytecode_length) };
 
     let vertex_shader: ID3D11VertexShader = unsafe {
@@ -45,7 +47,7 @@ pub fn create_pixel_shader(device: &ID3D11Device5, shader_path: &str) -> ID3D11P
     let bytecode_length = unsafe { ps_bytecode.GetBufferSize() };
 
     let ps_bytecode = unsafe { ps_bytecode.GetBufferPointer() as *const u8 };
-
+    // Using std::slice::from_raw_parts to get a slice from a pointer and the length.
     let ps_bytecode = unsafe { std::slice::from_raw_parts(ps_bytecode, bytecode_length) };
 
     let pixel_shader: ID3D11PixelShader = unsafe {
@@ -66,7 +68,9 @@ fn check_errors(blob: &Option<ID3DBlob>) {
             .GetBufferPointer() as *mut i8;
 
         let error_message = CString::from_raw(error_message);
-        let error_message = error_message.to_string_lossy();
+        let error_message = error_message
+            .to_str()
+            .expect("Failed to convert CString to String.");
 
         println!("Error : {:?}", error_message);
     }
@@ -84,55 +88,44 @@ fn compile_shader(shader_type: ShaderType) -> Option<ID3DBlob> {
     let mut compiled_shader_blob: Option<ID3DBlob> = None;
     let mut compilation_error_blob: Option<ID3DBlob> = None;
 
+    let mut shader_path: U16CString = U16CString::new();
+    let mut entry_point: PCSTR = PCSTR::null();
+    let mut target_profile: PCSTR = PCSTR::null();
+
     match shader_type {
-        ShaderType::Vertex(shader_path) => unsafe {
-            let shader_path =
-                U16CString::from_str(shader_path).expect("Failed to convert String to U16CString");
-
-            match D3DCompileFromFile(
-                PCWSTR(shader_path.as_ptr()),
-                None,
-                None,
-                PCSTR("vs_main\0".as_ptr()),
-                PCSTR("vs_5_0\0".as_ptr()),
-                compile_flags,
-                0,
-                &mut compiled_shader_blob,
-                Some(&mut compilation_error_blob as *mut Option<ID3DBlob>),
-            ) {
-                Ok(()) => {}
-                Err(error) => {
-                    println!("Error Code : {:?}", error.message());
-
-                    check_errors(&compilation_error_blob);
-                }
-            }
-        },
-        ShaderType::Pixel(shader_path) => unsafe {
-            let shader_path =
-                U16CString::from_str(shader_path).expect("Failed to convert String to U16CString");
-
-            match D3DCompileFromFile(
-                PCWSTR(shader_path.as_ptr()),
-                None,
-                None,
-                PCSTR("ps_main\0".as_ptr()),
-                PCSTR("ps_5_0\0".as_ptr()),
-                compile_flags,
-                0,
-                &mut compiled_shader_blob,
-                Some(&mut compilation_error_blob as *mut Option<ID3DBlob>),
-            ) {
-                Ok(()) => {}
-                Err(error) => {
-                    println!("Error Code : {:?}", error.message());
-
-                    check_errors(&compilation_error_blob);
-                }
-            }
-        },
-        _ => panic!("Error : Invalid shader type."),
+        ShaderType::Vertex(vs_shader_path) => {
+            entry_point = PCSTR("vs_main\0".as_ptr());
+            target_profile = PCSTR("vs_5_0\0".as_ptr());
+            shader_path = U16CString::from_str(vs_shader_path)
+                .expect("Failed to converot String to U16CString.");
+        }
+        ShaderType::Pixel(ps_shader_path) => {
+            entry_point = PCSTR("ps_main\0".as_ptr());
+            target_profile = PCSTR("ps_5_0\0".as_ptr());
+            shader_path = U16CString::from_str(ps_shader_path)
+                .expect("Failed to converot String to U16CString.");
+        }
     };
+
+    unsafe {
+        match D3DCompileFromFile(
+            PCWSTR(shader_path.as_ptr()),
+            None,
+            None,
+            entry_point,
+            target_profile,
+            compile_flags,
+            0,
+            &mut compiled_shader_blob,
+            Some(&mut compilation_error_blob as *mut Option<ID3DBlob>),
+        ) {
+            Ok(()) => {}
+            Err(error) => {
+                println!("Error Code : {:?}", error.message());
+                check_errors(&compilation_error_blob);
+            }
+        }
+    }
 
     return compiled_shader_blob;
 }

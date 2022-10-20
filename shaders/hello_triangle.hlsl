@@ -1,7 +1,7 @@
 static const float3 VERTEX_POSITIONS[3] = 
 {
     float3(-0.5f, -0.5f, 0.0f),
-    float3( 0.0f,  0.0f, 0.0f),
+    float3( 0.0f,  0.5f, 0.0f),
     float3( 0.5f, -0.5f, 0.0f)
 };
 
