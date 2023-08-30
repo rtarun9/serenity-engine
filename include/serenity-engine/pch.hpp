@@ -12,9 +12,10 @@ static constexpr bool SERENITY_DEBUG = false;
 #include <exception>
 #include <filesystem>
 #include <format>
-#include <memory>
-#include <source_location>
 #include <iostream>
+#include <memory>
+#include <optional>
+#include <source_location>
 #include <span>
 #include <stdexcept>
 #include <string>

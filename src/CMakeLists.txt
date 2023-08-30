@@ -8,9 +8,10 @@ set(SERENITY_ENGINE_SRC_FILES
 
     "${SERENITY_ENGINE_INCLUDE_PATH}/core/file_system.hpp"
     "core/file_system.cpp"
+    
+    "${SERENITY_ENGINE_INCLUDE_PATH}/core/application.hpp"
+    "core/application.cpp"
 )
-
-find_package(Vulkan REQUIRED)
 
 add_library(serenity-engine STATIC ${SERENITY_ENGINE_SRC_FILES})
 target_precompile_headers(serenity-engine PUBLIC "${CMAKE_SOURCE_DIR}/include/serenity-engine/pch.hpp")

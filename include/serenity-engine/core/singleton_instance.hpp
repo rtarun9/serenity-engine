@@ -10,7 +10,7 @@ namespace serenity::core
 
     template <typename T> class SingletonInstance
     {
-      public:
+      protected:
         explicit SingletonInstance()
         {
             if (s_instance)
@@ -26,6 +26,7 @@ namespace serenity::core
             s_instance = nullptr;
         }
 
+      public:
         static bool exists()
         {
             return s_instance != nullptr;

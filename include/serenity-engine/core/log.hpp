@@ -12,7 +12,7 @@ namespace serenity::core
     // The SingletonInstance<> provides a get() method, which will be used to access logging - related functions of this
     // class.
     // note(rtarun9) : Add option to disable logging to file in future.
-    class Log : public SingletonInstance<Log>
+    class Log final : public SingletonInstance<Log>
     {
       public:
         explicit Log();
@@ -32,6 +32,7 @@ namespace serenity::core
       private:
         Log(const Log &other) = delete;
         Log &operator=(const Log &other) = delete;
+
         Log(Log &&other) = delete;
         Log &operator=(Log &&other) = delete;
 
