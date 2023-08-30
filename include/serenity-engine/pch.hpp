@@ -8,6 +8,7 @@ static constexpr bool SERENITY_DEBUG = false;
 #endif
 
 // STL includes.
+#include <algorithm>
 #include <array>
 #include <exception>
 #include <filesystem>
@@ -20,6 +21,7 @@ static constexpr bool SERENITY_DEBUG = false;
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <typeinfo>
 #include <vector>
 

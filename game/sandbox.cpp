@@ -9,18 +9,7 @@ class Game final : public serenity::core::Application
   private:
 };
 
-// note(rtarun9) : Make a proper 'entry point' later.
-int main()
+std::unique_ptr<serenity::core::Application> serenity::core::create_application()
 {
-    try
-    {
-        Game game{};
-        game.run();
-    }
-    catch (const std::exception &e)
-    {
-        std::cerr << e.what() << '\n';
-    }
-
-    return 0;
+    return std::make_unique<Game>();
 }

@@ -23,12 +23,12 @@ namespace serenity::core
         m_logger = std::make_shared<spdlog::logger>("Logger", sinks.begin(), sinks.end());
         m_logger->set_level(spdlog::level::info);
 
-        info("Created the logger");
+        info("Created logger");
     }
 
     Log::~Log()
     {
-        info("Destroyed the logger");
+        info("Destroyed logger");
         spdlog::shutdown();
     }
 
@@ -41,7 +41,7 @@ namespace serenity::core
     {
         m_logger->warn(message);
     }
-
+     
     void Log::error(const std::string_view message, const std::source_location source_location)
     {
         m_logger->error(std::string(message) + format_source_location(source_location));

@@ -15,7 +15,8 @@ namespace serenity::core
         {
             if (s_instance)
             {
-                throw std::runtime_error(std::format("Instance already exist for type {}", typeid(T).name()));
+                throw std::runtime_error(
+                    std::format("Instance already exist for type {}. Did you mean to use get()?", typeid(T).name()));
             }
 
             s_instance = static_cast<T *>(this);

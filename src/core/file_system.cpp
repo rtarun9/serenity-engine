@@ -17,7 +17,7 @@ namespace serenity::core
             {
                 m_root_directory = current_path.string() + "/serenity-engine/"s;
 
-                Log::get().info(std::format("located root directory {}", m_root_directory));
+                Log::get().info(std::format("Located root directory {}", m_root_directory));
 
                 break;
             }
@@ -27,7 +27,7 @@ namespace serenity::core
 
         if (m_root_directory.empty())
         {
-            Log::get().critical(std::format("could not locate root directory"));
+            Log::get().critical(std::format("Could not locate root directory"));
         }
     }
 } // namespace serenity::core
