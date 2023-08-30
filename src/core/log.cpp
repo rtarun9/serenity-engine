@@ -6,7 +6,7 @@
 
 namespace serenity::core
 {
-    void Log::init()
+    Log::Log()
     {
         // Create the sinks (a console sink and file sink).
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
@@ -20,36 +20,42 @@ namespace serenity::core
         const auto sinks = std::vector<spdlog::sink_ptr>{console_sink, file_sink};
 
         // Create the logger.
-        s_logger = std::make_shared<spdlog::logger>("Logger", sinks.begin(), sinks.end());
-        s_logger->set_level(spdlog::level::info);
+        m_logger = std::make_shared<spdlog::logger>("Logger", sinks.begin(), sinks.end());
+        m_logger->set_level(spdlog::level::info);
+
+        info("Created the logger");
     }
 
-    void Log::destroy()
+    Log::~Log()
     {
+        info("Destroyed the logger");
         spdlog::shutdown();
     }
 
     void Log::info(const std::string_view message)
     {
-        s_logger->info(message);
+        m_logger->info(message);
     }
 
     void Log::warn(const std::string_view message)
     {
-        s_logger->warn(message);
+        m_logger->warn(message);
     }
 
     void Log::error(const std::string_view message, const std::source_location source_location)
     {
-        s_logger->error(std::string(message) + format_source_location(source_location));
+        m_logger->error(std::string(message) + format_source_location(source_location));
     }
 
     void Log::critical(const std::string_view message, const std::source_location source_location)
     {
-        s_logger->critical(std::string(message) + format_source_location(source_location));
+        const auto critical_message = std::string(message) + format_source_location(source_location);
+        m_logger->critical(critical_message);
+
+        throw std::runtime_error(critical_message);
     }
 
-    std::string Log::format_source_location(const std::source_location &source_location)
+    std::string Log::format_source_location(const std::source_location &source_location) const
     {
         return std::format("\n[file : {}.\nfunction : {}.\nline : {}.]", source_location.file_name(),
                            source_location.function_name(), source_location.line());

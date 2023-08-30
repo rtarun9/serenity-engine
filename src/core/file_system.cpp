@@ -1,8 +1,10 @@
 #include "serenity-engine/core/file_system.hpp"
 
+#include "serenity-engine/core/log.hpp"
+
 namespace serenity::core
 {
-    void FileSystem::init()
+    FileSystem::FileSystem()
     {
         // Logic : Start from the currrent directory, and keep moving up until you can find the directory
         // called "serenity-engine". Then, that path + "serenity-engine" will be the root directory.
@@ -14,7 +16,9 @@ namespace serenity::core
             if (std::filesystem::is_directory(current_path / "serenity-engine"))
             {
                 s_root_directory = current_path.string() + "/serenity-engine/"s;
-                Log::info(std::format("located root directory {}", s_root_directory));
+
+                Log::get().info(std::format("located root directory {}", s_root_directory));
+
                 break;
             }
 
@@ -23,7 +27,7 @@ namespace serenity::core
 
         if (s_root_directory.empty())
         {
-            Log::critical(std::format("could not locate root directory"));
+            Log::get().critical(std::format("could not locate root directory"));
         }
     }
 } // namespace serenity::core

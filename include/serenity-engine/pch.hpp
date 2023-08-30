@@ -9,13 +9,17 @@ static constexpr bool SERENITY_DEBUG = false;
 
 // STL includes.
 #include <array>
+#include <exception>
 #include <filesystem>
 #include <format>
 #include <memory>
 #include <source_location>
+#include <iostream>
 #include <span>
+#include <stdexcept>
 #include <string>
 #include <string_view>
+#include <typeinfo>
 #include <vector>
 
 using namespace std::string_literals;

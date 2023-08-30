@@ -15,3 +15,4 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/release)
 
 add_subdirectory(external)
 add_subdirectory(src)
+add_subdirectory(game)
