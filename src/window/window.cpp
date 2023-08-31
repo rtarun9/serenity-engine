@@ -2,6 +2,7 @@
 
 #define SDL_MAIN_HANDLED
 #include <SDL3/SDL.h>
+#include <SDL3/SDL_syswm.h>
 
 namespace serenity::window
 {
@@ -26,6 +27,12 @@ namespace serenity::window
         {
             core::Log::get().critical("Failed to create SDL window");
         }
+
+        // Get the underlying OS window handle.
+        SDL_SysWMinfo window_info{};
+        SDL_GetWindowWMInfo(m_window, &window_info, SDL_SYSWM_CURRENT_VERSION);
+
+        m_window_handle = window_info.info.win.window;
 
         core::Log::get().info("Created window");
     }
@@ -75,6 +82,11 @@ namespace serenity::window
             if (keyboard_state[SDL_SCANCODE_SPACE])
             {
                 input.set_key_state(core::Keys::Space, true);
+            }
+
+            if (keyboard_state[SDL_SCANCODE_ESCAPE])
+            {
+                input.set_key_state(core::Keys::Escape, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_UP])

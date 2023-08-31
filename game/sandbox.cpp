@@ -3,7 +3,7 @@
 class Game final : public serenity::core::Application
 {
   public:
-    Game() = default;
+    explicit Game() = default;
     ~Game() = default;
 
   private:

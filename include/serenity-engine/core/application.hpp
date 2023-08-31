@@ -5,6 +5,7 @@
 #include "input.hpp"
 
 #include "serenity-engine/window/window.hpp"
+#include "serenity-engine/graphics/device.hpp"
 
 namespace serenity::core
 {
@@ -13,7 +14,7 @@ namespace serenity::core
     class Application
     {
       public:
-        Application();
+        explicit Application();
         virtual ~Application() = default;
 
         virtual void run() final;
@@ -31,6 +32,8 @@ namespace serenity::core
 
         Input m_input{};
         std::unique_ptr<window::Window> m_window{};
+
+        std::unique_ptr<graphics::Device> m_graphics_device{};
     };
 
     // To be implemented in only a single class that inherits from Application.

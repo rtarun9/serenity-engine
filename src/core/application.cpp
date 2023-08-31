@@ -8,6 +8,8 @@ namespace serenity::core
         m_file_system = std::make_unique<FileSystem>();
 
         m_window = std::make_unique<window::Window>("serenity-engine", 1080u, 720u);
+
+        m_graphics_device = std::make_unique<graphics::Device>(m_window->get_window_handle(), 1080u, 720u);
     }
 
     void Application::run()
@@ -18,6 +20,11 @@ namespace serenity::core
             m_window->poll_events(m_input);
 
             if (m_input.quit == true)
+            {
+                quit = true;
+            }
+
+            if (m_input.is_key_pressed(Keys::Escape))
             {
                 quit = true;
             }
