@@ -17,4 +17,7 @@ target_sources(serenity-engine PUBLIC
 
 	"${SERENITY_ENGINE_INCLUDE_PATH}/graphics/device.hpp"
 	"device.cpp"
+
+	"${SERENITY_ENGINE_INCLUDE_PATH}/graphics/shader_compiler.hpp"
+	"shader_compiler.cpp"
 )

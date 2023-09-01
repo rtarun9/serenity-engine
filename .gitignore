@@ -1,3 +1,5 @@
 build/
 .vs/
 out/
+dxc.zip
+external/dxc

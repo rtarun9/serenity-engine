@@ -60,9 +60,11 @@ namespace serenity::graphics
         m_rtv_descriptor_heap->offset_current_handle(Swapchain::NUM_BACK_BUFFERS);
 
         // Create the swapchain.
-        m_swapchain =
-            std::make_unique<Swapchain>(m_factory, m_device, m_direct_command_queue->get_command_queue(),
-                                        *(m_rtv_descriptor_heap.get()), dimension, window_handle);
+        m_swapchain = std::make_unique<Swapchain>(m_factory, m_device, m_direct_command_queue->get_command_queue(),
+                                                  *(m_rtv_descriptor_heap.get()), dimension, window_handle);
+
+        // Create the shader compiler.
+        m_shader_compiler = std::make_unique<ShaderCompiler>();
 
         core::Log::instance().info("Created graphics device");
     }

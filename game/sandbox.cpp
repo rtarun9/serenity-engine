@@ -3,7 +3,17 @@
 class Game final : public serenity::core::Application
 {
   public:
-    explicit Game() = default;
+    explicit Game()
+    {
+        using namespace serenity::graphics;
+
+        const auto vertex_shader =
+            ShaderCompiler::instance().compile(ShaderTypes::Vertex, L"shaders/triangle.hlsl", L"vs_main");
+
+        const auto pixel_shader =
+            ShaderCompiler::instance().compile(ShaderTypes::Pixel, L"shaders/triangle.hlsl", L"ps_main");
+    }
+
     ~Game() = default;
 
     virtual void update(const float delta_time) override
@@ -39,8 +49,7 @@ class Game final : public serenity::core::Application
         command_list.execute_barriers();
 
         // Execute command list.
-        const auto command_list_for_execution = std::array{&command_list};
-        graphics_device.get_direct_command_queue().execute(command_list_for_execution);
+        graphics_device.get_direct_command_queue().execute(std::array{&command_list});
 
         swapchain.present();
 

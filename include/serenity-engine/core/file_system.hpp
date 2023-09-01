@@ -21,7 +21,7 @@ namespace serenity::core
 
         std::string get_relative_path(const std::string_view path) const
         {
-            return m_root_directory + "/"s + std::string(path);
+            return m_root_directory + std::string(path);
         }
 
       private:

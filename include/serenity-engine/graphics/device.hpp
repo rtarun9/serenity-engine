@@ -3,6 +3,7 @@
 #include "command_list.hpp"
 #include "command_queue.hpp"
 #include "descriptor_heap.hpp"
+#include "shader_compiler.hpp"
 #include "swapchain.hpp"
 
 #include "d3d_utils.hpp"
@@ -23,6 +24,7 @@ namespace serenity::graphics
         void frame_start();
 
         // Updates the frame fence value for current frame and updates current swapchain backbuffer index.
+        // Handles synchronization for now as well.
         void frame_end();
 
         CommandList &get_current_frame_direct_command_list() const
@@ -81,5 +83,8 @@ namespace serenity::graphics
         // This current swapchain back buffer index is updated in the frame_start() and frame_end() functions.
         std::unique_ptr<Swapchain> m_swapchain{};
         uint32_t m_current_swapchain_backbuffer_index{};
+
+        // Shader compiler (using DXC's C++ Api).
+        std::unique_ptr<ShaderCompiler> m_shader_compiler{};
     };
 } // namespace serenity::graphics

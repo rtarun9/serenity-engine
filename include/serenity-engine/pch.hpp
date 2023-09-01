@@ -30,6 +30,7 @@ using namespace std::string_literals;
 
 // D3D12 / Windows includes.
 #include "graphics/d3dx12.hpp"
+#include "graphics/dxcapi.hpp"
 #include <DirectXMath.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
