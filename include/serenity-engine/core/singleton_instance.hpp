@@ -33,7 +33,7 @@ namespace serenity::core
             return s_instance != nullptr;
         }
 
-        static T &get()
+        static T &instance()
         {
             if (!s_instance)
             {
@@ -43,7 +43,7 @@ namespace serenity::core
             return *s_instance;
         }
 
-      protected:
+      private:
         SingletonInstance(const SingletonInstance &other) = delete;
         SingletonInstance &operator=(const SingletonInstance &other) = delete;
 

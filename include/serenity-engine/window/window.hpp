@@ -13,15 +13,15 @@ namespace serenity::window
     class Window
     {
       public:
-        explicit Window(const std::string_view title, const uint32_t width, const uint32_t height);
+        explicit Window(const std::string_view title, const Uint2 dimension);
         ~Window();
 
         void poll_events(core::Input &input);
 
         // Returns a pair in form of {width, height}
-        std::pair<uint32_t, uint32_t> get_dimensions() const
+        Uint2 get_dimensions() const
         {
-            return {m_width, m_height};
+            return m_dimension;
         }
 
         HWND get_window_handle() const
@@ -34,7 +34,6 @@ namespace serenity::window
         SDL_Window *m_window{};
         HWND m_window_handle{};
 
-        uint32_t m_width{};
-        uint32_t m_height{};
+        Uint2 m_dimension{};
     };
 } // namespace serenity::window

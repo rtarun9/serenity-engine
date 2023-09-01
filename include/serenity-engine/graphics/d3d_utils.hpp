@@ -13,7 +13,7 @@ namespace serenity::graphics
     {
         if (FAILED(hr))
         {
-            core::Log::get().critical("Hresult failed", source_location);
+            core::Log::instance().critical("Hresult failed", source_location);
         }
     }
 
@@ -22,7 +22,7 @@ namespace serenity::graphics
         throw_if_failed(object->SetName(name.data()));
     }
 
-    static inline std::wstring command_list_type_to_string(const D3D12_COMMAND_LIST_TYPE command_list_type)
+    static inline std::wstring command_list_type_to_wstring(const D3D12_COMMAND_LIST_TYPE command_list_type)
     {
         switch (command_list_type)
         {
@@ -46,7 +46,12 @@ namespace serenity::graphics
         return L"INVALID COMMAND QUEUE TYPE";
     }
 
-    static inline std::wstring descriptor_heap_type_to_string(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
+    static inline std::string command_list_type_to_string(const D3D12_COMMAND_LIST_TYPE command_list_type)
+    {
+        return wstring_to_string(command_list_type_to_wstring(command_list_type));
+    }
+
+    static inline std::wstring descriptor_heap_type_to_wstring(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
     {
         switch (descriptor_heap_type)
         {
@@ -73,5 +78,10 @@ namespace serenity::graphics
 
         // Code should never reach here.
         return L"INVALID DESCRIPTOR HEAP TYPE";
+    }
+
+    static inline std::string descriptor_heap_type_to_string(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
+    {
+        return wstring_to_string(descriptor_heap_type_to_wstring(descriptor_heap_type));
     }
 } // namespace serenity::graphics

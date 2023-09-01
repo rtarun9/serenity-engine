@@ -10,6 +10,7 @@ static constexpr bool SERENITY_DEBUG = false;
 // STL includes.
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <exception>
 #include <filesystem>
 #include <format>
@@ -28,13 +29,13 @@ static constexpr bool SERENITY_DEBUG = false;
 using namespace std::string_literals;
 
 // D3D12 / Windows includes.
+#include "graphics/d3dx12.hpp"
+#include <DirectXMath.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
-#include <DirectXMath.h>
-#include "graphics/d3dx12.hpp"
 
 #define WIN32_LEAN_AND_MEAN
-#include <Windows.h> 
+#include <Windows.h>
 
 namespace math = DirectX;
 
@@ -42,3 +43,4 @@ namespace math = DirectX;
 
 // Global project includes.
 #include "core/log.hpp"
+#include "utils/primitive_datatypes.hpp"

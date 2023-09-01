@@ -6,26 +6,25 @@
 
 namespace serenity::window
 {
-    Window::Window(const std::string_view title, const uint32_t width, const uint32_t height)
-        : m_width(width), m_height(height)
+    Window::Window(const std::string_view title, const Uint2 dimension) : m_dimension(dimension)
     {
-        if (width == 0 || height == 0)
+        if (dimension.x == 0 || dimension.y == 0)
         {
-            core::Log::get().critical("Window dimensions cannot be 0");
+            core::Log::instance().critical("Window dimensions cannot be 0");
         }
 
         // Initialize SDL3.
         if (SDL_Init(SDL_INIT_VIDEO) < 0)
         {
-            core::Log::get().critical("Failed to initialize SDL3");
+            core::Log::instance().critical("Failed to initialize SDL3");
         }
 
         m_window = SDL_CreateWindowWithPosition(title.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-                                                static_cast<int>(width), static_cast<int>(height), 0);
+                                                static_cast<int>(dimension.x), static_cast<int>(dimension.y), 0);
 
         if (!m_window)
         {
-            core::Log::get().critical("Failed to create SDL window");
+            core::Log::instance().critical("Failed to create SDL window");
         }
 
         // Get the underlying OS window handle.
@@ -34,12 +33,12 @@ namespace serenity::window
 
         m_window_handle = window_info.info.win.window;
 
-        core::Log::get().info("Created window");
+        core::Log::instance().info("Created window");
     }
 
     Window::~Window()
     {
-        core::Log::get().info("Destroyed window");
+        core::Log::instance().info("Destroyed window");
 
         SDL_DestroyWindow(m_window);
         SDL_Quit();

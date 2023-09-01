@@ -2,6 +2,8 @@
 
 #include "d3d_utils.hpp"
 
+#include "command_list.hpp"
+
 namespace serenity::graphics
 {
     // Command Queue is the execution port of the GPU.
@@ -10,13 +12,26 @@ namespace serenity::graphics
     class CommandQueue
     {
       public:
-        explicit CommandQueue(ID3D12Device *const device, const D3D12_COMMAND_LIST_TYPE command_list_type);
+        explicit CommandQueue(const comptr<ID3D12Device> &device, const D3D12_COMMAND_LIST_TYPE command_list_type);
         ~CommandQueue();
 
-        ID3D12CommandQueue *get_command_queue() const
+        comptr<ID3D12CommandQueue> &get_command_queue()
         {
-            return m_command_queue.Get();
+            return m_command_queue;
         }
+
+        // Return the fence value we need to wait on to ensure that the GPU has completed execution for instructions
+        // (including this current signal call).
+        uint64_t signal();
+
+        // Block the cpu thread until the fence value has reached the given value.
+        void wait_for_fence_value(const uint64_t fence_value);
+
+        // Wait for GPU to complete execution of all instructions given to it.
+        void flush();
+
+        // Execute the command lists.
+        void execute(const std::span<CommandList *const> command_lists);
 
       private:
         CommandQueue(const CommandQueue &other) = delete;
@@ -30,5 +45,7 @@ namespace serenity::graphics
         comptr<ID3D12Fence> m_fence{};
 
         D3D12_COMMAND_LIST_TYPE m_command_list_type{};
+
+        uint64_t m_monotonically_increasing_fence_value{};
     };
 } // namespace serenity::graphics
