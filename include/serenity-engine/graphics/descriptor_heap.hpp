@@ -13,6 +13,8 @@ namespace serenity::graphics
 
         uint32_t descriptor_size{};
 
+        uint32_t index{};
+
         void offset(const uint32_t count = 1u);
     };
 
@@ -21,14 +23,26 @@ namespace serenity::graphics
     class DescriptorHeap
     {
       public:
-        explicit DescriptorHeap(const comptr<ID3D12Device>& device, const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type,
-                                const uint32_t num_descriptors);
+        explicit DescriptorHeap(const comptr<ID3D12Device> &device,
+                                const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type, const uint32_t num_descriptors);
         ~DescriptorHeap();
+
+        comptr<ID3D12DescriptorHeap> get_descriptor_heap() const
+        {
+            return m_descriptor_heap;
+        }
 
         DescriptorHandle get_handle_for_heap_start() const
         {
             return m_descriptor_handle_for_start;
         }
+
+        DescriptorHandle get_current_handle() const
+        {
+            return m_current_descriptor_handle;
+        }
+
+        uint32_t get_descriptor_index(const DescriptorHandle &descriptor_handle) const;
 
         DescriptorHandle get_handle_at_index(const uint32_t index) const;
 

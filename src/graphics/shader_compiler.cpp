@@ -49,8 +49,6 @@ namespace serenity::graphics
         }();
 
         auto compilation_args = std::vector<LPCWSTR>{
-            L"-HV",
-            L"2021",
             L"-E",
             entry_point.data(),
             L"-T",
@@ -58,6 +56,8 @@ namespace serenity::graphics
             DXC_ARG_PACK_MATRIX_ROW_MAJOR,
             DXC_ARG_WARNINGS_ARE_ERRORS,
             DXC_ARG_ALL_RESOURCES_BOUND,
+            L"-Qstrip_debug",
+            L"-Qstrip_reflect",
             L"-I",
             m_root_directory.c_str(),
         };
@@ -108,12 +108,33 @@ namespace serenity::graphics
                 std::format("Shader path : {}, Error : {}", wstring_to_string(shader_path), error_message));
         }
 
-        auto compiled_shader_blob = comptr<IDxcBlobUtf8>{};
-        compiled_shader_buffer->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiled_shader_blob), nullptr);
+        auto compiled_shader_blob = comptr<IDxcBlob>{};
+        throw_if_failed(compiled_shader_buffer->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiled_shader_blob), nullptr));
 
         shader.blob = compiled_shader_blob;
 
-        core::Log::instance().info(std::format("Compiled shader with path : {}", wstring_to_string(shader_path)));
+        const auto shader_type_str = [&](const auto shader_type) -> std::string {
+            switch (shader_type)
+            {
+            case ShaderTypes::Vertex: {
+                return "Vertex";
+            }
+            break;
+
+            case ShaderTypes::Pixel: {
+                return "Pixel";
+            }
+            break;
+
+            default: {
+                return "";
+            }
+            break;
+            };
+        };
+
+        core::Log::instance().info(std::format("Compiled {} shader with path : {}", shader_type_str(shader_type),
+                                               wstring_to_string(shader_path)));
         return shader;
     }
 } // namespace serenity::graphics

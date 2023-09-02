@@ -54,6 +54,13 @@ namespace serenity::graphics
                                                descriptor_heap_type_to_string(m_descriptor_heap_type)));
     }
 
+    uint32_t DescriptorHeap::get_descriptor_index(const DescriptorHandle &descriptor_handle) const
+    {
+        return static_cast<uint32_t>(
+            (descriptor_handle.cpu_descriptor_handle.ptr - m_descriptor_handle_for_start.cpu_descriptor_handle.ptr) /
+            m_descriptor_size);
+    }
+
     DescriptorHandle DescriptorHeap::get_handle_at_index(const uint32_t index) const
     {
         auto descriptor_handle = m_descriptor_handle_for_start;

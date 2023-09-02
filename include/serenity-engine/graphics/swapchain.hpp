@@ -36,6 +36,16 @@ namespace serenity::graphics
             return m_backbuffers.at(m_current_backbuffer_index);
         }
 
+        D3D12_VIEWPORT get_viewport() const
+        {
+            return m_viewport;
+        }
+
+        D3D12_RECT get_scissor_rect() const
+        {
+            return m_scissor_rect;
+        }
+
         // The m_current_backbuffer_index variable will be updated after the swapchain::present function is called.
         void present();
 

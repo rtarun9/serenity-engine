@@ -2,9 +2,11 @@
 
 #include "serenity-engine/graphics/command_list.hpp"
 
+#include "serenity-engine/graphics/device.hpp"
+
 namespace serenity::graphics
 {
-    CommandList::CommandList(const comptr<ID3D12Device> &const device, const D3D12_COMMAND_LIST_TYPE command_list_type)
+    CommandList::CommandList(const comptr<ID3D12Device> &device, const D3D12_COMMAND_LIST_TYPE command_list_type)
         : m_command_list_type(command_list_type)
     {
         // Create command list and allocator.
@@ -42,6 +44,18 @@ namespace serenity::graphics
     {
         m_command_list->ResourceBarrier(static_cast<uint32_t>(m_resource_barriers.size()), m_resource_barriers.data());
         m_resource_barriers.clear();
+    }
+
+    void CommandList::set_descriptor_heaps(const std::span<DescriptorHeap *const> descriptor_heaps)
+    {
+        auto shader_visible_descriptor_heaps = std::vector<ID3D12DescriptorHeap *>{};
+        for (const auto &heaps : descriptor_heaps)
+        {
+            shader_visible_descriptor_heaps.emplace_back(heaps->get_descriptor_heap().Get());
+        }
+
+        m_command_list->SetDescriptorHeaps(static_cast<uint32_t>(descriptor_heaps.size()),
+                                           shader_visible_descriptor_heaps.data());
     }
 
     void CommandList::reset()

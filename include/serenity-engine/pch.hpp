@@ -1,6 +1,6 @@
 #pragma once
 
-// Setup of certain constexpr values.
+// Setup of certain constexpr values and defines.
 #ifdef DEF_SERENITY_DEBUG
 static constexpr bool SERENITY_DEBUG = true;
 #else

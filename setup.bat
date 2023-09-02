@@ -12,3 +12,12 @@ xcopy external\dxc\bin\x64\* %BuildDirectory%\bin\release\
 
 xcopy external\dxc\bin\x64\* out\build\x64-Debug\bin\debug\
 xcopy external\dxc\bin\x64\* out\build\x64-Release\bin\release\
+
+powershell -Command "Invoke-WebRequest -Uri https://www.nuget.org/api/v2/package/Microsoft.Direct3D.D3D12/1.711.3-preview -OutFile agility.zip"
+powershell -Command "& {Expand-Archive agility.zip external/agility-sdk}"
+
+xcopy external\agility-sdk\build\native\bin\x64\* %BuildDirectory%\bin\debug\D3D12\
+xcopy external\agility-sdk\build\native\bin\x64\*  %BuildDirectory%\bin\release\D3D12\
+
+xcopy external\agility-sdk\build\native\bin\x64\*  out\build\x64-Debug\bin\debug\D3D12\
+xcopy external\agility-sdk\build\native\bin\x64\*   out\build\x64-Release\bin\release\D3D12\

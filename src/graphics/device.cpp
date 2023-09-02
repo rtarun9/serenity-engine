@@ -2,6 +2,17 @@
 
 #include "serenity-engine/graphics/d3d_utils.hpp"
 
+// Setting up the agility SDK parameters.   
+extern "C"
+{
+    __declspec(dllexport) extern const UINT D3D12SDKVersion = 711u;
+}
+
+extern "C"
+{
+    __declspec(dllexport) extern const char *D3D12SDKPath = ".\\D3D12\\";
+}
+
 namespace serenity::graphics
 {
     Device::Device(const HWND window_handle, const Uint2 dimension)
@@ -48,6 +59,7 @@ namespace serenity::graphics
 
         // Create command queues.
         m_direct_command_queue = std::make_unique<CommandQueue>(m_device.Get(), D3D12_COMMAND_LIST_TYPE_DIRECT);
+        m_copy_command_queue = std::make_unique<CommandQueue>(m_device.Get(), D3D12_COMMAND_LIST_TYPE_COPY);
 
         // Create command lists.
         for (auto &command_list : m_direct_command_lists)
@@ -55,13 +67,21 @@ namespace serenity::graphics
             command_list = std::make_unique<CommandList>(m_device.Get(), D3D12_COMMAND_LIST_TYPE_DIRECT);
         }
 
+        m_copy_command_list = std::make_unique<CommandList>(m_device.Get(), D3D12_COMMAND_LIST_TYPE_COPY);
+
         // Create descriptor heaps.
         m_rtv_descriptor_heap = std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3u);
         m_rtv_descriptor_heap->offset_current_handle(Swapchain::NUM_BACK_BUFFERS);
 
+        m_cbv_srv_uav_descriptor_heap =
+            std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 100u);
+
         // Create the swapchain.
         m_swapchain = std::make_unique<Swapchain>(m_factory, m_device, m_direct_command_queue->get_command_queue(),
                                                   *(m_rtv_descriptor_heap.get()), dimension, window_handle);
+
+        // Create the root signature.
+        m_root_signature = std::make_unique<RootSignature>(m_device);
 
         // Create the shader compiler.
         m_shader_compiler = std::make_unique<ShaderCompiler>();
@@ -90,5 +110,10 @@ namespace serenity::graphics
         // Wait for the previous frame (i.e the new m_current_swapchain_backbuffer_index's previous command's) to finish
         // execution.
         m_direct_command_queue->wait_for_fence_value(m_frame_fence_values.at(m_current_swapchain_backbuffer_index));
+    }
+
+    Pipeline Device::create_pipeline(const PipelineCreationDesc &pipeline_creation_desc)
+    {
+        return Pipeline(m_device, pipeline_creation_desc);
     }
 } // namespace serenity::graphics
