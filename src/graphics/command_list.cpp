@@ -63,4 +63,76 @@ namespace serenity::graphics
         throw_if_failed(m_command_allocator->Reset());
         throw_if_failed(m_command_list->Reset(m_command_allocator.Get(), nullptr));
     }
+
+    void CommandList::clear_render_target_views(const DescriptorHandle rtv_descriptor_handle,
+                                                const std::span<const float, 4u> clear_color) const
+    {
+        m_command_list->ClearRenderTargetView(rtv_descriptor_handle.cpu_descriptor_handle, clear_color.data(), 0u,
+                                              nullptr);
+    }
+
+    void CommandList::set_render_targets(const std::span<const DescriptorHandle> rtv_descriptor_handle,
+                                         const std::optional<DescriptorHandle> dsv_descriptor_handle) const
+    {
+        auto rtv_cpu_descriptor_handles = std::vector<D3D12_CPU_DESCRIPTOR_HANDLE>{};
+        for (const auto &handle : rtv_descriptor_handle)
+        {
+            rtv_cpu_descriptor_handles.emplace_back(handle.cpu_descriptor_handle);
+        }
+
+        if (dsv_descriptor_handle.has_value())
+        {
+            m_command_list->OMSetRenderTargets(static_cast<uint32_t>(rtv_cpu_descriptor_handles.size()),
+                                               rtv_cpu_descriptor_handles.data(), true,
+                                               &dsv_descriptor_handle->cpu_descriptor_handle);
+        }
+        else
+        {
+            m_command_list->OMSetRenderTargets(static_cast<uint32_t>(rtv_cpu_descriptor_handles.size()),
+                                               rtv_cpu_descriptor_handles.data(), true, nullptr);
+        }
+    }
+
+    void CommandList::set_primitive_topology(const D3D12_PRIMITIVE_TOPOLOGY primitive_topology) const
+    {
+        m_command_list->IASetPrimitiveTopology(primitive_topology);
+    }
+
+    void CommandList::set_index_buffer(const Buffer &buffer) const
+    {
+        const auto index_buffer_view = D3D12_INDEX_BUFFER_VIEW{
+            .BufferLocation = buffer.resource.Get()->GetGPUVirtualAddress(),
+            .SizeInBytes = static_cast<uint32_t>(buffer.size_in_bytes),
+            .Format = DXGI_FORMAT_R16_UINT,
+        };
+
+        m_command_list->IASetIndexBuffer(&index_buffer_view);
+    }
+
+    void CommandList::set_bindless_graphics_root_signature() const
+    {
+        m_command_list->SetGraphicsRootSignature(RootSignature::instance().get_root_signature().Get());
+    }
+
+    void CommandList::set_pipeline_state(const Pipeline &pipeline) const
+    {
+        m_command_list->SetPipelineState(pipeline.get_pipeline_state().Get());
+    }
+
+    void CommandList::set_graphics_32_bit_root_constants(const std::byte *data) const
+    {
+        m_command_list->SetGraphicsRoot32BitConstants(0u, RootSignature::NUM_32_BIT_ROOT_CONSTANTS, data, 0u);
+    }
+
+    void CommandList::set_viewport_and_scissor_rect(const D3D12_VIEWPORT &viewport,
+                                                    const D3D12_RECT &scissor_rect) const
+    {
+        m_command_list->RSSetViewports(1u, &viewport);
+        m_command_list->RSSetScissorRects(1u, &scissor_rect);
+    }
+
+    void CommandList::draw_instanced(const uint32_t vertex_count, const uint32_t instance_count)
+    {
+        m_command_list->DrawInstanced(3u, 1u, 0u, 0u);
+    }
 } // namespace serenity::graphics

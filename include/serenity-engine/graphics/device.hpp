@@ -3,9 +3,9 @@
 #include "command_list.hpp"
 #include "command_queue.hpp"
 #include "descriptor_heap.hpp"
+#include "root_signature.hpp"
 #include "shader_compiler.hpp"
 #include "swapchain.hpp"
-#include "root_signature.hpp"
 
 #include "buffer.hpp"
 #include "d3d_utils.hpp"
@@ -38,12 +38,12 @@ namespace serenity::graphics
             return m_frame_fence_values.at(frame_index);
         }
 
-        DescriptorHeap& get_cbv_stv_uav_descriptor_heap() const
+        DescriptorHeap &get_cbv_srv_uav_descriptor_heap() const
         {
             return *(m_cbv_srv_uav_descriptor_heap.get());
         }
 
-        // Resets the command buffer and allocator for the current frame.
+        // Resets the command buffer and allocator for the current frame. Also gets the swapchain backbuffer for this frame.
         void frame_start();
 
         // Updates the frame fence value for current frame and updates current swapchain backbuffer index.
@@ -141,6 +141,20 @@ namespace serenity::graphics
         // Fill in for constant buffer.
         if (buffer_creation_desc.usage == BufferUsage::ConstantBuffer)
         {
+            // For constant buffers, there is no GPU accesible only buffer. Due to this, the upload buffer is (despite
+            // what the name might suggest) the resource we want.
+            buffer.resource = upload_buffer;
+
+            // Get a mapped pointer to this constant buffer so we can write to it from the CPU.
+            auto mapped_pointer = static_cast<uint8_t *>(nullptr);
+
+            const auto no_read_range = D3D12_RANGE{
+                .Begin = 0u,
+                .End = 0u,
+            };
+
+            throw_if_failed(buffer.resource->Map(0u, &no_read_range, reinterpret_cast<void **>(&mapped_pointer)));
+            buffer.mapped_pointer = mapped_pointer;
         }
         else
         {
@@ -193,6 +207,19 @@ namespace serenity::graphics
                                                current_srv_descriptor.cpu_descriptor_handle);
 
             buffer.srv_index = m_cbv_srv_uav_descriptor_heap->get_descriptor_index(current_srv_descriptor);
+            m_cbv_srv_uav_descriptor_heap->offset_current_handle();
+        }
+        break;
+
+        case BufferUsage::ConstantBuffer: {
+            const auto cbv_desc = D3D12_CONSTANT_BUFFER_VIEW_DESC{
+                .BufferLocation = buffer.resource.Get()->GetGPUVirtualAddress(),
+                .SizeInBytes = static_cast<uint32_t>(buffer.size_in_bytes),
+            };
+
+            const auto current_cbv_descriptor = m_cbv_srv_uav_descriptor_heap->get_current_handle();
+            m_device->CreateConstantBufferView(&cbv_desc, current_cbv_descriptor.cpu_descriptor_handle);
+
             m_cbv_srv_uav_descriptor_heap->offset_current_handle();
         }
         break;

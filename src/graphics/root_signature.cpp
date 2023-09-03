@@ -6,7 +6,7 @@ namespace serenity::graphics
     {
         // Create the bindless root signature with some static samplers and 64 32 bit root constants.
         auto root_signature_parameters = CD3DX12_ROOT_PARAMETER1{};
-        root_signature_parameters.InitAsConstants(64u, 0u, 0u);
+        root_signature_parameters.InitAsConstants(RootSignature::NUM_32_BIT_ROOT_CONSTANTS, 0u, 0u);
 
         const auto versioned_root_signature_desc =
             CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC(1u, &root_signature_parameters, 0u, nullptr,

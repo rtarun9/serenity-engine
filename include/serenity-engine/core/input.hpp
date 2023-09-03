@@ -16,15 +16,13 @@ namespace serenity::core
         ArrowLeft,
         ArrowDown,
         ArrowRight,
-        Total
+        Count
     };
 
-    struct Input
+    struct KeyboardState
     {
         // True indicates key is pressed, false indicates it is not.
-        std::array<bool, get_enum_class_value(Keys::Total)> key_states{};
-
-        bool quit{false};
+        std::array<bool, get_enum_class_value(Keys::Count)> key_states{};
 
         bool is_key_pressed(const Keys key)
         {
@@ -35,5 +33,19 @@ namespace serenity::core
         {
             key_states.at(get_enum_class_value(key)) = state;
         }
+    };
+
+    struct MouseState
+    {
+        bool left_button_down{false};
+        bool right_button_down{false};
+
+        Float2 mouse_position{};
+    };
+
+    struct Input
+    {
+        KeyboardState keyboard{};
+        MouseState mouse{};
     };
 } // namespace serenity::core

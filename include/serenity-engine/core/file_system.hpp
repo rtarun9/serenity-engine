@@ -6,8 +6,8 @@ namespace serenity::core
 {
     // A singleton class primarily used to get root source directory / paths relative to the executable.
     // NOTE : Instance of log will be created by engine, no need to manually define it.
-    // The SingletonInstance<> provides a get() method, which will be used to access file system - related functions of
-    // this class.
+    // The SingletonInstance<> provides a instance() method, which will be used to access file system - related
+    // functions of this class.
     class FileSystem final : public SingletonInstance<FileSystem>
     {
       public:

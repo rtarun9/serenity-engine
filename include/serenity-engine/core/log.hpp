@@ -6,16 +6,13 @@
 
 namespace serenity::core
 {
-    // A singleton class for logging purposes. Logs to console and file.
-    // Uses spdlog internally.
+    // A singleton class for logging purposes. Logs to console and file. Uses spdlog internally.
     // NOTE : Instance of log will be created by engine, no need to manually define it.
-    // The SingletonInstance<> provides a get() method, which will be used to access logging - related functions of this
-    // class.
-    // note(rtarun9) : Add option to disable logging to file in future.
+    // The SingletonInstance<> provides a instance() method, which will be used to access logging - related functions of
     class Log final : public SingletonInstance<Log>
     {
       public:
-        explicit Log();
+        explicit Log(const bool enable_console_log = true, const bool enable_file_log = true);
         ~Log();
 
         void info(const std::string_view message);

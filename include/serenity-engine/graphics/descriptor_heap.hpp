@@ -27,7 +27,7 @@ namespace serenity::graphics
                                 const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type, const uint32_t num_descriptors);
         ~DescriptorHeap();
 
-        comptr<ID3D12DescriptorHeap> get_descriptor_heap() const
+        comptr<ID3D12DescriptorHeap>& get_descriptor_heap() 
         {
             return m_descriptor_heap;
         }

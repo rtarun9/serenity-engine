@@ -81,26 +81,19 @@ class Game final : public serenity::core::Application
         command_list.execute_barriers();
 
         // Clear rtv and set new clear color.
-        command_list.get_command_list()->ClearRenderTargetView(
-            back_buffer.descriptor_handle.cpu_descriptor_handle,
-            std::array{cos(m_frame_index / 90.0f), 0.2f, abs(sinf(m_frame_index / 120.0f)), 1.0f}.data(), 0u, nullptr);
+        command_list.clear_render_target_views(
+            back_buffer.descriptor_handle,
+            std::array{cos(m_frame_index / 90.0f), 0.2f, abs(sinf(m_frame_index / 120.0f)), 1.0f});
 
         // Record the rendering related code.
-        command_list.get_command_list()->OMSetRenderTargets(1u, &back_buffer.descriptor_handle.cpu_descriptor_handle,
-                                                            true, nullptr);
-        command_list.set_descriptor_heaps(std::array{&graphics_device.get_cbv_stv_uav_descriptor_heap()});
+        command_list.set_render_targets(std::array{back_buffer.descriptor_handle});
+        command_list.set_descriptor_heaps(std::array{&graphics_device.get_cbv_srv_uav_descriptor_heap()});
 
-        command_list.get_command_list()->IASetPrimitiveTopology(D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        const auto index_buffer_view = D3D12_INDEX_BUFFER_VIEW{
-            .BufferLocation = m_triangle_index_buffer.resource.Get()->GetGPUVirtualAddress(),
-            .SizeInBytes = static_cast<uint32_t>(m_triangle_index_buffer.size_in_bytes),
-            .Format = DXGI_FORMAT_R16_UINT,
-        };
+        command_list.set_primitive_topology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+        command_list.set_index_buffer(m_triangle_index_buffer);
 
-        command_list.get_command_list()->IASetIndexBuffer(&index_buffer_view);
-        command_list.get_command_list()->SetGraphicsRootSignature(
-            serenity::graphics::RootSignature::instance().get_root_signature().Get());
-        command_list.get_command_list()->SetPipelineState(m_triangle_pipeline.get_pipeline_state().Get());
+        command_list.set_bindless_graphics_root_signature();
+        command_list.set_pipeline_state(m_triangle_pipeline);
 
         struct RenderResources
         {
@@ -113,15 +106,14 @@ class Game final : public serenity::core::Application
             .color_buffer_index = m_triangle_color_buffer.srv_index,
         };
 
-        command_list.get_command_list()->SetGraphicsRoot32BitConstants(0u, 64u, &render_resources, 0u);
+        command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte*>(&render_resources));
 
         const auto viewport = swapchain.get_viewport();
         const auto scissor_rect = swapchain.get_scissor_rect();
 
-        command_list.get_command_list()->RSSetViewports(1u, &viewport);
-        command_list.get_command_list()->RSSetScissorRects(1u, &scissor_rect);
-        
-        command_list.get_command_list()->DrawInstanced(3u, 1u, 0u, 0u);
+        command_list.set_viewport_and_scissor_rect(viewport, scissor_rect);
+
+        command_list.draw_instanced(3u, 1u);
 
         // Transition backbuffer from render target to presentation.
         command_list.add_resource_barrier(back_buffer.resource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,

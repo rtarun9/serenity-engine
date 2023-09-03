@@ -11,6 +11,7 @@ static constexpr bool SERENITY_DEBUG = false;
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cstddef>
 #include <exception>
 #include <filesystem>
 #include <format>

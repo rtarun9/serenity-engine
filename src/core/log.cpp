@@ -6,16 +6,26 @@
 
 namespace serenity::core
 {
-    Log::Log()
+    Log::Log(const bool enable_console_log, const bool enable_file_log)
     {
         // Create the sinks (a console sink and file sink).
         auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
         console_sink->set_level(spdlog::level::info);
         console_sink->set_pattern("[%^%l%$] %v");
 
+        if (!enable_console_log)
+        {
+            console_sink->set_level(spdlog::level::off);
+        }
+
         auto file_sink = std::make_shared<spdlog::sinks::basic_file_sink_mt>("logs/log.txt", true);
         file_sink->set_level(spdlog::level::trace);
         file_sink->set_pattern("%+");
+
+        if (!enable_file_log)
+        {
+            file_sink->set_level(spdlog::level::off);
+        }
 
         const auto sinks = std::vector<spdlog::sink_ptr>{console_sink, file_sink};
 
@@ -41,7 +51,7 @@ namespace serenity::core
     {
         m_logger->warn(message);
     }
-     
+
     void Log::error(const std::string_view message, const std::source_location source_location)
     {
         m_logger->error(std::string(message) + format_source_location(source_location));

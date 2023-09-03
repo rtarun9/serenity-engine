@@ -6,7 +6,8 @@ namespace serenity::graphics
 {
     // Helper functions for D3D12.
 
-    template <typename T> using comptr = Microsoft::WRL::ComPtr<T>;
+    template <typename T>
+    using comptr = Microsoft::WRL::ComPtr<T>;
 
     static inline void throw_if_failed(const HRESULT hr,
                                        const std::source_location source_location = std::source_location::current())

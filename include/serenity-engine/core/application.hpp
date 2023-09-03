@@ -9,14 +9,17 @@
 
 namespace serenity::core
 {
-    // All serenity engine application's must inherit from the class application.
-    // NOTE : Implement the 'create_application' function that returns a unique_ptr of of derived class of Application.
+    // All serenity engine application's must inherit from this Application abstract class.
+    // NOTE : Implement the 'create_application()' function that returns a unique_ptr of of derived class of
+    // Application. The entry point / main function will use the create_application() function to get an object of
+    // Application (a derived class that is) and call the run method.
     class Application
     {
       public:
         explicit Application();
         virtual ~Application() = default;
 
+        // The run method should not be overriden.
         virtual void run() final;
 
         // To be implemented by applications inheriting from this class.
@@ -30,14 +33,14 @@ namespace serenity::core
         Application(Application &&other) = delete;
         Application &operator=(Application &&other) = delete;
 
-        // Classes that inherit SingletonInstance can be accessed using T::get(), so there is no need to make the
+        // Classes that inherit SingletonInstance can be accessed using T::instance(), so there is no need to make the
         // protected / public.
       private:
         std::unique_ptr<Log> m_log{};
         std::unique_ptr<FileSystem> m_file_system{};
         std::unique_ptr<graphics::Device> m_graphics_device{};
 
-      public:
+      protected:
         Input m_input{};
         std::unique_ptr<window::Window> m_window{};
 
@@ -46,6 +49,6 @@ namespace serenity::core
     };
 
     // To be implemented in only a single class that inherits from Application.
-    extern std::unique_ptr<Application> create_application();
+    extern [[nodiscard]] std::unique_ptr<Application> create_application();
 
 } // namespace serenity::core

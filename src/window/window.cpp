@@ -21,6 +21,7 @@ namespace serenity::window
 
         m_window = SDL_CreateWindowWithPosition(title.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                                 static_cast<int>(dimension.x), static_cast<int>(dimension.y), 0);
+        SDL_SetWindowBordered(m_window, SDL_FALSE);
 
         if (!m_window)
         {
@@ -47,65 +48,112 @@ namespace serenity::window
     void Window::poll_events(core::Input &input)
     {
         SDL_Event event{};
+
+        auto &keyboard = input.keyboard;
+        auto &mouse = input.mouse;
+
         while (SDL_PollEvent(&event))
         {
-            if (event.type == SDL_EVENT_QUIT)
-            {
-                input.quit = true;
-            }
-
             const auto *keyboard_state = SDL_GetKeyboardState(nullptr);
-
-            std::fill(input.key_states.begin(), input.key_states.end(), false);
+            std::fill(keyboard.key_states.begin(), keyboard.key_states.end(), false);
 
             if (keyboard_state[SDL_SCANCODE_W])
             {
-                input.set_key_state(core::Keys::W, true);
+                keyboard.set_key_state(core::Keys::W, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_A])
             {
-                input.set_key_state(core::Keys::A, true);
+                keyboard.set_key_state(core::Keys::A, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_S])
             {
-                input.set_key_state(core::Keys::S, true);
+                keyboard.set_key_state(core::Keys::S, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_D])
             {
-                input.set_key_state(core::Keys::D, true);
+                keyboard.set_key_state(core::Keys::D, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_SPACE])
             {
-                input.set_key_state(core::Keys::Space, true);
+                keyboard.set_key_state(core::Keys::Space, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_ESCAPE])
             {
-                input.set_key_state(core::Keys::Escape, true);
+                keyboard.set_key_state(core::Keys::Escape, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_UP])
             {
-                input.set_key_state(core::Keys::ArrowUp, true);
+                keyboard.set_key_state(core::Keys::ArrowUp, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_LEFT])
             {
-                input.set_key_state(core::Keys::ArrowLeft, true);
+                keyboard.set_key_state(core::Keys::ArrowLeft, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_DOWN])
             {
-                input.set_key_state(core::Keys::ArrowDown, true);
+                keyboard.set_key_state(core::Keys::ArrowDown, true);
             }
 
             if (keyboard_state[SDL_SCANCODE_RIGHT])
             {
-                input.set_key_state(core::Keys::ArrowRight, true);
+                keyboard.set_key_state(core::Keys::ArrowRight, true);
+            }
+
+            // Handle window movement (for borderless window).
+            switch (event.type)
+            {
+            case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+                if (event.button.button == SDL_BUTTON_LEFT)
+                {
+                    mouse.left_button_down = true;
+                    auto mouse_pos_x = 0.0f;
+                    auto mouse_pos_y = 0.0f;
+
+                    SDL_GetMouseState(&mouse_pos_x, &mouse_pos_y);
+
+                    mouse.mouse_position = Float2{
+                        .x = mouse_pos_x,
+                        .y = mouse_pos_y,
+                    };
+                }
+            }
+            break;
+
+            case SDL_EVENT_MOUSE_BUTTON_UP: {
+                if (event.button.button == SDL_BUTTON_LEFT)
+                {
+                    mouse.left_button_down = false;
+                }
+            }
+            break;
+
+            case SDL_EVENT_MOUSE_MOTION: {
+                if (mouse.left_button_down)
+                {
+                    auto mouse_pos_x = 0.0f;
+                    auto mouse_pos_y = 0.0f;
+
+                    SDL_GetMouseState(&mouse_pos_x, &mouse_pos_y);
+
+                    const auto dx = static_cast<int>(mouse_pos_x - mouse.mouse_position.x);
+                    const auto dy = static_cast<int>(mouse_pos_y - mouse.mouse_position.y);
+
+                    auto window_pos_x = static_cast<int>(0);
+                    auto window_pos_y = static_cast<int>(0);
+
+                    SDL_GetWindowPosition(m_window, &window_pos_x, &window_pos_y);
+                    SDL_SetWindowPosition(m_window, window_pos_x + dx, window_pos_y + dy);
+                }
+            }
+            break;
             }
         }
     }

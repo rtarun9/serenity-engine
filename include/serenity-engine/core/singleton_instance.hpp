@@ -8,15 +8,16 @@ namespace serenity::core
     // Primary reference :
     // https://github.com/karnkaul/LittleEngineVk/blob/main/engine/include/le/core/mono_instance.hpp.
 
-    template <typename T> class SingletonInstance
+    template <typename T>
+    class SingletonInstance
     {
       protected:
         explicit SingletonInstance()
         {
             if (s_instance)
             {
-                throw std::runtime_error(
-                    std::format("Instance already exist for type {}. Did you mean to use get()?", typeid(T).name()));
+                throw std::runtime_error(std::format(
+                    "Instance already exist for type {}. Did you mean to use instance()?", typeid(T).name()));
             }
 
             s_instance = static_cast<T *>(this);

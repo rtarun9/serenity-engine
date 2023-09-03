@@ -30,12 +30,7 @@ namespace serenity::core
         {
             m_window->poll_events(m_input);
 
-            if (m_input.quit == true)
-            {
-                quit = true;
-            }
-
-            if (m_input.is_key_pressed(Keys::Escape))
+            if (m_input.keyboard.is_key_pressed(Keys::Escape))
             {
                 quit = true;
             }

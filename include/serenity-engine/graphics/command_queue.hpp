@@ -15,7 +15,7 @@ namespace serenity::graphics
         explicit CommandQueue(const comptr<ID3D12Device> &device, const D3D12_COMMAND_LIST_TYPE command_list_type);
         ~CommandQueue();
 
-        comptr<ID3D12CommandQueue> &get_command_queue()
+        comptr<ID3D12CommandQueue> &get_command_queue() 
         {
             return m_command_queue;
         }
@@ -24,7 +24,8 @@ namespace serenity::graphics
         // (including this current signal call).
         uint64_t signal();
 
-        // Block the cpu thread until the fence value has reached the given value.
+        // Block the cpu thread until the fence value has reached the given value (i.e fence->GetCompletedValue() must
+        // be atleast equal to fence_value for this function to unblock the CPU thread).
         void wait_for_fence_value(const uint64_t fence_value);
 
         // Wait for GPU to complete execution of all instructions given to it.

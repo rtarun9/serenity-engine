@@ -6,6 +6,8 @@ namespace serenity::graphics
     {
         cpu_descriptor_handle.ptr += static_cast<size_t>(count) * descriptor_size;
         gpu_descriptor_handle.ptr += static_cast<uint64_t>(count) * descriptor_size;
+
+        index += count;
     }
 
     DescriptorHeap::DescriptorHeap(const comptr<ID3D12Device> &device,
@@ -40,6 +42,7 @@ namespace serenity::graphics
                                          ? m_descriptor_heap->GetGPUDescriptorHandleForHeapStart()
                                          : D3D12_GPU_DESCRIPTOR_HANDLE{},
             .descriptor_size = m_descriptor_size,
+            .index = 0u,
         };
 
         m_current_descriptor_handle = m_descriptor_handle_for_start;

@@ -2,7 +2,7 @@
 
 #include "serenity-engine/graphics/d3d_utils.hpp"
 
-// Setting up the agility SDK parameters.   
+// Setting up the agility SDK parameters.
 extern "C"
 {
     __declspec(dllexport) extern const UINT D3D12SDKVersion = 711u;
@@ -114,6 +114,6 @@ namespace serenity::graphics
 
     Pipeline Device::create_pipeline(const PipelineCreationDesc &pipeline_creation_desc)
     {
-        return Pipeline(m_device, pipeline_creation_desc);
+        return std::move(Pipeline(m_device, pipeline_creation_desc));
     }
 } // namespace serenity::graphics

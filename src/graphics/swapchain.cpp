@@ -38,7 +38,7 @@ namespace serenity::graphics
         // manually. Setup viewport and scissor rect.
         throw_if_failed(factory->MakeWindowAssociation(window_handle, DXGI_MWA_NO_ALT_ENTER));
 
-        m_viewport = {
+        m_viewport = D3D12_VIEWPORT{
             .TopLeftX = 0.0f,
             .TopLeftY = 0.0f,
             .Width = static_cast<float>(dimension.x),
@@ -48,14 +48,12 @@ namespace serenity::graphics
 
         };
 
-        m_scissor_rect = {
+        m_scissor_rect = D3D12_RECT{
             .left = 0u,
             .top = 0u,
             .right = static_cast<LONG>(dimension.x),
             .bottom = static_cast<LONG>(dimension.y),
         };
-
-        m_current_backbuffer_index = m_swapchain->GetCurrentBackBufferIndex();
 
         update_rtvs(device, rtv_descriptor_heap, dimension);
 
@@ -108,6 +106,8 @@ namespace serenity::graphics
 
             ++back_buffer_index;
         }
+
+        m_current_backbuffer_index = m_swapchain->GetCurrentBackBufferIndex();
     }
 
 } // namespace serenity::graphics

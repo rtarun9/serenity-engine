@@ -22,8 +22,9 @@ namespace serenity::graphics
     {
       public:
         explicit Swapchain(const comptr<IDXGIFactory5> &factory, const comptr<ID3D12Device5> &device,
-                           const comptr<ID3D12CommandQueue> &direct_command_queue, const DescriptorHeap &rtv_descriptor_heap,
-                           const Uint2 dimension, const HWND window_handle, bool enable_vsync = true);
+                           const comptr<ID3D12CommandQueue> &direct_command_queue,
+                           const DescriptorHeap &rtv_descriptor_heap, const Uint2 dimension, const HWND window_handle,
+                           bool enable_vsync = true);
         ~Swapchain();
 
         uint32_t get_current_backbuffer_index() const
