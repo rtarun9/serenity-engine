@@ -15,6 +15,7 @@ static constexpr bool SERENITY_DEBUG = false;
 #include <exception>
 #include <filesystem>
 #include <format>
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <optional>

@@ -6,6 +6,45 @@
 
 namespace serenity::window
 {
+    Window::Window(const std::string_view title, const Float2 screen_percent_to_cover)
+    {
+        if (screen_percent_to_cover.x == 0 || screen_percent_to_cover.y == 0)
+        {
+            core::Log::instance().critical("Window dimensions cannot be 0");
+        }
+
+        // Initialize SDL3.
+        if (SDL_Init(SDL_INIT_EVERYTHING) < 0)
+        {
+            core::Log::instance().critical("Failed to initialize SDL3");
+        }
+
+        // Get monitor dimensions.
+        auto display_mode = SDL_GetCurrentDisplayMode(SDL_GetPrimaryDisplay());
+
+        m_dimension = {
+            .x = static_cast<uint32_t>(display_mode->w * screen_percent_to_cover.x / 100.0f),
+            .y = static_cast<uint32_t>(display_mode->h * screen_percent_to_cover.y / 100.0f),
+        };
+
+        m_window = SDL_CreateWindowWithPosition(title.data(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+                                                static_cast<int>(m_dimension.x), static_cast<int>(m_dimension.y), 0);
+        SDL_SetWindowBordered(m_window, SDL_FALSE);
+
+        if (!m_window)
+        {
+            core::Log::instance().critical("Failed to create SDL window");
+        }
+
+        // Get the underlying OS window handle.
+        SDL_SysWMinfo window_info{};
+        SDL_GetWindowWMInfo(m_window, &window_info, SDL_SYSWM_CURRENT_VERSION);
+
+        m_window_handle = window_info.info.win.window;
+
+        core::Log::instance().info("Created window");
+    }
+
     Window::Window(const std::string_view title, const Uint2 dimension) : m_dimension(dimension)
     {
         if (dimension.x == 0 || dimension.y == 0)
@@ -56,6 +95,11 @@ namespace serenity::window
         {
             const auto *keyboard_state = SDL_GetKeyboardState(nullptr);
             std::fill(keyboard.key_states.begin(), keyboard.key_states.end(), false);
+
+            for (const auto &callback : m_event_callbacks)
+            {
+                callback(event);
+            }
 
             if (keyboard_state[SDL_SCANCODE_W])
             {
@@ -111,7 +155,7 @@ namespace serenity::window
             switch (event.type)
             {
             case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-                if (event.button.button == SDL_BUTTON_LEFT)
+                if (event.button.button == SDL_BUTTON_LEFT && keyboard.is_key_pressed(core::Keys::Space))
                 {
                     mouse.left_button_down = true;
                     auto mouse_pos_x = 0.0f;
@@ -156,5 +200,10 @@ namespace serenity::window
             break;
             }
         }
+    }
+
+    void Window::add_event_callback(std::function<void(SDL_Event)> callback)
+    {
+        m_event_callbacks.emplace_back(callback);
     }
 } // namespace serenity::window

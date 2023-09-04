@@ -9,6 +9,8 @@
 #include "serenity-engine/graphics/device.hpp"
 #include "serenity-engine/window/window.hpp"
 
+#include "serenity-engine/editor/editor.hpp"
+
 namespace serenity::core
 {
     // All serenity engine application's must inherit from this Application abstract class.
@@ -40,10 +42,10 @@ namespace serenity::core
       private:
         std::unique_ptr<Log> m_log{};
         std::unique_ptr<FileSystem> m_file_system{};
-        
+
         std::unique_ptr<graphics::Device> m_graphics_device{};
 
-        std::unique_ptr<asset::MeshLoader> m_mesh_loader{};
+        std::unique_ptr<editor::Editor> m_editor{};
 
       protected:
         Input m_input{};

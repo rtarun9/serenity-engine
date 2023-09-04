@@ -11,16 +11,16 @@ namespace serenity::core
 
         m_file_system = std::make_unique<FileSystem>();
 
-        const auto window_dimension = Uint2{
-            .x = 1080u,
-            .y = 720u,
+        const auto screen_percent_to_cover = Float2{
+            .x = 90.0f,
+            .y = 90.0f,
         };
 
-        m_window = std::make_unique<window::Window>("serenity-engine", window_dimension);
+        m_window = std::make_unique<window::Window>("serenity-engine", screen_percent_to_cover);
 
-        m_graphics_device = std::make_unique<graphics::Device>(m_window->get_window_handle(), window_dimension);
+        m_graphics_device = std::make_unique<graphics::Device>(m_window->get_window_handle(), m_window->get_dimensions());
 
-        m_mesh_loader = std::make_unique<asset::MeshLoader>();
+        m_editor = std::make_unique<editor::Editor>(*(m_window.get()));
     }
 
     void Application::run()

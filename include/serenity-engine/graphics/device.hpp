@@ -24,6 +24,11 @@ namespace serenity::graphics
         explicit Device(const HWND window_handle, const Uint2 dimensions);
         ~Device();
 
+        comptr<ID3D12Device> get_device() const
+        {
+            return m_device;
+        }
+
         CommandList &get_current_frame_direct_command_list() const
         {
             return *(m_direct_command_lists.at(m_current_swapchain_backbuffer_index).get());

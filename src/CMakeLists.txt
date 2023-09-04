@@ -8,6 +8,7 @@ add_subdirectory(utils)
 add_subdirectory(window)
 add_subdirectory(scene)
 add_subdirectory(asset)
+add_subdirectory(editor)
 add_subdirectory(main)
 
 target_precompile_headers(serenity-engine PUBLIC "${PROJECT_SOURCE_DIR}/include/serenity-engine/pch.hpp")

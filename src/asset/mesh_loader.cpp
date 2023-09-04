@@ -9,9 +9,9 @@
 #define TINYGLTF_NO_EXTERNAL_IMAGE
 #include <tiny_gltf.h>
 
-namespace serenity::asset
+namespace serenity::asset::MeshLoader
 {
-    scene::Mesh MeshLoader::load_mesh(const std::string_view mesh_path)
+    scene::Mesh load_mesh(const std::string_view mesh_path)
     {
         auto mesh = scene::Mesh{};
 

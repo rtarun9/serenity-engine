@@ -22,7 +22,7 @@ class Game final : public serenity::core::Application
         const auto pixel_shader =
             ShaderCompiler::instance().compile(ShaderTypes::Pixel, L"shaders/mesh_viewer.hlsl", L"ps_main");
 
-        m_cube = serenity::asset::MeshLoader::instance().load_mesh("data/Cube/glTF/Cube.gltf");
+        m_cube = serenity::asset::MeshLoader::load_mesh("data/Cube/glTF/Cube.gltf");
 
         m_transform_buffer = Device::instance().create_buffer<TransformBuffer>(BufferCreationDesc{
             .usage = BufferUsage::ConstantBuffer,
@@ -38,11 +38,7 @@ class Game final : public serenity::core::Application
         m_depth_texture = Device::instance().create_texture(TextureCreationDesc{
             .usage = TextureUsage::Depth,
             .format = DXGI_FORMAT_D32_FLOAT,
-            .dimension =
-                serenity::Uint2{
-                    .x = 1080u,
-                    .y = 720u,
-                },
+            .dimension = m_window->get_dimensions(),
             .name = L"Depth Texture",
 
         });
@@ -117,6 +113,8 @@ class Game final : public serenity::core::Application
         command_list.set_viewport_and_scissor_rect(viewport, scissor_rect);
 
         command_list.draw_indexed_instanced(m_cube.value().indices_count, 1u);
+
+        serenity::editor::Editor::instance().render(command_list);
 
         // Transition backbuffer from render target to presentation.
         command_list.add_resource_barrier(back_buffer.resource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
