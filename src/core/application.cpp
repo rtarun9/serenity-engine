@@ -19,6 +19,8 @@ namespace serenity::core
         m_window = std::make_unique<window::Window>("serenity-engine", window_dimension);
 
         m_graphics_device = std::make_unique<graphics::Device>(m_window->get_window_handle(), window_dimension);
+
+        m_mesh_loader = std::make_unique<asset::MeshLoader>();
     }
 
     void Application::run()

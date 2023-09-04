@@ -18,6 +18,7 @@ static constexpr bool SERENITY_DEBUG = false;
 #include <iostream>
 #include <memory>
 #include <optional>
+#include <ranges>
 #include <source_location>
 #include <span>
 #include <stdexcept>

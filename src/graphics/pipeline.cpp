@@ -12,6 +12,8 @@ namespace serenity::graphics
         // Create pipeline state object.
         if (pipeline_creation_desc.pipeline_variant == PipelineVariant::Graphics)
         {
+            const auto depth_enable = pipeline_creation_desc.dsv_format != DXGI_FORMAT_UNKNOWN;
+
             const auto graphics_pipeline_state_desc = D3D12_GRAPHICS_PIPELINE_STATE_DESC{
 
                 .pRootSignature = RootSignature::instance().get_root_signature().Get(),
@@ -31,13 +33,14 @@ namespace serenity::graphics
                 .SampleMask = D3D12_DEFAULT_SAMPLE_MASK,
                 .RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
                 .DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(
-                    false, D3D12_DEPTH_WRITE_MASK_ALL, D3D12_COMPARISON_FUNC_LESS_EQUAL, false, 0u, 0u,
+                    depth_enable, D3D12_DEPTH_WRITE_MASK_ALL, D3D12_COMPARISON_FUNC_LESS_EQUAL, false, 0u, 0u,
                     D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO,
                     D3D12_COMPARISON_FUNC_LESS_EQUAL, D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO,
                     D3D12_STENCIL_OP_ZERO, D3D12_COMPARISON_FUNC_EQUAL),
                 .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
                 .NumRenderTargets = 1u,
                 .RTVFormats = {DXGI_FORMAT_R8G8B8A8_UNORM},
+                .DSVFormat = pipeline_creation_desc.dsv_format,
                 .SampleDesc = {1u, 0u},
                 .NodeMask = 0u,
                 .Flags = D3D12_PIPELINE_STATE_FLAG_NONE,

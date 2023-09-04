@@ -76,6 +76,7 @@ namespace serenity::graphics
         m_cbv_srv_uav_descriptor_heap =
             std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 100u);
 
+        m_dsv_descriptor_heap = std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 3u);
         // Create the swapchain.
         m_swapchain = std::make_unique<Swapchain>(m_factory, m_device, m_direct_command_queue->get_command_queue(),
                                                   *(m_rtv_descriptor_heap.get()), dimension, window_handle);
@@ -110,6 +111,62 @@ namespace serenity::graphics
         // Wait for the previous frame (i.e the new m_current_swapchain_backbuffer_index's previous command's) to finish
         // execution.
         m_direct_command_queue->wait_for_fence_value(m_frame_fence_values.at(m_current_swapchain_backbuffer_index));
+    }
+
+    Texture Device::create_texture(const TextureCreationDesc &texture_creation_desc, const std::byte *data)
+    {
+        auto texture = Texture{};
+
+        // If the texture's data is not nullptr, then a upload buffer must be created to upload the data from cpu -> cpu
+        // / gpu accesible memory, and finally copied into gpu only memory.
+        if (!(texture_creation_desc.usage == TextureUsage::Depth ||
+              texture_creation_desc.usage == TextureUsage::DepthStencil))
+        {
+            core::Log::instance().critical("This function has not been implemented yet!");
+        }
+
+        const auto texture_resource_desc = D3D12_RESOURCE_DESC{
+            .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
+            .Alignment = 0u,
+            .Width = static_cast<UINT64>(texture_creation_desc.dimension.x),
+            .Height = texture_creation_desc.dimension.y,
+            .DepthOrArraySize = 1u,
+            .MipLevels = 1u,
+            .Format = texture_creation_desc.format,
+            .SampleDesc = {1u, 0u},
+            .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
+            .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+        };
+
+        const auto default_heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+
+        const auto clear_color = D3D12_CLEAR_VALUE{
+            .Format = texture_creation_desc.format,
+            .DepthStencil = {.Depth = 1.0f, .Stencil = 1u},
+        };
+
+        throw_if_failed(m_device->CreateCommittedResource(&default_heap_properties, D3D12_HEAP_FLAG_NONE,
+                                                          &texture_resource_desc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                                          &clear_color, IID_PPV_ARGS(&texture.resource)));
+
+        // Create the depth stencil view.
+        auto current_dsv_descriptor = m_dsv_descriptor_heap->get_current_handle();
+        const auto dsv_desc = D3D12_DEPTH_STENCIL_VIEW_DESC{
+            .Format = texture_creation_desc.format,
+            .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
+            .Texture2D =
+                {
+                    .MipSlice = 0u,
+                },
+        };
+
+        m_device->CreateDepthStencilView(texture.resource.Get(), &dsv_desc,
+                                         current_dsv_descriptor.cpu_descriptor_handle);
+        texture.dsv_index = current_dsv_descriptor.index;
+
+        m_dsv_descriptor_heap->offset_current_handle();
+
+        return texture;
     }
 
     Pipeline Device::create_pipeline(const PipelineCreationDesc &pipeline_creation_desc)

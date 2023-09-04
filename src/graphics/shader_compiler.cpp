@@ -11,8 +11,8 @@ namespace serenity::graphics
         throw_if_failed(::DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_compiler)));
         throw_if_failed(m_utils->CreateDefaultIncludeHandler(&m_include_handler));
 
-        // Get the root directory.
-        m_root_directory = string_to_wstring(core::FileSystem::instance().get_root_directory());
+        // Get the shader directory.
+        m_shader_directory = string_to_wstring(core::FileSystem::instance().get_relative_path("shaders/"));
 
         core::Log::instance().info("Created shader compiler");
     }
@@ -59,7 +59,7 @@ namespace serenity::graphics
             L"-Qstrip_debug",
             L"-Qstrip_reflect",
             L"-I",
-            m_root_directory.c_str(),
+            m_shader_directory.c_str(),
         };
 
         // Indicate that the shader should be in a debuggable state if in debug mode.

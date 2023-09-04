@@ -4,6 +4,8 @@
 #include "input.hpp"
 #include "log.hpp"
 
+#include "serenity-engine/asset/mesh_loader.hpp"
+
 #include "serenity-engine/graphics/device.hpp"
 #include "serenity-engine/window/window.hpp"
 
@@ -38,14 +40,17 @@ namespace serenity::core
       private:
         std::unique_ptr<Log> m_log{};
         std::unique_ptr<FileSystem> m_file_system{};
+        
         std::unique_ptr<graphics::Device> m_graphics_device{};
+
+        std::unique_ptr<asset::MeshLoader> m_mesh_loader{};
 
       protected:
         Input m_input{};
         std::unique_ptr<window::Window> m_window{};
 
         // The number of frames rendered.
-        uint32_t m_frame_index{};
+        uint32_t m_frame_count{};
     };
 
     // To be implemented in only a single class that inherits from Application.

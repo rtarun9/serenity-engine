@@ -1,4 +1,4 @@
-add_executable(game "sandbox.cpp")
+add_executable(game "game.cpp")
 target_link_libraries(game PRIVATE serenity-engine)
 
 # Set the Visual studio debugger working directory.

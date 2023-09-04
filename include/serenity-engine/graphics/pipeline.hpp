@@ -19,6 +19,8 @@ namespace serenity::graphics
         Shader vertex_shader{};
         Shader pixel_shader{};
 
+        DXGI_FORMAT dsv_format{DXGI_FORMAT_UNKNOWN};
+
         std::wstring name{};
     };
 

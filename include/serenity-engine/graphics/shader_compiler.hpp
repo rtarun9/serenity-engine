@@ -41,6 +41,6 @@ namespace serenity::graphics
         comptr<IDxcUtils> m_utils{};
         comptr<IDxcIncludeHandler> m_include_handler{};
 
-        std::wstring m_root_directory{};
+        std::wstring m_shader_directory{};
     };
 } // namespace serenity::graphics

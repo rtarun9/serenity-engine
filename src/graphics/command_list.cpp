@@ -71,6 +71,13 @@ namespace serenity::graphics
                                               nullptr);
     }
 
+    void CommandList::clear_depth_stencil_view(const DescriptorHandle dsv_descriptor_handle, const float depth,
+                                               const uint32_t stencil) const
+    {
+        m_command_list->ClearDepthStencilView(dsv_descriptor_handle.cpu_descriptor_handle, D3D12_CLEAR_FLAG_DEPTH,
+                                              depth, stencil, 0u, nullptr);
+    }
+
     void CommandList::set_render_targets(const std::span<const DescriptorHandle> rtv_descriptor_handle,
                                          const std::optional<DescriptorHandle> dsv_descriptor_handle) const
     {
@@ -131,8 +138,13 @@ namespace serenity::graphics
         m_command_list->RSSetScissorRects(1u, &scissor_rect);
     }
 
-    void CommandList::draw_instanced(const uint32_t vertex_count, const uint32_t instance_count)
+    void CommandList::draw_instanced(const uint32_t vertex_count, const uint32_t instance_count) const
     {
-        m_command_list->DrawInstanced(3u, 1u, 0u, 0u);
+        m_command_list->DrawInstanced(vertex_count, instance_count, 0u, 0u);
+    }
+
+    void CommandList::draw_indexed_instanced(const uint32_t indices_count, const uint32_t instance_count) const
+    {
+        m_command_list->DrawIndexedInstanced(indices_count, instance_count, 0u, 0u, 0u);
     }
 } // namespace serenity::graphics

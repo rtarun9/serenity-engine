@@ -21,8 +21,15 @@ FetchContent_Declare(
     GIT_PROGRESS   TRUE
 )
 
-FetchContent_MakeAvailable(SDL3 glm spdlog)
+option(TINYGLTF_BUILD_LOADER_EXAMPLE "" OFF)
+FetchContent_Declare(
+    tinygltf
+    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
+    GIT_TAG 544969b7324cd6bba29f6203c7d78c7ea92dbab0
+)
+
+FetchContent_MakeAvailable(SDL3 glm spdlog tinygltf)
 
 add_library(external INTERFACE)
-target_link_libraries(external INTERFACE SDL3::SDL3)	
-target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${glm_SOURCE_DIR} ${spdlog_SOURCE_DIR}/include) 
+target_link_libraries(external INTERFACE SDL3::SDL3 tinygltf)	
+target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${glm_SOURCE_DIR} ${spdlog_SOURCE_DIR}/include ${tinygltf_SOURCE_DIR}) 

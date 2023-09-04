@@ -9,7 +9,7 @@ namespace serenity::graphics
     template <typename T>
     using comptr = Microsoft::WRL::ComPtr<T>;
 
-    static inline void throw_if_failed(const HRESULT hr,
+    inline void throw_if_failed(const HRESULT hr,
                                        const std::source_location source_location = std::source_location::current())
     {
         if (FAILED(hr))
@@ -18,12 +18,12 @@ namespace serenity::graphics
         }
     }
 
-    static inline void set_name(ID3D12Object *const object, const std::wstring_view name)
+    inline void set_name(ID3D12Object *const object, const std::wstring_view name)
     {
         throw_if_failed(object->SetName(name.data()));
     }
 
-    static inline std::wstring command_list_type_to_wstring(const D3D12_COMMAND_LIST_TYPE command_list_type)
+    inline std::wstring command_list_type_to_wstring(const D3D12_COMMAND_LIST_TYPE command_list_type)
     {
         switch (command_list_type)
         {
@@ -47,12 +47,12 @@ namespace serenity::graphics
         return L"INVALID COMMAND QUEUE TYPE";
     }
 
-    static inline std::string command_list_type_to_string(const D3D12_COMMAND_LIST_TYPE command_list_type)
+    inline std::string command_list_type_to_string(const D3D12_COMMAND_LIST_TYPE command_list_type)
     {
         return wstring_to_string(command_list_type_to_wstring(command_list_type));
     }
 
-    static inline std::wstring descriptor_heap_type_to_wstring(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
+    inline std::wstring descriptor_heap_type_to_wstring(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
     {
         switch (descriptor_heap_type)
         {
@@ -81,7 +81,7 @@ namespace serenity::graphics
         return L"INVALID DESCRIPTOR HEAP TYPE";
     }
 
-    static inline std::string descriptor_heap_type_to_string(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
+    inline std::string descriptor_heap_type_to_string(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
     {
         return wstring_to_string(descriptor_heap_type_to_wstring(descriptor_heap_type));
     }

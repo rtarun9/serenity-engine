@@ -8,6 +8,7 @@
 #include "swapchain.hpp"
 
 #include "buffer.hpp"
+#include "texture.hpp"
 #include "d3d_utils.hpp"
 #include "pipeline.hpp"
 
@@ -43,6 +44,11 @@ namespace serenity::graphics
             return *(m_cbv_srv_uav_descriptor_heap.get());
         }
 
+        DescriptorHeap &get_dsv_descriptor_heap() const
+        {
+            return *(m_dsv_descriptor_heap.get());
+        }
+
         // Resets the command buffer and allocator for the current frame. Also gets the swapchain backbuffer for this frame.
         void frame_start();
 
@@ -54,6 +60,9 @@ namespace serenity::graphics
         template <typename T>
         [[nodiscard]] Buffer create_buffer(const BufferCreationDesc &buffer_creation_desc,
                                            const std::span<const T> data = {});
+
+        [[nodiscard]] Texture create_texture(const TextureCreationDesc &texture_creation_desc,
+                                             const std::byte *data = nullptr);
 
         [[nodiscard]] Pipeline create_pipeline(const PipelineCreationDesc &pipeline_creation_desc);
 
@@ -95,6 +104,7 @@ namespace serenity::graphics
         // that fully describe a resource to the gpu).
         std::unique_ptr<DescriptorHeap> m_rtv_descriptor_heap{};
         std::unique_ptr<DescriptorHeap> m_cbv_srv_uav_descriptor_heap{};
+        std::unique_ptr<DescriptorHeap> m_dsv_descriptor_heap{};
 
         // Swapchain implements / holds surfaces that we can render onto / store for presentation.
         // handles swapping of buffers.
@@ -122,7 +132,7 @@ namespace serenity::graphics
 
         auto buffer = Buffer{};
 
-        const auto size = sizeof(T) * data.size();
+        const auto size = sizeof(T) * std::max<size_t>(data.size(), static_cast<size_t>(1u));
         buffer.size_in_bytes = size;
 
         // Create a commited resource for the buffer (which creates a heap (i.e abstarction of contiguous memory on GPU)
@@ -206,7 +216,7 @@ namespace serenity::graphics
             m_device->CreateShaderResourceView(buffer.resource.Get(), &srv_desc,
                                                current_srv_descriptor.cpu_descriptor_handle);
 
-            buffer.srv_index = m_cbv_srv_uav_descriptor_heap->get_descriptor_index(current_srv_descriptor);
+            buffer.srv_index = current_srv_descriptor.index;
             m_cbv_srv_uav_descriptor_heap->offset_current_handle();
         }
         break;
@@ -220,6 +230,7 @@ namespace serenity::graphics
             const auto current_cbv_descriptor = m_cbv_srv_uav_descriptor_heap->get_current_handle();
             m_device->CreateConstantBufferView(&cbv_desc, current_cbv_descriptor.cpu_descriptor_handle);
 
+            buffer.cbv_index = current_cbv_descriptor.index;
             m_cbv_srv_uav_descriptor_heap->offset_current_handle();
         }
         break;

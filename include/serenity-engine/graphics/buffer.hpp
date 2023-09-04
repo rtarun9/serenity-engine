@@ -12,7 +12,7 @@ namespace serenity::graphics
         IndexBuffer,
     };
 
-    static inline std::string buffer_usage_to_string(const BufferUsage &buffer_usage)
+    inline std::string buffer_usage_to_string(const BufferUsage &buffer_usage)
     {
         switch (buffer_usage)
         {
@@ -62,5 +62,10 @@ namespace serenity::graphics
 
         // To be used only by constant buffers.
         std::optional<uint8_t *> mapped_pointer{};
+
+        void update(const std::byte* data, const size_t size)
+        {
+            std::memcpy(mapped_pointer.value(), reinterpret_cast<const void *>(data), size);
+        }
     };
 } // namespace serenity::graphics

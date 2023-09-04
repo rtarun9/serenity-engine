@@ -45,6 +45,9 @@ namespace serenity::graphics
         void clear_render_target_views(const DescriptorHandle rtv_descriptor_handle,
                                        const std::span<const float, 4u> clear_color) const;
 
+        void clear_depth_stencil_view(const DescriptorHandle dsv_descriptor_handle, const float depth = 1.0f,
+                                      const uint32_t stencil = 1u) const;
+
         void set_render_targets(const std::span<const DescriptorHandle> rtv_descriptor_handle,
                                 const std::optional<DescriptorHandle> dsv_descriptor_handle = {}) const;
 
@@ -53,14 +56,15 @@ namespace serenity::graphics
         void set_index_buffer(const Buffer &buffer) const;
 
         void set_bindless_graphics_root_signature() const;
-        
-        void set_pipeline_state(const Pipeline& pipeline) const;
 
-        void set_graphics_32_bit_root_constants(const std::byte* data) const;
+        void set_pipeline_state(const Pipeline &pipeline) const;
 
-        void set_viewport_and_scissor_rect(const D3D12_VIEWPORT& viewport, const D3D12_RECT& scissor_rect) const;
+        void set_graphics_32_bit_root_constants(const std::byte *data) const;
 
-        void draw_instanced(const uint32_t vertex_count, const uint32_t instance_count);
+        void set_viewport_and_scissor_rect(const D3D12_VIEWPORT &viewport, const D3D12_RECT &scissor_rect) const;
+
+        void draw_instanced(const uint32_t vertex_count, const uint32_t instance_count) const;
+        void draw_indexed_instanced(const uint32_t indices_count, const uint32_t instance_count) const;
 
       private:
         CommandList(const CommandList &other) = delete;

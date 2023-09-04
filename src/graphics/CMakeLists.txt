@@ -3,6 +3,7 @@ set(SERENITY_ENGINE_INCLUDE_PATH "${PROJECT_SOURCE_DIR}/include/serenity-engine"
 target_sources(serenity-engine PUBLIC
 	"${SERENITY_ENGINE_INCLUDE_PATH}/graphics/d3d_utils.hpp"
 	"${SERENITY_ENGINE_INCLUDE_PATH}/graphics/buffer.hpp"
+	"${SERENITY_ENGINE_INCLUDE_PATH}/graphics/texture.hpp"
 
 	"${SERENITY_ENGINE_INCLUDE_PATH}/graphics/command_list.hpp"
 	"command_list.cpp"
