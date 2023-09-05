@@ -2,6 +2,7 @@
 
 #include "serenity-engine/core/file_system.hpp"
 #include "serenity-engine/graphics/device.hpp"
+#include "serenity-engine/scene/scene_manager.hpp"
 
 #include "imgui.h"
 #include "imgui_impl_dx12.h"
@@ -20,12 +21,10 @@ namespace serenity::editor
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
         ImGuiIO &io = ImGui::GetIO();
-        (void)io;
 
         m_ini_path = core::FileSystem::instance().get_relative_path("data/editor.ini");
         io.IniFilename = m_ini_path.c_str();
 
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable docking.
 
         // Setup Dear ImGui style
@@ -42,7 +41,7 @@ namespace serenity::editor
 
         graphics::Device::instance().get_cbv_srv_uav_descriptor_heap().offset_current_handle();
 
-        window.add_event_callback([&](SDL_Event event) { ImGui_ImplSDL3_ProcessEvent(&event); });
+        window.add_event_callback([&](window::Event event) { ImGui_ImplSDL3_ProcessEvent(&event.internal_event); });
 
         core::Log::instance().info("Created the editor");
     }
@@ -56,7 +55,7 @@ namespace serenity::editor
         core::Log::instance().info("Destroyed the editor");
     }
 
-    void Editor::render(graphics::CommandList &command_list)
+    void Editor::render()
     {
         ImGui_ImplDX12_NewFrame();
         ImGui_ImplSDL3_NewFrame();
@@ -64,6 +63,8 @@ namespace serenity::editor
 
         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(),
                                      ImGuiDockNodeFlags_::ImGuiDockNodeFlags_PassthruCentralNode);
+
+        static auto render_ui = true;
 
         if (ImGui::BeginMainMenuBar())
         {
@@ -76,18 +77,39 @@ namespace serenity::editor
                 ImGui::EndMenu();
             }
 
+            if (ImGui::BeginMenu("Editor Settings"))
+            {
+                ImGui::Checkbox("Render Editor UI", &render_ui);
+                ImGui::EndMenu();
+            }
+
             ImGui::EndMainMenuBar();
         }
 
-        ImGui::ShowDemoWindow();
-
-        if (ImGui::Begin("Test"))
+        if (render_ui)
         {
-            ImGui::End();
+            ImGui::ShowDemoWindow();
+
+            scene_panel();
         }
 
         ImGui::Render();
 
-        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), command_list.get_command_list().Get());
+        auto &command_list = graphics::Device::instance().get_current_frame_direct_command_list().get_command_list();
+        ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), command_list.Get());
+    }
+
+    void Editor::scene_panel()
+    {
+        auto &current_scene = scene::SceneManager::instance().get_current_scene();
+
+        if (auto &camrera = current_scene.get_camera(); ImGui::Begin("Camera Settings"))
+        {
+            ImGui::SliderFloat("Movement speed", &camrera.m_movement_speed, 0.0001f, 1.0f);
+            ImGui::SliderFloat("Rotation speed", &camrera.m_rotation_speed, 0.0001f, 0.10f);
+            ImGui::SliderFloat("Friction", &camrera.m_friction_factor, 0.0001f, 1.0f);
+
+            ImGui::End();
+        }
     }
 } // namespace serenity::editor

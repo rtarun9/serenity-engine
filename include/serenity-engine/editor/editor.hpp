@@ -21,9 +21,12 @@ namespace serenity::editor
         ~Editor();
 
         // As the name suggests, call this function to render the editor in the engine window.
-        void render(graphics::CommandList& command_list);
+        void render();
 
-        private:
+      private:
+        void scene_panel();
+
+      private:
         std::string m_ini_path{};
     };
 } // namespace serenity::editor

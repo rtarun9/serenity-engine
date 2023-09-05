@@ -98,7 +98,7 @@ namespace serenity::window
 
             for (const auto &callback : m_event_callbacks)
             {
-                callback(event);
+                callback(Event{.internal_event = event});
             }
 
             if (keyboard_state[SDL_SCANCODE_W])
@@ -202,7 +202,7 @@ namespace serenity::window
         }
     }
 
-    void Window::add_event_callback(std::function<void(SDL_Event)> callback)
+    void Window::add_event_callback(std::function<void(Event)> callback)
     {
         m_event_callbacks.emplace_back(callback);
     }

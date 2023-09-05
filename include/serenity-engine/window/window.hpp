@@ -9,6 +9,12 @@ struct SDL_Window;
 
 namespace serenity::window
 {
+    // Used for event callbacks.
+    struct Event
+    {
+        SDL_Event internal_event{};
+    };
+
     // A light weight abstraction over SDL3's window.
     // The poll_events function takes in a reference to a Input object.
     // This design is chosen because events / input is closely related to the window.
@@ -41,7 +47,7 @@ namespace serenity::window
         }
 
         // Experimental : If you want to have event handling (such as for editor), you can pass the event handlers here.
-        void add_event_callback(std::function<void(SDL_Event)> callback);
+        void add_event_callback(std::function<void(Event)> callback);
 
       private:
         SDL_Window *m_window{};
@@ -49,6 +55,6 @@ namespace serenity::window
 
         Uint2 m_dimension{};
 
-        std::vector<std::function<void(SDL_Event)>> m_event_callbacks{};
+        std::vector<std::function<void(Event)>> m_event_callbacks{};
     };
 } // namespace serenity::window

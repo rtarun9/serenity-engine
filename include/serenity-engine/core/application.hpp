@@ -4,7 +4,7 @@
 #include "input.hpp"
 #include "log.hpp"
 
-#include "serenity-engine/asset/mesh_loader.hpp"
+#include "serenity-engine/scene/scene_manager.hpp"
 
 #include "serenity-engine/graphics/device.hpp"
 #include "serenity-engine/window/window.hpp"
@@ -44,6 +44,8 @@ namespace serenity::core
         std::unique_ptr<FileSystem> m_file_system{};
 
         std::unique_ptr<graphics::Device> m_graphics_device{};
+
+        std::unique_ptr<scene::SceneManager> m_scene_manager{};
 
         std::unique_ptr<editor::Editor> m_editor{};
 

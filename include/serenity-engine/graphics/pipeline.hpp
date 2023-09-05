@@ -40,7 +40,7 @@ namespace serenity::graphics
         Pipeline(const Pipeline &other) = delete;
         Pipeline &operator=(const Pipeline &other) = delete;
 
-        Pipeline(Pipeline &&other)
+        Pipeline(Pipeline &&other) noexcept
         {
             if (this != &other)
             {
@@ -49,7 +49,7 @@ namespace serenity::graphics
             }
         }
 
-        Pipeline &operator=(Pipeline &&other)
+        Pipeline &operator=(Pipeline &&other) noexcept
         {
             if (this != &other)
             {

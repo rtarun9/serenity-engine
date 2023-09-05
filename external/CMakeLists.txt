@@ -21,14 +21,13 @@ FetchContent_Declare(
     GIT_PROGRESS   TRUE
 )
 
-option(TINYGLTF_BUILD_LOADER_EXAMPLE "" OFF)
 FetchContent_Declare(
-    tinygltf
-    GIT_REPOSITORY https://github.com/syoyo/tinygltf.git
-    GIT_TAG 544969b7324cd6bba29f6203c7d78c7ea92dbab0
+    fastgltf
+    GIT_REPOSITORY https://github.com/spnda/fastgltf.git
+    GIT_TAG        b857a186c21262d0749ab31f5a2954f02725f47c
 )
 
-FetchContent_MakeAvailable(SDL3 glm spdlog tinygltf)
+FetchContent_MakeAvailable(SDL3 glm spdlog fastgltf)
 
 
 FetchContent_Declare(
@@ -59,5 +58,5 @@ ${sdl2_SOURCE_DIR}/include
 target_link_libraries(libimgui PUBLIC SDL3::SDL3)
 
 add_library(external INTERFACE)
-target_link_libraries(external INTERFACE SDL3::SDL3 tinygltf libimgui)	
-target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${glm_SOURCE_DIR} ${spdlog_SOURCE_DIR}/include ${tinygltf_SOURCE_DIR}) 
+target_link_libraries(external INTERFACE SDL3::SDL3 libimgui fastgltf)	
+target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${glm_SOURCE_DIR} ${spdlog_SOURCE_DIR}/include) 

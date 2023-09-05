@@ -2,17 +2,19 @@
 
 #include "serenity-engine/scene/camera.hpp"
 
-#include "serenity-engine/asset/mesh_loader.hpp"
-#include "serenity-engine/scene/mesh.hpp"
+#include "serenity-engine/asset/model_loader.hpp"
+#include "serenity-engine/scene/scene.hpp"
 
 #include "shaders/interop/constant_buffers.hlsli"
 #include "shaders/interop/render_resources.hlsli"
 
+using namespace serenity;
 
 class Game final : public serenity::core::Application
 {
+
   public:
-    explicit Game() 
+    explicit Game()
     {
         using namespace serenity::graphics;
 
@@ -21,8 +23,6 @@ class Game final : public serenity::core::Application
 
         const auto pixel_shader =
             ShaderCompiler::instance().compile(ShaderTypes::Pixel, L"shaders/mesh_viewer.hlsl", L"ps_main");
-
-        m_cube = serenity::asset::MeshLoader::load_mesh("data/Cube/glTF/Cube.gltf");
 
         m_transform_buffer = Device::instance().create_buffer<TransformBuffer>(BufferCreationDesc{
             .usage = BufferUsage::ConstantBuffer,
@@ -42,13 +42,19 @@ class Game final : public serenity::core::Application
             .name = L"Depth Texture",
 
         });
+
+        auto default_scene = scene::Scene("Default Scene");
+        default_scene.add_model("data/Cube/glTF/Cube.gltf");
+
+        scene::SceneManager::instance().add_scene(std::move(default_scene));
     }
 
     ~Game() = default;
 
     virtual void update(const float delta_time) override
     {
-        m_camera.update(delta_time, m_input);
+        auto &current_scene_camera = scene::SceneManager::instance().get_current_scene().get_camera();
+        current_scene_camera.update(delta_time, m_input);
 
         const auto model_matrix = math::XMMatrixIdentity();
 
@@ -56,7 +62,7 @@ class Game final : public serenity::core::Application
         const auto aspect_ratio = static_cast<float>(window_dimensions.x) / static_cast<float>(window_dimensions.y);
 
         auto transform_buffer_data = TransformBuffer{
-            .mvp_matrix = model_matrix * m_camera.get_view_matrix() *
+            .mvp_matrix = model_matrix * current_scene_camera.get_view_matrix() *
                           math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), aspect_ratio, 0.1f, 100.0f),
         };
 
@@ -95,26 +101,32 @@ class Game final : public serenity::core::Application
         command_list.set_descriptor_heaps(std::array{&graphics_device.get_cbv_srv_uav_descriptor_heap()});
 
         command_list.set_primitive_topology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        command_list.set_index_buffer(m_cube.value().index_buffer);
-
-        command_list.set_bindless_graphics_root_signature();
-        command_list.set_pipeline_state(m_pipeline);
-
-        const auto render_resources = MeshViewerRenderResources{
-            .position_buffer_index = m_cube.value().position_buffer.srv_index,
-            .transform_buffer_index = m_transform_buffer.cbv_index,
-        };
-
-        command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte *>(&render_resources));
 
         const auto viewport = swapchain.get_viewport();
         const auto scissor_rect = swapchain.get_scissor_rect();
 
         command_list.set_viewport_and_scissor_rect(viewport, scissor_rect);
 
-        command_list.draw_indexed_instanced(m_cube.value().indices_count, 1u);
+        command_list.set_bindless_graphics_root_signature();
+        command_list.set_pipeline_state(m_pipeline);
 
-        serenity::editor::Editor::instance().render(command_list);
+        for (auto models = scene::SceneManager::instance().get_current_scene().get_models(); auto &model : models)
+        {
+            for (const auto &mesh : model.meshes)
+            {
+                command_list.set_index_buffer(mesh.index_buffer);
+
+                const auto render_resources = MeshViewerRenderResources{
+                    .position_buffer_index = mesh.position_buffer.srv_index,
+                    .transform_buffer_index = m_transform_buffer.cbv_index,
+                };
+
+                command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte *>(&render_resources));
+                command_list.draw_indexed_instanced(mesh.indices, 1u);
+            };
+        }
+
+        serenity::editor::Editor::instance().render();
 
         // Transition backbuffer from render target to presentation.
         command_list.add_resource_barrier(back_buffer.resource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -132,15 +144,11 @@ class Game final : public serenity::core::Application
     }
 
   private:
-    std::optional<serenity::scene::Mesh> m_cube{};
-
     serenity::graphics::Pipeline m_pipeline{};
 
     serenity::graphics::Buffer m_transform_buffer{};
 
     serenity::graphics::Texture m_depth_texture{};
-
-    serenity::scene::Camera m_camera{};
 };
 
 std::unique_ptr<serenity::core::Application> serenity::core::create_application()

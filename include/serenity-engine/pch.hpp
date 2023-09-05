@@ -22,6 +22,7 @@ static constexpr bool SERENITY_DEBUG = false;
 #include <ranges>
 #include <source_location>
 #include <span>
+#include <stack>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -32,14 +33,16 @@ static constexpr bool SERENITY_DEBUG = false;
 using namespace std::string_literals;
 
 // D3D12 / Windows includes.
+
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <Windows.h>
+
 #include "graphics/d3dx12.hpp"
 #include "graphics/dxcapi.hpp"
 #include <DirectXMath.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
-
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
 
 namespace math = DirectX;
 
