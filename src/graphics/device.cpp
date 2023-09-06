@@ -118,53 +118,172 @@ namespace serenity::graphics
         auto texture = Texture{};
 
         // If the texture's data is not nullptr, then a upload buffer must be created to upload the data from cpu -> cpu
-        // / gpu accesible memory, and finally copied into gpu only memory.
-        if (!(texture_creation_desc.usage == TextureUsage::Depth ||
-              texture_creation_desc.usage == TextureUsage::DepthStencil))
+        // / gpu accesible memory, and finally copied into gpu only memory. This willl be the case for most textures.
+
+        if (!(texture_creation_desc.usage == TextureUsage::DepthStencilTexture ||
+              texture_creation_desc.usage == TextureUsage::ShaderResourceTexture))
         {
             core::Log::instance().critical("This function has not been implemented yet!");
         }
 
+        const auto get_texture_flags = [&]() {
+            switch (texture_creation_desc.usage)
+            {
+            case TextureUsage::DepthStencilTexture: {
+                return D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
+            }
+            break;
+
+            case TextureUsage::ShaderResourceTexture: {
+                return D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            }
+            break;
+
+            case TextureUsage::UAVTexture: {
+                return D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            }
+            break;
+
+            case TextureUsage::RenderTexture: {
+                return D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+            }
+            break;
+
+            default: {
+                return D3D12_RESOURCE_FLAG_NONE;
+            }
+            break;
+            }
+        };
+
+        // Create resource (GPU only).
         const auto texture_resource_desc = D3D12_RESOURCE_DESC{
             .Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D,
             .Alignment = 0u,
             .Width = static_cast<UINT64>(texture_creation_desc.dimension.x),
             .Height = texture_creation_desc.dimension.y,
             .DepthOrArraySize = 1u,
-            .MipLevels = 1u,
+            .MipLevels = static_cast<UINT16>(texture_creation_desc.mip_levels),
             .Format = texture_creation_desc.format,
             .SampleDesc = {1u, 0u},
             .Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN,
-            .Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL,
+            .Flags = get_texture_flags(),
         };
 
         const auto default_heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
-        const auto clear_color = D3D12_CLEAR_VALUE{
-            .Format = texture_creation_desc.format,
-            .DepthStencil = {.Depth = 1.0f, .Stencil = 1u},
-        };
+        // Clear color is only valid for depth texture and render target's.
+        if (texture_creation_desc.usage == TextureUsage::DepthStencilTexture)
+        {
+            const auto depth_clear_color = D3D12_CLEAR_VALUE{
+                .Format = texture_creation_desc.format,
+                .DepthStencil = {.Depth = 1.0f, .Stencil = 1u},
+            };
 
-        throw_if_failed(m_device->CreateCommittedResource(&default_heap_properties, D3D12_HEAP_FLAG_NONE,
-                                                          &texture_resource_desc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                                                          &clear_color, IID_PPV_ARGS(&texture.resource)));
+            throw_if_failed(m_device->CreateCommittedResource(&default_heap_properties, D3D12_HEAP_FLAG_NONE,
+                                                              &texture_resource_desc, D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                                              &depth_clear_color, IID_PPV_ARGS(&texture.resource)));
+        }
+        else if (texture_creation_desc.usage == TextureUsage::RenderTexture)
+        {
+            const auto render_target_clear_color = D3D12_CLEAR_VALUE{
+                .Format = texture_creation_desc.format,
+                .Color = {0.0f, 0.0f, 0.0f, 1.0f},
+            };
 
-        // Create the depth stencil view.
-        auto current_dsv_descriptor = m_dsv_descriptor_heap->get_current_handle();
-        const auto dsv_desc = D3D12_DEPTH_STENCIL_VIEW_DESC{
-            .Format = texture_creation_desc.format,
-            .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
-            .Texture2D =
-                {
-                    .MipSlice = 0u,
+            throw_if_failed(
+                m_device->CreateCommittedResource(&default_heap_properties, D3D12_HEAP_FLAG_NONE,
+                                                  &texture_resource_desc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                                                  &render_target_clear_color, IID_PPV_ARGS(&texture.resource)));
+        }
+        else
+        {
+            throw_if_failed(m_device->CreateCommittedResource(&default_heap_properties, D3D12_HEAP_FLAG_NONE,
+                                                              &texture_resource_desc, D3D12_RESOURCE_STATE_COPY_DEST,
+                                                              nullptr, IID_PPV_ARGS(&texture.resource)));
+        }
+
+        // If data is to be filled with some initial data, create a CPU / GPU accessible heap - resource and upload the
+        // data.
+        if (data)
+        {
+            // Here, we need to create another texture so as to copy data from CPU / GPU shareable memory to GPU only
+            // memory.
+
+            const auto size = texture_creation_desc.dimension.x * texture_creation_desc.dimension.y *
+                              texture_creation_desc.bytes_per_pixel;
+
+            const auto upload_buffer_resource_desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+
+            const auto upload_heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+            auto upload_buffer = comptr<ID3D12Resource>{};
+
+            throw_if_failed(m_device->CreateCommittedResource(&upload_heap_properties, D3D12_HEAP_FLAG_NONE,
+                                                              &upload_buffer_resource_desc, D3D12_RESOURCE_STATE_COMMON,
+                                                              nullptr, IID_PPV_ARGS(&upload_buffer)));
+
+            // Copy data from CPU to GPU.
+            const auto subresource_data = D3D12_SUBRESOURCE_DATA{
+                .pData = data,
+                .RowPitch =
+                    static_cast<LONG_PTR>(texture_creation_desc.bytes_per_pixel * texture_creation_desc.dimension.x),
+                .SlicePitch = size,
+            };
+
+            m_copy_command_list->reset();
+            UpdateSubresources(m_copy_command_list->get_command_list().Get(), texture.resource.Get(),
+                               upload_buffer.Get(), 0u, 0u, 1u, &subresource_data);
+
+            const auto command_list_for_execution = std::array{
+                m_copy_command_list.get(),
+            };
+
+            m_copy_command_queue->execute(command_list_for_execution);
+            m_copy_command_queue->flush();
+        }
+
+        // Create descriptors based on texture usage.
+        if (texture_creation_desc.usage == TextureUsage::DepthStencilTexture)
+        {
+            // Create the depth stencil view.
+            auto current_dsv_descriptor = m_dsv_descriptor_heap->get_current_handle();
+            const auto dsv_desc = D3D12_DEPTH_STENCIL_VIEW_DESC{
+                .Format = texture_creation_desc.format,
+                .ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D,
+                .Texture2D =
+                    {
+                        .MipSlice = 0u,
+                    },
+            };
+
+            m_device->CreateDepthStencilView(texture.resource.Get(), &dsv_desc,
+                                             current_dsv_descriptor.cpu_descriptor_handle);
+            texture.dsv_index = current_dsv_descriptor.index;
+
+            m_dsv_descriptor_heap->offset_current_handle();
+        }
+
+        if (texture_creation_desc.usage == TextureUsage::ShaderResourceTexture)
+        {
+            // Create the shader resource view.
+            auto current_srv_descriptor = m_cbv_srv_uav_descriptor_heap->get_current_handle();
+
+            const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{
+                .Format = texture_creation_desc.format,
+                .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+                .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+                .Texture2D{
+                    .MostDetailedMip = 0u,
+                    .MipLevels = texture_creation_desc.mip_levels,
                 },
-        };
+            };
 
-        m_device->CreateDepthStencilView(texture.resource.Get(), &dsv_desc,
-                                         current_dsv_descriptor.cpu_descriptor_handle);
-        texture.dsv_index = current_dsv_descriptor.index;
+            m_device->CreateShaderResourceView(texture.resource.Get(), &srv_desc,
+                                               current_srv_descriptor.cpu_descriptor_handle);
+            texture.srv_index = current_srv_descriptor.index;
 
-        m_dsv_descriptor_heap->offset_current_handle();
+            m_cbv_srv_uav_descriptor_heap->offset_current_handle();
+        }
 
         return texture;
     }

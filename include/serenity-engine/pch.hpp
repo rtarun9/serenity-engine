@@ -28,6 +28,7 @@ static constexpr bool SERENITY_DEBUG = false;
 #include <string_view>
 #include <type_traits>
 #include <typeinfo>
+#include <variant>
 #include <vector>
 
 using namespace std::string_literals;

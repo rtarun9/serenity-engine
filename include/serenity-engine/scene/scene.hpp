@@ -16,7 +16,10 @@ namespace serenity::scene
         explicit Scene(const std::string_view scene_name);
         ~Scene() = default;
 
-        void add_model(const std::string_view model_path);
+        void add_model(const std::string_view model_path, const std::string_view model_name);
+
+        // Update the transform component of all models in the scene.
+        void update(const math::XMMATRIX projection_matrix);
 
         const std::string &get_scene_name()
         {
@@ -28,7 +31,7 @@ namespace serenity::scene
             return m_camera;
         }
 
-        const std::vector<Model> &get_models()
+        std::vector<Model> &get_models()
         {
             return m_models;
         }

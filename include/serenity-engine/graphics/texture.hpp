@@ -6,22 +6,35 @@ namespace serenity::graphics
 {
     enum class TextureUsage : uint8_t
     {
-        Depth,
-        DepthStencil,
+        DepthStencilTexture,
+        ShaderResourceTexture,
+        UAVTexture,
+        RenderTexture,
     };
 
     inline std::string texture_usage_to_string(const TextureUsage &texture_usage)
     {
         switch (texture_usage)
         {
-        case TextureUsage::Depth: {
-            return "Depth Texture";
+        case TextureUsage::DepthStencilTexture: {
+            return "Depth Stencil Texture";
+        };
+        break;
+
+        case TextureUsage::ShaderResourceTexture: {
+            return "Shader Resource Texture";
         }
         break;
 
-        case TextureUsage::DepthStencil: {
-            return "Depth Stencil";
-        };
+        case TextureUsage::UAVTexture: {
+
+            return "UAV Texture";
+        }
+        break;
+
+        case TextureUsage::RenderTexture: {
+            return "Render Texture";
+        }
         break;
 
         default: {
@@ -35,6 +48,9 @@ namespace serenity::graphics
     {
         TextureUsage usage{};
         DXGI_FORMAT format{};
+        uint32_t mip_levels{1u};
+        uint32_t num_channels{4u};
+        uint32_t bytes_per_pixel{4u};
         Uint2 dimension{};
         std::wstring name{};
     };

@@ -111,5 +111,37 @@ namespace serenity::editor
 
             ImGui::End();
         }
+
+        if (ImGui::Begin("Scene Hierarchy"))
+        {
+            if (ImGui::TreeNode(current_scene.get_scene_name().c_str()))
+            {
+                for (auto &model : current_scene.get_models())
+                {
+                    if (ImGui::BeginChild(model.model_name.c_str()))
+                    {
+                        if (ImGui::TreeNode("Transform"))
+                        {
+                            auto &transform_component = model.transform_component;
+
+                            ImGui::SliderFloat("Scale", &transform_component.scale.x, 0.1f, 10.0f);
+                            ImGui::SliderFloat3("Rotation", &transform_component.rotation.x, -180.0f, 180.0f);
+                            ImGui::SliderFloat3("Translation", &transform_component.translation.x, -100.0f, 100.0f);
+
+                            model.transform_component.scale.y = model.transform_component.scale.x;
+                            model.transform_component.scale.z = model.transform_component.scale.x;
+
+                            ImGui::TreePop();
+                        }
+
+                        ImGui::EndChild();
+                    }
+                }
+
+                ImGui::TreePop();
+            }
+
+            ImGui::End();
+        }
     }
 } // namespace serenity::editor

@@ -19,7 +19,8 @@ struct TriangleRenderResources
 struct MeshViewerRenderResources
 {
     uint position_buffer_index;
-    uint color_buffer_index;
+    uint texture_coord_buffer_index;
+    uint albedo_texture_index;
     uint transform_buffer_index;
 };
 

@@ -28,6 +28,7 @@ using namespace math;
 
 namespace serenity::asset::ModelLoader
 {
+    // Helper function to get data given the asset and accessor.
     template <typename T>
     std::vector<T> get_data_from_accessor(const fastgltf::Asset &asset, const fastgltf::Accessor &accessor)
     {
@@ -39,7 +40,7 @@ namespace serenity::asset::ModelLoader
         return attribute_data;
     }
 
-    ModelData load_model(const std::string_view model_path)
+    ModelData load_model(const std::string_view model_path, const math::XMMATRIX transform_matrix)
     {
         auto model = ModelData{};
 
@@ -136,7 +137,7 @@ namespace serenity::asset::ModelLoader
                     mesh_data.indices = get_data_from_accessor<uint16_t>(asset, index_accessor);
                 }
 
-                model.cpu_meshes.emplace_back(std::move(mesh_data));
+                model.mesh_data.emplace_back(std::move(mesh_data));
             };
         }
 

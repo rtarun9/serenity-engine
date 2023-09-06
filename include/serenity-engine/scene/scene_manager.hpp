@@ -20,7 +20,7 @@ namespace serenity::scene
 
         void add_scene(Scene &&scene);
         void set_current_scene(const std::string_view scene_name);
-
+       
         Scene &get_current_scene()
         {
 

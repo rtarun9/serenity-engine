@@ -27,8 +27,14 @@ FetchContent_Declare(
     GIT_TAG        b857a186c21262d0749ab31f5a2954f02725f47c
 )
 
-FetchContent_MakeAvailable(SDL3 glm spdlog fastgltf)
+FetchContent_Declare(
+    stb
+    GIT_REPOSITORY https://github.com/nothings/stb
+    GIT_TAG 8b5f1f37b5b75829fc72d38e7b5d4bcbf8a26d55
+    GIT_PROGRESS TRUE
+)
 
+FetchContent_MakeAvailable(SDL3 glm spdlog fastgltf stb)
 
 FetchContent_Declare(
     imgui
@@ -50,13 +56,13 @@ add_library(libimgui
 )
 
 target_include_directories(libimgui PUBLIC 
-${imgui_SOURCE_DIR} 
-${imgui_SOURCE_DIR}/backends
-${sdl2_SOURCE_DIR}/include
+    ${imgui_SOURCE_DIR} 
+    ${imgui_SOURCE_DIR}/backends
+    ${sdl3_SOURCE_DIR}/include
 )
 
 target_link_libraries(libimgui PUBLIC SDL3::SDL3)
 
 add_library(external INTERFACE)
 target_link_libraries(external INTERFACE SDL3::SDL3 libimgui fastgltf)	
-target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${glm_SOURCE_DIR} ${spdlog_SOURCE_DIR}/include) 
+target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${glm_SOURCE_DIR} ${spdlog_SOURCE_DIR}/include ${stb_SOURCE_DIR}) 

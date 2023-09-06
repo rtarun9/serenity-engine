@@ -2,8 +2,6 @@
 
 #include "serenity-engine/core/singleton_instance.hpp"
 
-#include "serenity-engine/scene/model.hpp"
-
 namespace serenity::asset
 {
     struct MeshData
@@ -19,7 +17,7 @@ namespace serenity::asset
 
     struct ModelData
     {
-        std::vector<MeshData> cpu_meshes{};
+        std::vector<MeshData> mesh_data{};
     };
 
     namespace ModelLoader
@@ -29,6 +27,7 @@ namespace serenity::asset
         // here). This design is taken so as to reduce dependency between the process of loading GLTF files and actually
         // constructing data from them.
         // Model loader currently uses fastgltf.
-        [[nodiscard]] ModelData load_model(const std::string_view model_path);
+        [[nodiscard]] ModelData load_model(const std::string_view model_path,
+                                           const math::XMMATRIX transform_matrix = math::XMMatrixIdentity());
     } // namespace ModelLoader
 } // namespace serenity::asset

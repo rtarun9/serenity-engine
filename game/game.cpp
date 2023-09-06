@@ -1,72 +1,69 @@
 #include "serenity-engine/core/application.hpp"
 
-#include "serenity-engine/scene/camera.hpp"
+#include "serenity-engine/asset/texture_loader.hpp"
 
-#include "serenity-engine/asset/model_loader.hpp"
-#include "serenity-engine/scene/scene.hpp"
-
-#include "shaders/interop/constant_buffers.hlsli"
 #include "shaders/interop/render_resources.hlsli"
 
 using namespace serenity;
 
-class Game final : public serenity::core::Application
+class Game final : public core::Application
 {
 
   public:
     explicit Game()
     {
-        using namespace serenity::graphics;
-
-        const auto vertex_shader =
-            ShaderCompiler::instance().compile(ShaderTypes::Vertex, L"shaders/mesh_viewer.hlsl", L"vs_main");
-
-        const auto pixel_shader =
-            ShaderCompiler::instance().compile(ShaderTypes::Pixel, L"shaders/mesh_viewer.hlsl", L"ps_main");
-
-        m_transform_buffer = Device::instance().create_buffer<TransformBuffer>(BufferCreationDesc{
-            .usage = BufferUsage::ConstantBuffer,
-            .name = L"Transform Buffer",
-        });
-
-        m_pipeline = Device::instance().create_pipeline(PipelineCreationDesc{
-            .vertex_shader = vertex_shader,
-            .pixel_shader = pixel_shader,
-            .name = L"Mesh Viewer pixel shader",
-        });
-
-        m_depth_texture = Device::instance().create_texture(TextureCreationDesc{
-            .usage = TextureUsage::Depth,
+        // Create depth texture.
+        m_depth_texture = graphics::Device::instance().create_texture(graphics::TextureCreationDesc{
+            .usage = graphics::TextureUsage::DepthStencilTexture,
             .format = DXGI_FORMAT_D32_FLOAT,
             .dimension = m_window->get_dimensions(),
             .name = L"Depth Texture",
 
         });
 
+        // Create pipeline.
+        m_pipeline = graphics::Device::instance().create_pipeline(graphics::PipelineCreationDesc{
+            .vertex_shader = graphics::ShaderCompiler::instance().compile(graphics::ShaderTypes::Vertex,
+                                                                          L"shaders/mesh_viewer.hlsl", L"vs_main"),
+            .pixel_shader = graphics::ShaderCompiler::instance().compile(graphics::ShaderTypes::Pixel,
+                                                                         L"shaders/mesh_viewer.hlsl", L"ps_main"),
+            .name = L"Mesh Viewer pixel shader",
+        });
+
+        // Create albedo texture and scene.
+        auto sample_texture_data = asset::TextureLoader::load_texture("data/Cube/glTF/Cube_BaseColor.png");
+        auto &texture_data_vector = std::get<std::vector<uint8_t>>(sample_texture_data.data);
+
         auto default_scene = scene::Scene("Default Scene");
-        default_scene.add_model("data/Cube/glTF/Cube.gltf");
+        default_scene.add_model("data/Cube/glTF/Cube.gltf", "Cube");
 
         scene::SceneManager::instance().add_scene(std::move(default_scene));
+
+        m_albedo_texture = graphics::Device::instance().create_texture(
+            graphics::TextureCreationDesc{
+                .usage = graphics::TextureUsage::ShaderResourceTexture,
+                .format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                .bytes_per_pixel = 4u,
+                .dimension = sample_texture_data.dimension,
+            },
+            reinterpret_cast<const std::byte *>(texture_data_vector.data()));
     }
 
     ~Game() = default;
 
     virtual void update(const float delta_time) override
     {
+        // Update scene objects (camera and models).
         auto &current_scene_camera = scene::SceneManager::instance().get_current_scene().get_camera();
         current_scene_camera.update(delta_time, m_input);
-
-        const auto model_matrix = math::XMMatrixIdentity();
 
         const auto window_dimensions = m_window->get_dimensions();
         const auto aspect_ratio = static_cast<float>(window_dimensions.x) / static_cast<float>(window_dimensions.y);
 
-        auto transform_buffer_data = TransformBuffer{
-            .mvp_matrix = model_matrix * current_scene_camera.get_view_matrix() *
-                          math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), aspect_ratio, 0.1f, 100.0f),
-        };
+        const auto projection_matrix =
+            math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), aspect_ratio, 0.1f, 100.0f);
 
-        m_transform_buffer.update(reinterpret_cast<std::byte *>(&transform_buffer_data), sizeof(TransformBuffer));
+        scene::SceneManager::instance().get_current_scene().update(projection_matrix);
     }
 
     virtual void render() override
@@ -118,7 +115,9 @@ class Game final : public serenity::core::Application
 
                 const auto render_resources = MeshViewerRenderResources{
                     .position_buffer_index = mesh.position_buffer.srv_index,
-                    .transform_buffer_index = m_transform_buffer.cbv_index,
+                    .texture_coord_buffer_index = mesh.texture_coords_buffer.srv_index,
+                    .albedo_texture_index = m_albedo_texture.srv_index,
+                    .transform_buffer_index = model.transform_component.transform_buffer.cbv_index,
                 };
 
                 command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte *>(&render_resources));
@@ -126,7 +125,7 @@ class Game final : public serenity::core::Application
             };
         }
 
-        serenity::editor::Editor::instance().render();
+        editor::Editor::instance().render();
 
         // Transition backbuffer from render target to presentation.
         command_list.add_resource_barrier(back_buffer.resource.Get(), D3D12_RESOURCE_STATE_RENDER_TARGET,
@@ -144,11 +143,10 @@ class Game final : public serenity::core::Application
     }
 
   private:
-    serenity::graphics::Pipeline m_pipeline{};
+    graphics::Pipeline m_pipeline{};
 
-    serenity::graphics::Buffer m_transform_buffer{};
-
-    serenity::graphics::Texture m_depth_texture{};
+    graphics::Texture m_depth_texture{};
+    graphics::Texture m_albedo_texture{};
 };
 
 std::unique_ptr<serenity::core::Application> serenity::core::create_application()
