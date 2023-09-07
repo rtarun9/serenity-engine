@@ -1,6 +1,6 @@
-#include "serenity-engine/graphics/root_signature.hpp"
+#include "serenity-engine/renderer/rhi/root_signature.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     RootSignature::RootSignature(const comptr<ID3D12Device> &device)
     {
@@ -30,4 +30,4 @@ namespace serenity::graphics
     {
         core::Log::instance().info("Destroyed root signature");
     }
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

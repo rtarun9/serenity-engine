@@ -2,9 +2,9 @@
 
 #include "d3d_utils.hpp"
 
-#include "shader_compiler.hpp"
+#include "serenity-engine/renderer/shader.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     enum class PipelineVariant
     {
@@ -68,4 +68,4 @@ namespace serenity::graphics
       private:
         comptr<ID3D12PipelineState> m_pipeline_state{};
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

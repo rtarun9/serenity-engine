@@ -98,23 +98,21 @@ namespace serenity::scene
         // Load all XMFLOATX into XMVECTOR's.
         // The target is camera position + camera front direction (i.e direction it is looking at).
 
-        const math::XMMATRIX rotation_matrix = math::XMMatrixRotationRollPitchYaw(m_pitch, m_yaw, 0.0f);
+        const auto rotation_matrix = math::XMMatrixRotationRollPitchYaw(m_pitch, m_yaw, 0.0f);
 
-        static constexpr math::XMVECTOR world_up = math::XMVECTOR{0.0f, 1.0f, 0.0f, 0.0f};
-        static constexpr math::XMVECTOR world_right = math::XMVECTOR{1.0f, 0.0f, 0.0f, 0.0f};
-        static constexpr math::XMVECTOR world_front = math::XMVECTOR{0.0f, 0.0f, 1.0f, 0.0f};
+        static constexpr auto world_up = math::XMVECTOR{0.0f, 1.0f, 0.0f, 0.0f};
+        static constexpr auto world_right = math::XMVECTOR{1.0f, 0.0f, 0.0f, 0.0f};
+        static constexpr auto world_front = math::XMVECTOR{0.0f, 0.0f, 1.0f, 0.0f};
 
-        const math::XMVECTOR camera_right =
-            math::XMVector3Normalize(math::XMVector3TransformCoord(world_right, rotation_matrix));
+        const auto camera_right = math::XMVector3Normalize(math::XMVector3TransformCoord(world_right, rotation_matrix));
 
-        const math::XMVECTOR camera_front =
-            math::XMVector3Normalize(math::XMVector3TransformCoord(world_front, rotation_matrix));
+        const auto camera_front = math::XMVector3Normalize(math::XMVector3TransformCoord(world_front, rotation_matrix));
 
-        const math::XMVECTOR camera_up = math::XMVector3Normalize(math::XMVector3Cross(camera_front, camera_right));
+        const auto camera_up = math::XMVector3Normalize(math::XMVector3Cross(camera_front, camera_right));
 
-        const math::XMVECTOR camera_position = math::XMLoadFloat4(&m_camera_position);
+        const auto camera_position = math::XMLoadFloat4(&m_camera_position);
 
-        const math::XMVECTOR camera_target = camera_position + camera_front;
+        const auto camera_target = camera_position + camera_front;
 
         math::XMStoreFloat4(&m_camera_right, camera_right);
         math::XMStoreFloat4(&m_camera_front, camera_front);

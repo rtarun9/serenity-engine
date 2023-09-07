@@ -2,6 +2,8 @@
 
 #include "singleton_instance.hpp"
 
+#include "serenity-engine/utils/string_conversions.hpp"
+
 namespace serenity::core
 {
     // A singleton class primarily used to get root source directory / paths relative to the executable.
@@ -22,6 +24,11 @@ namespace serenity::core
         std::string get_relative_path(const std::string_view path) const
         {
             return m_root_directory + std::string(path);
+        }
+
+        std::wstring get_relative_path(const std::wstring_view path) const
+        {
+            return string_to_wstring(m_root_directory) + std::wstring(path);
         }
 
       private:

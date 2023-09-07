@@ -11,8 +11,6 @@ namespace serenity::asset
         std::vector<math::XMFLOAT2> texture_coords{};
 
         std::vector<uint16_t> indices{};
-
-        math::XMMATRIX transform{};
     };
 
     struct ModelData

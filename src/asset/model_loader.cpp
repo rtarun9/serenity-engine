@@ -1,7 +1,6 @@
 #include "serenity-engine/asset/model_loader.hpp"
 
 #include "serenity-engine/core/file_system.hpp"
-#include "serenity-engine/graphics/device.hpp"
 
 #include <fastgltf/parser.hpp>
 #include <fastgltf/tools.hpp>
@@ -38,6 +37,32 @@ namespace serenity::asset::ModelLoader
                                               [&](T attribute, size_t index) { attribute_data[index] = attribute; });
 
         return attribute_data;
+    }
+
+    // Helper function to get transform matrix from node.
+    // Reference :
+    // https://github.com/spnda/fastgltf/blob/ee5dd8948f2b8191cda01556c7daab5d2799840f/examples/gl_viewer/gl_viewer.cpp#L261
+    math::XMMATRIX get_transform_matrix_from_node(const fastgltf::Node &node)
+    {
+        auto transform = math::XMMatrixIdentity();
+
+        if (auto *trs = std::get_if<fastgltf::Node::TRS>(&node.transform))
+        {
+            const auto rotation_quaternion = math::XMMatrixRotationQuaternion(
+                math::XMVectorSet(trs->rotation[0], trs->rotation[1], trs->rotation[2], trs->rotation[3]));
+
+            transform = math::XMMatrixScaling(trs->scale[0], trs->scale[1], trs->scale[2]) * rotation_quaternion *
+                        math::XMMatrixTranslation(trs->translation[0], trs->translation[1], trs->translation[2]);
+        }
+
+        else if (auto *mat = std::get_if<fastgltf::Node::TransformMatrix>(&node.transform))
+        {
+            const auto &m = *mat;
+            transform = math::XMMatrixSet(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11],
+                                          m[12], m[13], m[14], m[15]);
+        }
+
+        return transform;
     }
 
     ModelData load_model(const std::string_view model_path, const math::XMMATRIX transform_matrix)
@@ -91,23 +116,26 @@ namespace serenity::asset::ModelLoader
         }
 
         // Get all nodes from scene so they can be traversed (DFS).
-        auto node_indices = std::stack<size_t>{};
+        // Stack contains the node index and the transform matrix.
+        auto node_indices = std::stack<std::pair<size_t, math::XMMATRIX>>{};
         for (auto node_index : asset.scenes[asset.defaultScene.value()].nodeIndices)
         {
-            node_indices.emplace(node_index);
+            node_indices.push({node_index, transform_matrix});
         }
 
         while (!node_indices.empty())
         {
-            auto node_index = node_indices.top();
+            const auto &[node_index, transform_matrix] = node_indices.top();
             node_indices.pop();
 
             const auto &node = asset.nodes.at(node_index);
 
+            const auto local_transform = get_transform_matrix_from_node(asset.nodes.at(node_index));
+
             // Load child nodes.
             for (auto &child_nodes : node.children)
             {
-                node_indices.emplace(child_nodes);
+                node_indices.push({child_nodes, local_transform * transform_matrix});
             }
 
             // Check if the current node has a mesh.
@@ -123,6 +151,13 @@ namespace serenity::asset::ModelLoader
                     // Load positions.
                     auto &position_accessor = asset.accessors[primitive.findAttribute("POSITION")->second];
                     mesh_data.positions = get_data_from_accessor<math::XMFLOAT3>(asset, position_accessor);
+
+                    // Apply the transform.
+                    std::for_each(mesh_data.positions.begin(), mesh_data.positions.end(),
+                                  [&](math::XMFLOAT3 &position) {
+                                      auto vector = math::XMVectorSet(position.x, position.y, position.z, 1.0f);
+                                      math::XMStoreFloat3(&position, math::XMVector4Transform(vector, local_transform));
+                                  });
 
                     // Load normals.
                     auto &normal_accessor = asset.accessors[primitive.findAttribute("NORMAL")->second];

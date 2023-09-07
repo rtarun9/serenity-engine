@@ -4,7 +4,7 @@
 
 #include "serenity-engine/core/singleton_instance.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     // Abstraction for bindless root signature, which specifies that the shader expects 32 bit root constants (64 of
     // them) and a bunch of static samplers.
@@ -25,4 +25,4 @@ namespace serenity::graphics
       private:
         comptr<ID3D12RootSignature> m_root_signature{};
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

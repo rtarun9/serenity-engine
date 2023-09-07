@@ -4,7 +4,9 @@ namespace serenity::core
 {
     // A 'smart' version of a singleton, which aims at achieving both RAII and a convenient singleton
     // interface. User can own a SingletonInstnace which will handle RAII and follow the
-    // singleton pattern throughout the project.
+    // singleton pattern throughout the project. That is, somewhere in the code a object that derives SingletonInstance
+    // must be created, but from then on anywhere in the code, SingletonInstance::instance() can be used to access the
+    // object similar to the singleton pattern.
     // Primary reference :
     // https://github.com/karnkaul/LittleEngineVk/blob/main/engine/include/le/core/mono_instance.hpp.
 
@@ -51,7 +53,7 @@ namespace serenity::core
         SingletonInstance(SingletonInstance &&other) = delete;
         SingletonInstance &operator=(SingletonInstance &&other) = delete;
 
-      protected:
+      private:
         static inline T *s_instance{};
     };
 } // namespace serenity::core

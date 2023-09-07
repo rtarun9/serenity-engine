@@ -9,8 +9,10 @@ namespace serenity
         explicit Timer() = default;
         ~Timer() = default;
 
+        // Use this function right before get_delta_time(). Internally update the start and end frame times.
         void tick();
 
+        // Returns difference of frame start and frame end time in milliseconds.
         float get_delta_time() const;
 
       private:

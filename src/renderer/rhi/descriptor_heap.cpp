@@ -1,6 +1,6 @@
-#include "serenity-engine/graphics/descriptor_heap.hpp"
+#include "serenity-engine/renderer/rhi/descriptor_heap.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     void DescriptorHandle::offset(const uint32_t count)
     {
@@ -76,4 +76,4 @@ namespace serenity::graphics
     {
         m_current_descriptor_handle.offset(offset);
     }
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

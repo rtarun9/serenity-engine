@@ -1,6 +1,6 @@
-#include "serenity-engine/graphics/device.hpp"
+#include "serenity-engine/renderer/rhi/device.hpp"
 
-#include "serenity-engine/graphics/d3d_utils.hpp"
+#include "serenity-engine/renderer/rhi/d3d_utils.hpp"
 
 // Setting up the agility SDK parameters.
 extern "C"
@@ -13,7 +13,7 @@ extern "C"
     __declspec(dllexport) extern const char *D3D12SDKPath = ".\\D3D12\\";
 }
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     Device::Device(const HWND window_handle, const Uint2 dimension)
     {
@@ -74,18 +74,16 @@ namespace serenity::graphics
         m_rtv_descriptor_heap->offset_current_handle(Swapchain::NUM_BACK_BUFFERS);
 
         m_cbv_srv_uav_descriptor_heap =
-            std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 100u);
+            std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10'000u);
 
         m_dsv_descriptor_heap = std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 3u);
+
         // Create the swapchain.
         m_swapchain = std::make_unique<Swapchain>(m_factory, m_device, m_direct_command_queue->get_command_queue(),
                                                   *(m_rtv_descriptor_heap.get()), dimension, window_handle);
 
         // Create the root signature.
         m_root_signature = std::make_unique<RootSignature>(m_device);
-
-        // Create the shader compiler.
-        m_shader_compiler = std::make_unique<ShaderCompiler>();
 
         core::Log::instance().info("Created graphics device");
     }
@@ -292,4 +290,4 @@ namespace serenity::graphics
     {
         return std::move(Pipeline(m_device, pipeline_creation_desc));
     }
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

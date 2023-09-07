@@ -1,7 +1,7 @@
 #pragma once
 
-#include "serenity-engine/graphics/buffer.hpp"
-#include "serenity-engine/graphics/texture.hpp"
+#include "serenity-engine/renderer/rhi/buffer.hpp"
+#include "serenity-engine/renderer/rhi/texture.hpp"
 
 #include "shaders/interop/constant_buffers.hlsli"
 
@@ -15,11 +15,11 @@ namespace serenity::scene
 
     struct Mesh
     {
-        graphics::Buffer position_buffer{};
-        graphics::Buffer normal_buffer{};
-        graphics::Buffer texture_coords_buffer{};
+        renderer::rhi::Buffer position_buffer{};
+        renderer::rhi::Buffer normal_buffer{};
+        renderer::rhi::Buffer texture_coords_buffer{};
 
-        graphics::Buffer index_buffer{};
+        renderer::rhi::Buffer index_buffer{};
 
         uint32_t indices{};
     };
@@ -27,7 +27,7 @@ namespace serenity::scene
     struct Material
     {
         math::XMFLOAT4 base_color{};
-        graphics::Texture base_color_texture{};
+        renderer::rhi::Texture base_color_texture{};
     };
 
     struct Transform
@@ -36,7 +36,7 @@ namespace serenity::scene
         math::XMFLOAT3 rotation{};
         math::XMFLOAT3 translation{};
 
-        graphics::Buffer transform_buffer{};
+        renderer::rhi::Buffer transform_buffer{};
 
         void update(const math::XMMATRIX view_projection_matrix)
         {

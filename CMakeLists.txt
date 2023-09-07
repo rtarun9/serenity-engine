@@ -13,6 +13,11 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/release)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/release)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE ${CMAKE_BINARY_DIR}/bin/release)
 
+# Enable hot reload for visual studio (having the code here ensures all targets have this setting applied to them)
+if (MSVC AND WIN32 AND NOT MSVC_VERSION VERSION_LESS 142)
+	set(CMAKE_CXX_FLAGS_DEBUG "/MDd /ZI /Ob0 /Od /RTC1")
+endif()
+
 add_subdirectory(external)
 add_subdirectory(src)
 add_subdirectory(game)

@@ -6,7 +6,7 @@
 
 #include "serenity-engine/core/singleton_instance.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     // Backbuffer abstraction that ties together the descriptor handle and resource.
     struct Backbuffer
@@ -78,4 +78,4 @@ namespace serenity::graphics
         bool m_vsync_enabled{true};
         bool m_tearing_supported{false};
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

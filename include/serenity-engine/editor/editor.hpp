@@ -4,7 +4,7 @@
 
 #include "serenity-engine/window/window.hpp"
 
-#include "serenity-engine/graphics/command_list.hpp"
+#include "serenity-engine/renderer/rhi/rhi.hpp"
 
 namespace serenity::editor
 {

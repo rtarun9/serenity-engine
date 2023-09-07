@@ -1,22 +1,12 @@
 #pragma once
 
-#include "d3d_utils.hpp"
+#include "rhi/d3d_utils.hpp"
+#include "shader.hpp"
 
 #include "serenity-engine/core/singleton_instance.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer
 {
-    enum class ShaderTypes : uint8_t
-    {
-        Vertex,
-        Pixel,
-    };
-
-    struct Shader
-    {
-        comptr<IDxcBlob> blob{};
-    };
-
     // Shader compiler abstraction (using DXC's C++ Api).
     class ShaderCompiler final : public core::SingletonInstance<ShaderCompiler>
     {
@@ -43,4 +33,4 @@ namespace serenity::graphics
 
         std::wstring m_shader_directory{};
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer

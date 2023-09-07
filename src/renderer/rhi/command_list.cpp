@@ -1,10 +1,10 @@
 #pragma once
 
-#include "serenity-engine/graphics/command_list.hpp"
+#include "serenity-engine/renderer/rhi/command_list.hpp"
 
-#include "serenity-engine/graphics/device.hpp"
+#include "serenity-engine/renderer/rhi/device.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     CommandList::CommandList(const comptr<ID3D12Device> &device, const D3D12_COMMAND_LIST_TYPE command_list_type)
         : m_command_list_type(command_list_type)
@@ -147,4 +147,4 @@ namespace serenity::graphics
     {
         m_command_list->DrawIndexedInstanced(indices_count, instance_count, 0u, 0u, 0u);
     }
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

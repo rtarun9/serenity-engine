@@ -1,5 +1,6 @@
 include(FetchContent)
 
+# SDL3 for input / window creation and handling.
 FetchContent_Declare(
     SDL3
 	GIT_REPOSITORY https://github.com/libsdl-org/SDL
@@ -7,13 +8,7 @@ FetchContent_Declare(
 	GIT_PROGRESS TRUE
 )
 
-FetchContent_Declare(
-    glm
-	GIT_REPOSITORY https://github.com/g-truc/glm
-	GIT_TAG 47585fde0c49fa77a2bf2fb1d2ead06999fd4b6e # The latest commit as of writing this cmake script.
-	GIT_PROGRESS TRUE
-)
-
+# spdlog for logging to console and file.
 FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
@@ -21,12 +16,14 @@ FetchContent_Declare(
     GIT_PROGRESS   TRUE
 )
 
+# fastgltf for GLTF asset loading.
 FetchContent_Declare(
     fastgltf
     GIT_REPOSITORY https://github.com/spnda/fastgltf.git
     GIT_TAG        b857a186c21262d0749ab31f5a2954f02725f47c
 )
 
+# stb for image loading.
 FetchContent_Declare(
     stb
     GIT_REPOSITORY https://github.com/nothings/stb
@@ -34,8 +31,9 @@ FetchContent_Declare(
     GIT_PROGRESS TRUE
 )
 
-FetchContent_MakeAvailable(SDL3 glm spdlog fastgltf stb)
+FetchContent_MakeAvailable(SDL3 spdlog fastgltf stb)
 
+# imgui for the editor ui
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui
@@ -65,4 +63,4 @@ target_link_libraries(libimgui PUBLIC SDL3::SDL3)
 
 add_library(external INTERFACE)
 target_link_libraries(external INTERFACE SDL3::SDL3 libimgui fastgltf)	
-target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${glm_SOURCE_DIR} ${spdlog_SOURCE_DIR}/include ${stb_SOURCE_DIR}) 
+target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${spdlog_SOURCE_DIR}/include ${stb_SOURCE_DIR}) 

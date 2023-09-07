@@ -6,7 +6,7 @@
 
 #include "serenity-engine/scene/scene_manager.hpp"
 
-#include "serenity-engine/graphics/device.hpp"
+#include "serenity-engine/renderer/renderer.hpp"
 #include "serenity-engine/window/window.hpp"
 
 #include "serenity-engine/editor/editor.hpp"
@@ -43,7 +43,7 @@ namespace serenity::core
         std::unique_ptr<Log> m_log{};
         std::unique_ptr<FileSystem> m_file_system{};
 
-        std::unique_ptr<graphics::Device> m_graphics_device{};
+        std::unique_ptr<renderer::Renderer> m_renderer{};
 
         std::unique_ptr<scene::SceneManager> m_scene_manager{};
 

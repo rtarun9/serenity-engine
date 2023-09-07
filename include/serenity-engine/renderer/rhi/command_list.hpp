@@ -6,7 +6,7 @@
 #include "descriptor_heap.hpp"
 #include "pipeline.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     // Command list's are used to record GPU commands that are submitted to a command queue for execution on the gpu.
     // Command allocator acts as a backing store for these recorded commands.
@@ -81,4 +81,4 @@ namespace serenity::graphics
 
         std::vector<D3D12_RESOURCE_BARRIER> m_resource_barriers{};
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

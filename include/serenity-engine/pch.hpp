@@ -1,6 +1,6 @@
 #pragma once
 
-// Setup of certain constexpr values and defines.
+// Setup of certain constexpr values and defines based on build config.
 #ifdef DEF_SERENITY_DEBUG
 static constexpr bool SERENITY_DEBUG = true;
 #else
@@ -33,21 +33,20 @@ static constexpr bool SERENITY_DEBUG = false;
 
 using namespace std::string_literals;
 
-// D3D12 / Windows includes.
+// D3D12 / Windows includes (includes some third party includes related to D3D12 and DXC).
 
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
 #include <Windows.h>
 
-#include "graphics/d3dx12.hpp"
-#include "graphics/dxcapi.hpp"
+#include "renderer/rhi/d3dx12.hpp"
+#include "renderer/rhi/dxcapi.hpp"
 #include <DirectXMath.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
+#include <wrl.h>
 
 namespace math = DirectX;
-
-#include <wrl.h>
 
 // Global project includes.
 #include "core/log.hpp"

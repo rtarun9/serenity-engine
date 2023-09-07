@@ -3,13 +3,15 @@
 namespace serenity
 {
     // Helper functions for converting strings from wstring to string and vice versa.
+    // Reference :
+    // https://github.com/turanszkij/WickedEngine/blob/bb519474cad797af78f53bbee622520efbb725f7/WickedEngine/wiHelper.cpp#L1520
 
     inline std::wstring string_to_wstring(const std::string_view input_string)
     {
         auto result = std::wstring{};
         const auto input = std::string(input_string);
 
-        const int32_t length = ::MultiByteToWideChar(CP_UTF8, 0, input.c_str(), -1, NULL, 0);
+        const auto length = ::MultiByteToWideChar(CP_UTF8, 0, input.c_str(), -1, NULL, 0);
         if (length > 0)
         {
             result.resize(size_t(length) - 1);
@@ -24,7 +26,7 @@ namespace serenity
         auto result = std::string{};
         const auto input = std::wstring(input_string);
 
-        const int32_t length = ::WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, NULL, 0, NULL, NULL);
+        const auto length = ::WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, NULL, 0, NULL, NULL);
         if (length > 0)
         {
             result.resize(size_t(length) - 1);

@@ -1,6 +1,6 @@
-#include "serenity-engine/graphics/command_queue.hpp"
+#include "serenity-engine/renderer/rhi/command_queue.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     CommandQueue::CommandQueue(const comptr<ID3D12Device> &device, const D3D12_COMMAND_LIST_TYPE command_list_type)
         : m_command_list_type(command_list_type)
@@ -71,4 +71,4 @@ namespace serenity::graphics
                                              command_lists_to_execute.data());
     }
 
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

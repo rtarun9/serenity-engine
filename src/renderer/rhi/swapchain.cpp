@@ -1,6 +1,6 @@
-#include "serenity-engine/graphics/swapchain.hpp"
+#include "serenity-engine/renderer/rhi/swapchain.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     Swapchain::Swapchain(const comptr<IDXGIFactory5> &factory, const comptr<ID3D12Device5> &device,
                          const comptr<ID3D12CommandQueue> &direct_command_queue,
@@ -110,4 +110,4 @@ namespace serenity::graphics
         m_current_backbuffer_index = m_swapchain->GetCurrentBackBufferIndex();
     }
 
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

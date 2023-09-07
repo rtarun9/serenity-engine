@@ -1,15 +1,15 @@
-#include "serenity-engine/graphics/shader_compiler.hpp"
+#include "serenity-engine/renderer/shader_compiler.hpp"
 
 #include "serenity-engine/core/file_system.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer
 {
     ShaderCompiler::ShaderCompiler()
     {
         // Init core DXC objects.
-        throw_if_failed(::DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_utils)));
-        throw_if_failed(::DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_compiler)));
-        throw_if_failed(m_utils->CreateDefaultIncludeHandler(&m_include_handler));
+        rhi::throw_if_failed(::DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_utils)));
+        rhi::throw_if_failed(::DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_compiler)));
+        rhi::throw_if_failed(m_utils->CreateDefaultIncludeHandler(&m_include_handler));
 
         // Get the shader directory.
         m_shader_directory = string_to_wstring(core::FileSystem::instance().get_relative_path("shaders/"));
@@ -79,7 +79,7 @@ namespace serenity::graphics
         const auto full_shader_path =
             string_to_wstring(core::FileSystem::instance().get_relative_path(wstring_to_string(shader_path)));
 
-        throw_if_failed(m_utils->LoadFile(full_shader_path.data(), nullptr, &source_blob));
+        rhi::throw_if_failed(m_utils->LoadFile(full_shader_path.data(), nullptr, &source_blob));
 
         const auto source_buffer = DxcBuffer{
             .Ptr = source_blob->GetBufferPointer(),
@@ -100,7 +100,7 @@ namespace serenity::graphics
 
         // Get compilation errors (if any).
         auto errors = comptr<IDxcBlobUtf8>{};
-        throw_if_failed(compiled_shader_buffer->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr));
+        rhi::throw_if_failed(compiled_shader_buffer->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr));
         if (errors && errors->GetStringLength() > 0)
         {
             const auto error_message = errors->GetStringPointer();
@@ -109,7 +109,8 @@ namespace serenity::graphics
         }
 
         auto compiled_shader_blob = comptr<IDxcBlob>{};
-        throw_if_failed(compiled_shader_buffer->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiled_shader_blob), nullptr));
+        rhi::throw_if_failed(
+            compiled_shader_buffer->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiled_shader_blob), nullptr));
 
         shader.blob = compiled_shader_blob;
 
@@ -137,4 +138,4 @@ namespace serenity::graphics
                                                wstring_to_string(shader_path)));
         return shader;
     }
-} // namespace serenity::graphics
+} // namespace serenity::renderer

@@ -4,17 +4,16 @@
 #include "command_queue.hpp"
 #include "descriptor_heap.hpp"
 #include "root_signature.hpp"
-#include "shader_compiler.hpp"
 #include "swapchain.hpp"
 
 #include "buffer.hpp"
-#include "texture.hpp"
 #include "d3d_utils.hpp"
 #include "pipeline.hpp"
+#include "texture.hpp"
 
 #include "serenity-engine/core/singleton_instance.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     // Abstraction for creating / destroying various graphics resources.
     // Encapsulates most renderer resources / objects in use : the swap chain, descriptor heaps, command queue's, etc.
@@ -54,7 +53,8 @@ namespace serenity::graphics
             return *(m_dsv_descriptor_heap.get());
         }
 
-        // Resets the command buffer and allocator for the current frame. Also gets the swapchain backbuffer for this frame.
+        // Resets the command buffer and allocator for the current frame. Also gets the swapchain backbuffer for this
+        // frame.
         void frame_start();
 
         // Updates the frame fence value for current frame and updates current swapchain backbuffer index.
@@ -119,9 +119,6 @@ namespace serenity::graphics
 
         // Bindless root signature (a singleton instance).
         std::unique_ptr<RootSignature> m_root_signature{};
-
-        // Shader compiler (using DXC's C++ Api).
-        std::unique_ptr<ShaderCompiler> m_shader_compiler{};
     };
 
     template <typename T>
@@ -249,4 +246,4 @@ namespace serenity::graphics
 
         return buffer;
     }
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

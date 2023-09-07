@@ -4,7 +4,7 @@
 
 #include "command_list.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     // Command Queue is the execution port of the GPU.
     // Command lists are submitted to the queue for execution on the GPU. Since synchronization must be done explicitly,
@@ -15,7 +15,7 @@ namespace serenity::graphics
         explicit CommandQueue(const comptr<ID3D12Device> &device, const D3D12_COMMAND_LIST_TYPE command_list_type);
         ~CommandQueue();
 
-        comptr<ID3D12CommandQueue> &get_command_queue() 
+        comptr<ID3D12CommandQueue> &get_command_queue()
         {
             return m_command_queue;
         }
@@ -49,4 +49,4 @@ namespace serenity::graphics
 
         uint64_t m_monotonically_increasing_fence_value{};
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

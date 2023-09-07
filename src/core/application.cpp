@@ -16,10 +16,9 @@ namespace serenity::core
             .y = 90.0f,
         };
 
-        m_window = std::make_unique<window::Window>("serenity-engine", screen_percent_to_cover);
+        m_window = std::make_unique<window::Window>(screen_percent_to_cover);
 
-        m_graphics_device =
-            std::make_unique<graphics::Device>(m_window->get_window_handle(), m_window->get_dimensions());
+        m_renderer = std::make_unique<renderer::Renderer>(*(m_window.get()));
 
         m_scene_manager = std::make_unique<scene::SceneManager>();
 

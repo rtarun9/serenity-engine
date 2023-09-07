@@ -2,7 +2,7 @@
 
 #include "d3d_utils.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     enum class BufferUsage : uint8_t
     {
@@ -63,9 +63,9 @@ namespace serenity::graphics
         // To be used only by constant buffers.
         std::optional<uint8_t *> mapped_pointer{};
 
-        void update(const std::byte* data, const size_t size)
+        void update(const std::byte *data, const size_t size)
         {
             std::memcpy(mapped_pointer.value(), reinterpret_cast<const void *>(data), size);
         }
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

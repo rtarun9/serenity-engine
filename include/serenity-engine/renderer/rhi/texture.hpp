@@ -2,7 +2,7 @@
 
 #include "d3d_utils.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     enum class TextureUsage : uint8_t
     {
@@ -64,7 +64,5 @@ namespace serenity::graphics
         uint32_t uav_index{};
         uint32_t rtv_index{};
         uint32_t dsv_index{};
-
-        size_t size_in_bytes{};
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

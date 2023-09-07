@@ -2,15 +2,13 @@
 
 #include "serenity-engine/utils/string_conversions.hpp"
 
-namespace serenity::graphics
+template <typename T>
+using comptr = Microsoft::WRL::ComPtr<T>;
+
+namespace serenity::renderer::rhi
 {
-    // Helper functions for D3D12.
-
-    template <typename T>
-    using comptr = Microsoft::WRL::ComPtr<T>;
-
     inline void throw_if_failed(const HRESULT hr,
-                                       const std::source_location source_location = std::source_location::current())
+                                const std::source_location source_location = std::source_location::current())
     {
         if (FAILED(hr))
         {
@@ -18,6 +16,7 @@ namespace serenity::graphics
         }
     }
 
+    // Helper functions for D3D12.
     inline void set_name(ID3D12Object *const object, const std::wstring_view name)
     {
         throw_if_failed(object->SetName(name.data()));
@@ -85,4 +84,4 @@ namespace serenity::graphics
     {
         return wstring_to_string(descriptor_heap_type_to_wstring(descriptor_heap_type));
     }
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

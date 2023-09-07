@@ -2,7 +2,7 @@
 
 #include "d3d_utils.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     // Descriptor abstraction (holds both a CPU and GPU descriptor handle).
     // The GPU descriptor handle is to only be used when the descriptor heap is shader visible.
@@ -27,7 +27,7 @@ namespace serenity::graphics
                                 const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type, const uint32_t num_descriptors);
         ~DescriptorHeap();
 
-        comptr<ID3D12DescriptorHeap>& get_descriptor_heap() 
+        comptr<ID3D12DescriptorHeap> &get_descriptor_heap()
         {
             return m_descriptor_heap;
         }
@@ -64,4 +64,4 @@ namespace serenity::graphics
         DescriptorHandle m_descriptor_handle_for_start{};
         DescriptorHandle m_current_descriptor_handle{};
     };
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi

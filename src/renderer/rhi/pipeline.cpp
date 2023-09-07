@@ -1,8 +1,8 @@
-#include "serenity-engine/graphics/pipeline.hpp"
+#include "serenity-engine/renderer/rhi/pipeline.hpp"
 
-#include "serenity-engine/graphics/root_signature.hpp"
+#include "serenity-engine/renderer/rhi/root_signature.hpp"
 
-namespace serenity::graphics
+namespace serenity::renderer::rhi
 {
     Pipeline::Pipeline(const comptr<ID3D12Device> &device, const PipelineCreationDesc &pipeline_creation_desc)
     {
@@ -53,4 +53,4 @@ namespace serenity::graphics
         {
         }
     }
-} // namespace serenity::graphics
+} // namespace serenity::renderer::rhi
