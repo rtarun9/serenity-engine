@@ -17,7 +17,7 @@ namespace serenity::renderer::rhi
 {
     // Abstraction for creating / destroying various graphics resources.
     // Encapsulates most renderer resources / objects in use : the swap chain, descriptor heaps, command queue's, etc.
-    class Device : public core::SingletonInstance<Device>
+    class Device 
     {
       public:
         explicit Device(const HWND window_handle, const Uint2 dimensions);
@@ -51,6 +51,11 @@ namespace serenity::renderer::rhi
         DescriptorHeap &get_dsv_descriptor_heap() const
         {
             return *(m_dsv_descriptor_heap.get());
+        }
+
+        Swapchain& get_swapchain() const
+        {
+            return *(m_swapchain.get());
         }
 
         // Resets the command buffer and allocator for the current frame. Also gets the swapchain backbuffer for this

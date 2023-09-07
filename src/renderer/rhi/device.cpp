@@ -96,7 +96,7 @@ namespace serenity::renderer::rhi
     void Device::frame_start()
     {
         // Reset command buffer and allocater associated with this frame.
-        m_current_swapchain_backbuffer_index = Swapchain::instance().get_current_backbuffer_index();
+        m_current_swapchain_backbuffer_index = m_swapchain->get_current_backbuffer_index();
 
         m_direct_command_lists.at(m_current_swapchain_backbuffer_index)->reset();
     }
@@ -104,7 +104,7 @@ namespace serenity::renderer::rhi
     void Device::frame_end()
     {
         m_frame_fence_values.at(m_current_swapchain_backbuffer_index) = m_direct_command_queue->signal();
-        m_current_swapchain_backbuffer_index = Swapchain::instance().get_current_backbuffer_index();
+        m_current_swapchain_backbuffer_index = m_swapchain->get_current_backbuffer_index();
 
         // Wait for the previous frame (i.e the new m_current_swapchain_backbuffer_index's previous command's) to finish
         // execution.

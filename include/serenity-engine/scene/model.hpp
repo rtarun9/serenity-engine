@@ -1,8 +1,6 @@
 #pragma once
 
-#include "serenity-engine/renderer/rhi/buffer.hpp"
-#include "serenity-engine/renderer/rhi/texture.hpp"
-
+#include "serenity-engine/renderer/renderer.hpp"
 #include "shaders/interop/constant_buffers.hlsli"
 
 namespace serenity::scene
@@ -15,11 +13,13 @@ namespace serenity::scene
 
     struct Mesh
     {
-        renderer::rhi::Buffer position_buffer{};
-        renderer::rhi::Buffer normal_buffer{};
-        renderer::rhi::Buffer texture_coords_buffer{};
+        uint32_t position_buffer_index{};
+        uint32_t normal_buffer_index{};
+        uint32_t texture_coords_buffer_index{};
 
-        renderer::rhi::Buffer index_buffer{};
+        uint32_t index_buffer_index{};
+
+        uint32_t material_index{};
 
         uint32_t indices{};
     };
@@ -27,7 +27,7 @@ namespace serenity::scene
     struct Material
     {
         math::XMFLOAT4 base_color{};
-        renderer::rhi::Texture base_color_texture{};
+        uint32_t base_color_texture_index{};
     };
 
     struct Transform
@@ -36,7 +36,7 @@ namespace serenity::scene
         math::XMFLOAT3 rotation{};
         math::XMFLOAT3 translation{};
 
-        renderer::rhi::Buffer transform_buffer{};
+        uint32_t transform_buffer_index{};
 
         void update(const math::XMMATRIX view_projection_matrix)
         {
@@ -48,7 +48,9 @@ namespace serenity::scene
 
             const auto mvp_matrix = model_matrix * view_projection_matrix;
 
-            transform_buffer.update(reinterpret_cast<const std::byte *>(&mvp_matrix), sizeof(math::XMMATRIX));
+            renderer::Renderer::instance()
+                .get_buffer_at_index(transform_buffer_index)
+                .update(reinterpret_cast<const std::byte *>(&mvp_matrix), sizeof(math::XMMATRIX));
         }
     };
 

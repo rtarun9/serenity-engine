@@ -65,7 +65,105 @@ namespace serenity::asset::ModelLoader
         return transform;
     }
 
-    ModelData load_model(const std::string_view model_path, const math::XMMATRIX transform_matrix)
+    // Function to get mesh data.
+    std::vector<MeshData> get_mesh_data_from_node(const fastgltf::Asset &asset, const fastgltf::Node &node)
+    {
+        auto result_mesh_data = std::vector<MeshData>{};
+
+        // Load all child nodes.
+        for (const auto &child_node : node.children)
+        {
+            const auto child_mesh_data = get_mesh_data_from_node(asset, asset.nodes.at(child_node));
+            result_mesh_data.insert(result_mesh_data.end(), child_mesh_data.begin(), child_mesh_data.end());
+        }
+
+        // Get GLTF mesh data.
+        const auto mesh = asset.meshes.at(node.meshIndex.value());
+
+        for (auto &primitive : mesh.primitives)
+        {
+            auto mesh_data = MeshData{};
+            // Load attributes.
+
+            // Load positions.
+            auto &position_accessor = asset.accessors[primitive.findAttribute("POSITION")->second];
+            mesh_data.positions = get_data_from_accessor<math::XMFLOAT3>(asset, position_accessor);
+
+            // Load normals.
+            auto &normal_accessor = asset.accessors[primitive.findAttribute("NORMAL")->second];
+            mesh_data.normals = get_data_from_accessor<math::XMFLOAT3>(asset, normal_accessor);
+
+            // Load texture coords.
+            auto &texture_coord_accessor = asset.accessors[primitive.findAttribute("TEXCOORD_0")->second];
+            mesh_data.texture_coords = get_data_from_accessor<math::XMFLOAT2>(asset, texture_coord_accessor);
+
+            // Load index buffer.
+            auto &index_accessor = asset.accessors[primitive.indicesAccessor.value()];
+            mesh_data.indices = get_data_from_accessor<uint16_t>(asset, index_accessor);
+
+            if (primitive.materialIndex.has_value())
+            {
+                mesh_data.material_index = primitive.materialIndex.value();
+            }
+            else
+            {
+                mesh_data.material_index = 0;
+            }
+            result_mesh_data.emplace_back(std::move(mesh_data));
+        }
+
+        return result_mesh_data;
+    }
+
+    // Main reference : https://github.com/spnda/fastgltf/blob/main/examples/gl_viewer/gl_viewer.cpp.
+    std::vector<MaterialData> get_material_data_from_asset(const fastgltf::Asset &asset, const std::string path)
+    {
+        auto result_material_data = std::vector<MaterialData>{};
+
+        for (const auto &material : asset.materials)
+        {
+            auto material_data = MaterialData{};
+            material_data.base_color = math::XMFLOAT4{
+                material.pbrData.baseColorFactor[0],
+                material.pbrData.baseColorFactor[1],
+                material.pbrData.baseColorFactor[2],
+                material.pbrData.baseColorFactor[3],
+            };
+
+            if (material.pbrData.baseColorTexture.has_value())
+            {
+                const auto &base_color_texture_info = material.pbrData.baseColorTexture.value();
+                auto &base_color_texture = asset.textures.at(base_color_texture_info.textureIndex);
+
+                const auto base_image_index =
+                    base_color_texture.imageIndex.has_value() ? base_color_texture.imageIndex.value() : base_color_texture.fallbackImageIndex.value();
+
+                const auto &base_color_image = asset.images.at(base_image_index);
+                if (const auto &texture_path = std::get_if<fastgltf::sources::URI>(&base_color_image.data))
+                {
+                    material_data.base_color_texture =
+                        TextureLoader::load_texture(path + "/"s + texture_path->uri.path().data(), 4u);
+
+                    auto x = material_data.base_color_texture.dimension;
+                    auto y = 3;
+                }
+                else if (const auto &texture_data = std::get_if<fastgltf::sources::Vector>(&base_color_image.data))
+                {
+                    material_data.base_color_texture = TextureLoader::load_texture(
+                        reinterpret_cast<const std::byte *>(texture_data->bytes.data()), texture_data->bytes.size());
+
+                                        auto x = material_data.base_color_texture.dimension;
+                    auto y = 3;
+                }
+            }
+
+            result_material_data.emplace_back(material_data);
+        }
+
+        return result_material_data;
+    }
+
+    ModelData load_model(const std::string_view model_path)
     {
         auto model = ModelData{};
 
@@ -79,8 +177,7 @@ namespace serenity::asset::ModelLoader
 
         // These options tell fastgltf that we want it to load all external buffers, images, and GLB buffers into cpu
         // memory.
-        constexpr auto options = fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadExternalImages |
-                                 fastgltf::Options::LoadGLBBuffers;
+        constexpr auto options = fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadGLBBuffers;
 
         // Create a parser and parse the GLTF.
         auto parser = fastgltf::Parser();
@@ -115,66 +212,13 @@ namespace serenity::asset::ModelLoader
                 "For now, only gltf's with single scene are loaded. This will be implemented in future");
         }
 
-        // Get all nodes from scene so they can be traversed (DFS).
-        // Stack contains the node index and the transform matrix.
-        auto node_indices = std::stack<std::pair<size_t, math::XMMATRIX>>{};
-        for (auto node_index : asset.scenes[asset.defaultScene.value()].nodeIndices)
+        // Load meshes for all nodes.
+        for (const auto &node : asset.nodes)
         {
-            node_indices.push({node_index, transform_matrix});
+            model.mesh_data = get_mesh_data_from_node(asset, node);
         }
 
-        while (!node_indices.empty())
-        {
-            const auto &[node_index, transform_matrix] = node_indices.top();
-            node_indices.pop();
-
-            const auto &node = asset.nodes.at(node_index);
-
-            const auto local_transform = get_transform_matrix_from_node(asset.nodes.at(node_index));
-
-            // Load child nodes.
-            for (auto &child_nodes : node.children)
-            {
-                node_indices.push({child_nodes, local_transform * transform_matrix});
-            }
-
-            // Check if the current node has a mesh.
-            if (node.meshIndex.has_value())
-            {
-                auto mesh_data = MeshData{};
-                const auto &mesh = asset.meshes.at(node.meshIndex.value());
-
-                for (const auto &primitive : mesh.primitives)
-                {
-                    // Load attributes.
-
-                    // Load positions.
-                    auto &position_accessor = asset.accessors[primitive.findAttribute("POSITION")->second];
-                    mesh_data.positions = get_data_from_accessor<math::XMFLOAT3>(asset, position_accessor);
-
-                    // Apply the transform.
-                    std::for_each(mesh_data.positions.begin(), mesh_data.positions.end(),
-                                  [&](math::XMFLOAT3 &position) {
-                                      auto vector = math::XMVectorSet(position.x, position.y, position.z, 1.0f);
-                                      math::XMStoreFloat3(&position, math::XMVector4Transform(vector, local_transform));
-                                  });
-
-                    // Load normals.
-                    auto &normal_accessor = asset.accessors[primitive.findAttribute("NORMAL")->second];
-                    mesh_data.normals = get_data_from_accessor<math::XMFLOAT3>(asset, normal_accessor);
-
-                    // Load texture coords.
-                    auto &texture_coord_accessor = asset.accessors[primitive.findAttribute("TEXCOORD_0")->second];
-                    mesh_data.texture_coords = get_data_from_accessor<math::XMFLOAT2>(asset, texture_coord_accessor);
-
-                    // Load index buffer.
-                    auto &index_accessor = asset.accessors[primitive.indicesAccessor.value()];
-                    mesh_data.indices = get_data_from_accessor<uint16_t>(asset, index_accessor);
-                }
-
-                model.mesh_data.emplace_back(std::move(mesh_data));
-            };
-        }
+        model.material_data = get_material_data_from_asset(asset, path.parent_path().string());
 
         core::Log::instance().info(std::format("Loaded model from path :  {}", model_path));
 

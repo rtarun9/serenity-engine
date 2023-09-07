@@ -1,5 +1,7 @@
 #pragma once
 
+#include "d3dx12.hpp"
+
 #include "serenity-engine/utils/string_conversions.hpp"
 
 template <typename T>

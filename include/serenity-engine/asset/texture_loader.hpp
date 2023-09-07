@@ -16,5 +16,8 @@ namespace serenity::asset
     namespace TextureLoader
     {
         [[nodiscard]] TextureData load_texture(const std::string_view texture_path, const int num_channels = 4);
+
+        // Internally uses stbi_load_from_memory.
+        [[nodiscard]] TextureData load_texture(const std::byte* data, const uint32_t size, const int num_channels = 4);
     }
 } // namespace serenity::asset

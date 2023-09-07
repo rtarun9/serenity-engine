@@ -3,8 +3,8 @@
 // NOTE : REMOVE, THE ASSSET LOADER FILES SHOULD NOT BE HERE : ADDED FOR NOW JUST TO CHECK THE ABSTRACTIONS AND
 // INTERACTIONS.
 #include "serenity-engine/asset/texture_loader.hpp"
-#include "serenity-engine/scene/scene_manager.hpp"
 #include "serenity-engine/editor/editor.hpp"
+#include "serenity-engine/scene/scene_manager.hpp"
 #include "shaders/interop/render_resources.hlsli"
 
 namespace serenity::renderer
@@ -29,8 +29,8 @@ namespace serenity::renderer
 
     void Renderer::render()
     {
-        auto &graphics_device = rhi::Device::instance();
-        auto &swapchain = rhi::Swapchain::instance();
+        auto &graphics_device = (*m_device.get());
+        auto &swapchain = m_device->get_swapchain();
 
         // Frame start will reset the command list and command allocator associated with the current frame.
         graphics_device.frame_start();
@@ -70,13 +70,16 @@ namespace serenity::renderer
         {
             for (const auto &mesh : model.meshes)
             {
-                command_list.set_index_buffer(mesh.index_buffer);
+                command_list.set_index_buffer(get_buffer_at_index(mesh.index_buffer_index));
 
                 const auto render_resources = MeshViewerRenderResources{
-                    .position_buffer_index = mesh.position_buffer.srv_index,
-                    .texture_coord_buffer_index = mesh.texture_coords_buffer.srv_index,
-                    .albedo_texture_index = m_albedo_texture.srv_index,
-                    .transform_buffer_index = model.transform_component.transform_buffer.cbv_index,
+                    .position_buffer_index = get_buffer_at_index(mesh.position_buffer_index).srv_index,
+                    .texture_coord_buffer_index = get_buffer_at_index(mesh.texture_coords_buffer_index).srv_index,
+                    .albedo_texture_index =
+                        get_texture_at_index(model.materials.at(mesh.material_index).base_color_texture_index)
+                            .srv_index,
+                    .transform_buffer_index =
+                        get_buffer_at_index(model.transform_component.transform_buffer_index).cbv_index,
                 };
 
                 command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte *>(&render_resources));
@@ -102,7 +105,7 @@ namespace serenity::renderer
     void Renderer::create_resources()
     {
         // Create depth texture.
-        m_depth_texture = renderer::rhi::Device::instance().create_texture(renderer::rhi::TextureCreationDesc{
+        m_depth_texture = m_device->create_texture(renderer::rhi::TextureCreationDesc{
             .usage = renderer::rhi::TextureUsage::DepthStencilTexture,
             .format = DXGI_FORMAT_D32_FLOAT,
             .dimension = window_ref.get_dimensions(),
@@ -111,26 +114,14 @@ namespace serenity::renderer
         });
 
         // Create pipeline.
-        m_pipeline = renderer::rhi::Device::instance().create_pipeline(renderer::rhi::PipelineCreationDesc{
+        m_pipeline = m_device->create_pipeline(renderer::rhi::PipelineCreationDesc{
             .vertex_shader = renderer::ShaderCompiler::instance().compile(renderer::ShaderTypes::Vertex,
                                                                           L"shaders/mesh_viewer.hlsl", L"vs_main"),
             .pixel_shader = renderer::ShaderCompiler::instance().compile(renderer::ShaderTypes::Pixel,
                                                                          L"shaders/mesh_viewer.hlsl", L"ps_main"),
+            .dsv_format = DXGI_FORMAT_D32_FLOAT,
             .name = L"Mesh Viewer pixel shader",
         });
-
-        // Create albedo texture and scene.
-        auto sample_texture_data = asset::TextureLoader::load_texture("data/Cube/glTF/Cube_BaseColor.png");
-        auto &texture_data_vector = std::get<std::vector<uint8_t>>(sample_texture_data.data);
-
-        m_albedo_texture = renderer::rhi::Device::instance().create_texture(
-            renderer::rhi::TextureCreationDesc{
-                .usage = renderer::rhi::TextureUsage::ShaderResourceTexture,
-                .format = DXGI_FORMAT_R8G8B8A8_UNORM,
-                .bytes_per_pixel = 4u,
-                .dimension = sample_texture_data.dimension,
-            },
-            reinterpret_cast<const std::byte *>(texture_data_vector.data()));
     }
 
     void Renderer::create_renderpasses()

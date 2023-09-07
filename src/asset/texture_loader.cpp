@@ -14,7 +14,12 @@ namespace serenity::asset::TextureLoader
         // If the texture extension is 'hdr', that means we need to load the texture as vector of floats. Else, a vector
         // of uint8_t's is used.
 
-        auto path = core::FileSystem::instance().get_relative_path(texture_path);
+        auto path = std::string(texture_path);
+        if (path.find("serenity-engine") == std::string::npos)
+        {
+            path = core::FileSystem::instance().get_relative_path(path);
+        }
+        
         if (const auto extension = std::filesystem::path(path).extension(); extension == ".hdr")
         {
             core::Log::instance().critical("This function is not implemented yet!");
@@ -24,14 +29,14 @@ namespace serenity::asset::TextureLoader
             auto width = static_cast<int>(0);
             auto height = static_cast<int>(0);
 
-            auto data = stbi_load(path.c_str(), &width, &height, nullptr, num_channels);
+            auto data = stbi_load(path.data(), &width, &height, nullptr, num_channels);
 
             texture_data.dimension = Uint2{
                 .x = static_cast<uint32_t>(width),
                 .y = static_cast<uint32_t>(height),
             };
 
-            if (!data)
+            if (!data || width == 0 || height == 0)
             {
                 core::Log::instance().critical(std::format("Failed to load texture from path : {}", texture_path));
                 return {};
@@ -46,6 +51,37 @@ namespace serenity::asset::TextureLoader
         }
 
         core::Log::instance().info(std::format("Loaded texture from path :  {}", texture_path));
+
+        return texture_data;
+    }
+
+    TextureData load_texture(const std::byte *data, const uint32_t size, const int num_channels)
+    {
+        auto texture_data = TextureData{};
+
+        auto width = static_cast<int>(0);
+        auto height = static_cast<int>(0);
+
+        auto data_loaded_from_memory =
+            stbi_load_from_memory(reinterpret_cast<stbi_uc *>(&data), size, &width, &height, nullptr, num_channels);
+
+        texture_data.dimension = Uint2{
+            .x = static_cast<uint32_t>(width),
+            .y = static_cast<uint32_t>(height),
+        };
+
+        if (!data)
+        {
+            core::Log::instance().critical("Failed to load texture");
+            return {};
+        }
+        else
+        {
+            auto data_vector = std::vector<uint8_t>(static_cast<size_t>(width * height * num_channels));
+            std::memcpy(data_vector.data(), data_loaded_from_memory, data_vector.size());
+
+            texture_data.data = data_vector;
+        }
 
         return texture_data;
     }

@@ -1,7 +1,7 @@
 #include "serenity-engine/editor/editor.hpp"
 
 #include "serenity-engine/core/file_system.hpp"
-#include "serenity-engine/renderer/rhi/device.hpp"
+#include "serenity-engine/renderer/renderer.hpp"
 #include "serenity-engine/scene/scene_manager.hpp"
 
 #include "imgui.h"
@@ -31,15 +31,16 @@ namespace serenity::editor
         ImGui::StyleColorsDark();
 
         const auto current_srv_descriptor =
-            renderer::rhi::Device::instance().get_cbv_srv_uav_descriptor_heap().get_current_handle();
+            renderer::Renderer::instance().get_device().get_cbv_srv_uav_descriptor_heap().get_current_handle();
 
         ImGui_ImplSDL3_InitForD3D(window.get_internal_window());
-        ImGui_ImplDX12_Init(renderer::rhi::Device::instance().get_device().Get(), renderer::rhi::Swapchain::NUM_BACK_BUFFERS,
-                            DXGI_FORMAT_R8G8B8A8_UNORM,
-                            renderer::rhi::Device::instance().get_cbv_srv_uav_descriptor_heap().get_descriptor_heap().Get(),
-                            current_srv_descriptor.cpu_descriptor_handle, current_srv_descriptor.gpu_descriptor_handle);
+        ImGui_ImplDX12_Init(
+            renderer::Renderer::instance().get_device().get_device().Get(), renderer::rhi::Swapchain::NUM_BACK_BUFFERS,
+            DXGI_FORMAT_R8G8B8A8_UNORM,
+            renderer::Renderer::instance().get_device().get_cbv_srv_uav_descriptor_heap().get_descriptor_heap().Get(),
+            current_srv_descriptor.cpu_descriptor_handle, current_srv_descriptor.gpu_descriptor_handle);
 
-        renderer::rhi::Device::instance().get_cbv_srv_uav_descriptor_heap().offset_current_handle();
+        renderer::Renderer::instance().get_device().get_cbv_srv_uav_descriptor_heap().offset_current_handle();
 
         window.add_event_callback([&](window::Event event) { ImGui_ImplSDL3_ProcessEvent(&event.internal_event); });
 
@@ -95,7 +96,8 @@ namespace serenity::editor
 
         ImGui::Render();
 
-        auto &command_list = renderer::rhi::Device::instance().get_current_frame_direct_command_list().get_command_list();
+        auto &command_list =
+            renderer::Renderer::instance().get_device().get_current_frame_direct_command_list().get_command_list();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), command_list.Get());
     }
 
@@ -118,7 +120,7 @@ namespace serenity::editor
             {
                 for (auto &model : current_scene.get_models())
                 {
-                    if (ImGui::BeginChild(model.model_name.c_str()))
+                    if (ImGui::TreeNode(model.model_name.c_str()))
                     {
                         if (ImGui::TreeNode("Transform"))
                         {
@@ -134,7 +136,7 @@ namespace serenity::editor
                             ImGui::TreePop();
                         }
 
-                        ImGui::EndChild();
+                        ImGui::TreePop();
                     }
                 }
 

@@ -16,8 +16,8 @@ namespace serenity::scene
         explicit Scene(const std::string_view scene_name);
         ~Scene() = default;
 
-        void add_model(const std::string_view model_path, const math::XMMATRIX transform,
-                       const std::string_view model_name);
+        void add_model(const std::string_view model_path, const std::string_view model_name,
+                       const math::XMFLOAT3 scale = math::XMFLOAT3{1.0f, 1.0f, 1.0f});
 
         // Update the transform component of all models in the scene.
         void update(const math::XMMATRIX projection_matrix);

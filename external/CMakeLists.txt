@@ -33,7 +33,7 @@ FetchContent_Declare(
 
 FetchContent_MakeAvailable(SDL3 spdlog fastgltf stb)
 
-# imgui for the editor ui
+# imgui for the editor ui.
 FetchContent_Declare(
     imgui
     GIT_REPOSITORY https://github.com/ocornut/imgui

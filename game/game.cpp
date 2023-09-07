@@ -11,7 +11,7 @@ class Game final : public core::Application
     explicit Game()
     {
         auto default_scene = scene::Scene("Default Scene");
-        default_scene.add_model("data/Cube/glTF/Cube.gltf", math::XMMatrixIdentity(), "Cube");
+        default_scene.add_model("data/Cube/glTF/Cube.gltf", "Cube");
 
         scene::SceneManager::instance().add_scene(std::move(default_scene));
     }

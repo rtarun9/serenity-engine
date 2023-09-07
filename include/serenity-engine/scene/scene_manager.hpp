@@ -6,7 +6,7 @@
 
 namespace serenity::scene
 {
-    // A static class that holds a list of scenes and thier respective names, and exposes methods to set the current
+    // A static class that holds a list of scenes and their respective names, and exposes methods to set the current
     // scene.
     // note(rtarun9) : This class is added to the engine quite early since to have the editor be disjoint from the
     // engine, this is required. When the graphics / other features are well developed, this class will be further
@@ -20,7 +20,7 @@ namespace serenity::scene
 
         void add_scene(Scene &&scene);
         void set_current_scene(const std::string_view scene_name);
-       
+
         Scene &get_current_scene()
         {
 

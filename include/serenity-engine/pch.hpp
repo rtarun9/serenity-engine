@@ -33,15 +33,11 @@ static constexpr bool SERENITY_DEBUG = false;
 
 using namespace std::string_literals;
 
-// D3D12 / Windows includes (includes some third party includes related to D3D12 and DXC).
-
+// D3D12 / Windows includes.
 #define WIN32_LEAN_AND_MEAN
 #define NOMINMAX
-#include <Windows.h>
-
-#include "renderer/rhi/d3dx12.hpp"
-#include "renderer/rhi/dxcapi.hpp"
 #include <DirectXMath.h>
+#include <Windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>

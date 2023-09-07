@@ -17,8 +17,7 @@ namespace serenity::renderer::rhi
 
     // Swapchain holds / implements surfaces that we can render into and store before presenting it to output.
     // Handles swapping and allocation of backbuffers.
-    // NOTE : As a design choice, the swapchain will be a SingletonInstance, but will be created by device.
-    class Swapchain final : public core::SingletonInstance<Swapchain>
+    class Swapchain
     {
       public:
         explicit Swapchain(const comptr<IDXGIFactory5> &factory, const comptr<ID3D12Device5> &device,

@@ -2,6 +2,8 @@
 
 #include "rhi/d3d_utils.hpp"
 
+#include <dxcapi.h>
+
 namespace serenity::renderer
 {
     struct Shader

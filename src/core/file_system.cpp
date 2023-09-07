@@ -10,6 +10,7 @@ namespace serenity::core
         // called "serenity-engine". Then, that path + "serenity-engine" will be the root directory.
 
         auto current_path = std::filesystem::current_path();
+        Log::instance().info(std::format("Executable path : {}", current_path.string()));
 
         while (current_path.has_parent_path())
         {
