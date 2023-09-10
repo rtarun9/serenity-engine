@@ -17,7 +17,7 @@ namespace serenity::renderer::rhi
 {
     // Abstraction for creating / destroying various graphics resources.
     // Encapsulates most renderer resources / objects in use : the swap chain, descriptor heaps, command queue's, etc.
-    class Device 
+    class Device
     {
       public:
         explicit Device(const HWND window_handle, const Uint2 dimensions);
@@ -53,7 +53,7 @@ namespace serenity::renderer::rhi
             return *(m_dsv_descriptor_heap.get());
         }
 
-        Swapchain& get_swapchain() const
+        Swapchain &get_swapchain() const
         {
             return *(m_swapchain.get());
         }
@@ -172,6 +172,12 @@ namespace serenity::renderer::rhi
 
             throw_if_failed(buffer.resource->Map(0u, &no_read_range, reinterpret_cast<void **>(&mapped_pointer)));
             buffer.mapped_pointer = mapped_pointer;
+
+            if (data.size() > 0)
+            {
+                // If some data is passed in, update the constant buffer.
+                buffer.update(reinterpret_cast<const std::byte *>(data.data()), sizeof(T));
+            }
         }
         else
         {

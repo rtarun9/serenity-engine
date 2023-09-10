@@ -6,7 +6,7 @@ namespace serenity::core
 {
     FileSystem::FileSystem()
     {
-        // Logic : Start from the currrent directory, and keep moving up until you can find the directory
+        // Logic : Start from the current directory, and keep moving up until you can find the directory
         // called "serenity-engine". Then, that path + "serenity-engine" will be the root directory.
 
         auto current_path = std::filesystem::current_path();

@@ -24,10 +24,13 @@ namespace serenity::scene
         uint32_t indices{};
     };
 
+    // Note : MaterialBuffer contains some texture indices, which are the actual SRV indices. The material_buffer_index
+    // on the other hand is the index of material buffer in the renderer's buffer array.
     struct Material
     {
-        math::XMFLOAT4 base_color{};
-        uint32_t base_color_texture_index{};
+        MaterialBuffer material_data{};
+
+        uint32_t material_buffer_index{};
     };
 
     struct Transform
@@ -38,7 +41,7 @@ namespace serenity::scene
 
         uint32_t transform_buffer_index{};
 
-        void update(const math::XMMATRIX view_projection_matrix)
+        void update()
         {
             const auto model_matrix = math::XMMatrixScaling(scale.x, scale.y, scale.z) *
                                       math::XMMatrixRotationX(math::XMConvertToRadians(rotation.x)) *
@@ -46,11 +49,11 @@ namespace serenity::scene
                                       math::XMMatrixRotationZ(math::XMConvertToRadians(rotation.z)) *
                                       math::XMMatrixTranslation(translation.x, translation.y, translation.z);
 
-            const auto mvp_matrix = model_matrix * view_projection_matrix;
+            const auto transform_buffer_data = TransformBuffer{.model_matrix = model_matrix};
 
             renderer::Renderer::instance()
                 .get_buffer_at_index(transform_buffer_index)
-                .update(reinterpret_cast<const std::byte *>(&mvp_matrix), sizeof(math::XMMATRIX));
+                .update(reinterpret_cast<const std::byte *>(&transform_buffer_data), sizeof(TransformBuffer));
         }
     };
 

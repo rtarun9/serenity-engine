@@ -14,4 +14,7 @@ namespace serenity
         float x{};
         float y{};
     };
+
+    static constexpr uint32_t INVALID_INDEX_U32 = -1;
+
 } // namespace serenity

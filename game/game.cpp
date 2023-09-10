@@ -8,11 +8,11 @@ class Game final : public core::Application
 {
 
   public:
-    explicit Game()
+    explicit Game(const core::ApplicationConfig &application_config) : core::Application(application_config)
     {
         auto default_scene = scene::Scene("Default Scene");
         default_scene.add_model("data/Cube/glTF/Cube.gltf", "Cube");
-
+        default_scene.add_model("data/sketchfab_pbr_material_reference_chart/scene.gltf", "PBR_References");
         scene::SceneManager::instance().add_scene(std::move(default_scene));
     }
 
@@ -45,5 +45,10 @@ class Game final : public core::Application
 
 std::unique_ptr<serenity::core::Application> serenity::core::create_application()
 {
-    return std::make_unique<Game>();
+    return std::make_unique<Game>(serenity::core::ApplicationConfig{.log_to_console = true,
+                                                                    .log_to_file = true,
+                                                                    .dimensions = Float2{
+                                                                        .x = 92.0f,
+                                                                        .y = 92.0f,
+                                                                    }});
 }

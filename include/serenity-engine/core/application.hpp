@@ -13,17 +13,24 @@
 
 namespace serenity::core
 {
+    struct ApplicationConfig
+    {
+        bool log_to_console{true};
+        bool log_to_file{true};
+        std::variant<Uint2, Float2> dimensions{};
+    };
+
     // All serenity engine application's must inherit from this Application abstract class.
-    // NOTE : Implement the 'create_application()' function that returns a unique_ptr of of derived class of
+    // NOTE : Implement the 'create_application()' function that returns a unique_ptr of  derived class of
     // Application. The entry point / main function will use the create_application() function to get an object of
     // Application (a derived class that is) and call the run method.
     class Application
     {
       public:
-        explicit Application();
+        explicit Application(const ApplicationConfig &application_config);
         virtual ~Application() = default;
 
-        // The run method should not be overriden.
+        // The run method should not be overridden.
         virtual void run() final;
 
         // To be implemented by applications inheriting from this class.

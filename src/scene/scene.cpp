@@ -7,6 +7,11 @@ namespace serenity::scene
 {
     Scene::Scene(const std::string_view scene_name) : m_scene_name(scene_name)
     {
+        // Create the scene buffer.
+        m_scene_buffer_index = renderer::Renderer::instance().create_buffer<SceneBuffer>(
+            renderer::rhi::BufferCreationDesc{.usage = renderer::rhi::BufferUsage::ConstantBuffer,
+                                              .name = string_to_wstring(scene_name) + L" Scene Buffer"});
+
         core::Log::instance().info(std::format("Created scene {}", scene_name));
     }
 
@@ -68,16 +73,35 @@ namespace serenity::scene
         {
             auto material = Material{};
 
-            const auto base_color_texture_data = std::get<std::vector<uint8_t>>(material_data.base_color_texture.data);
+            const auto &base_color_texture_data = std::get<std::vector<uint8_t>>(material_data.base_color_texture.data);
 
-            material.base_color_texture_index = renderer::Renderer::instance().create_texture(
-                renderer::rhi::TextureCreationDesc{
-                    .usage = renderer::rhi::TextureUsage::ShaderResourceTexture,
-                    .format = DXGI_FORMAT_R8G8B8A8_UNORM,
-                    .bytes_per_pixel = 4u,
-                    .dimension = material_data.base_color_texture.dimension,
+            material.material_data.albedo_texture_srv_index = INVALID_INDEX_U32;
+
+            if (material_data.base_color_texture.dimension.x != 0 && material_data.base_color_texture.dimension.y != 0)
+            {
+                const auto albedo_texture_index = renderer::Renderer::instance().create_texture(
+                    renderer::rhi::TextureCreationDesc{
+                        .usage = renderer::rhi::TextureUsage::ShaderResourceTexture,
+                        .format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                        .bytes_per_pixel = 4u,
+                        .dimension = material_data.base_color_texture.dimension,
+                        .name = string_to_wstring(model_name) + L" albedo texture",
+                    },
+                    reinterpret_cast<const std::byte *>(base_color_texture_data.data()));
+
+                material.material_data.albedo_texture_srv_index =
+                    renderer::Renderer::instance().get_texture_at_index(albedo_texture_index).srv_index;
+            }
+
+            material.material_data.base_color = material_data.base_color;
+
+            // Create the material buffer.
+            material.material_buffer_index = renderer::Renderer::instance().create_buffer<MaterialBuffer>(
+                renderer::rhi::BufferCreationDesc{
+                    .usage = renderer::rhi::BufferUsage::ConstantBuffer,
+                    .name = string_to_wstring(model_name) + L" material buffer",
                 },
-                reinterpret_cast<const std::byte *>(base_color_texture_data.data()));
+                std::array{material.material_data});
 
             model.materials.emplace_back(std::move(material));
         }
@@ -87,9 +111,15 @@ namespace serenity::scene
 
     void Scene::update(const math::XMMATRIX projection_matrix)
     {
+        // Update scene buffer.
+        m_scene_buffer.view_projection_matrix = m_camera.get_view_matrix() * projection_matrix;
+        renderer::Renderer::instance()
+            .get_buffer_at_index(m_scene_buffer_index)
+            .update(reinterpret_cast<const std::byte *>(&m_scene_buffer), sizeof(SceneBuffer));
+
         for (auto &model : m_models)
         {
-            model.transform_component.update(m_camera.get_view_matrix() * projection_matrix);
+            model.transform_component.update();
         }
     }
 } // namespace serenity::scene

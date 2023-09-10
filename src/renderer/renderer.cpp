@@ -1,10 +1,8 @@
 #include "serenity-engine/renderer/renderer.hpp"
 
-// NOTE : REMOVE, THE ASSSET LOADER FILES SHOULD NOT BE HERE : ADDED FOR NOW JUST TO CHECK THE ABSTRACTIONS AND
-// INTERACTIONS.
-#include "serenity-engine/asset/texture_loader.hpp"
 #include "serenity-engine/editor/editor.hpp"
 #include "serenity-engine/scene/scene_manager.hpp"
+
 #include "shaders/interop/render_resources.hlsli"
 
 namespace serenity::renderer
@@ -66,6 +64,8 @@ namespace serenity::renderer
         command_list.set_bindless_graphics_root_signature();
         command_list.set_pipeline_state(m_pipeline);
 
+        const auto &scene_buffer_index = scene::SceneManager::instance().get_current_scene().get_scene_buffer_index();
+
         for (auto models = scene::SceneManager::instance().get_current_scene().get_models(); auto &model : models)
         {
             for (const auto &mesh : model.meshes)
@@ -73,13 +73,13 @@ namespace serenity::renderer
                 command_list.set_index_buffer(get_buffer_at_index(mesh.index_buffer_index));
 
                 const auto render_resources = MeshViewerRenderResources{
-                    .position_buffer_index = get_buffer_at_index(mesh.position_buffer_index).srv_index,
-                    .texture_coord_buffer_index = get_buffer_at_index(mesh.texture_coords_buffer_index).srv_index,
-                    .albedo_texture_index =
-                        get_texture_at_index(model.materials.at(mesh.material_index).base_color_texture_index)
-                            .srv_index,
-                    .transform_buffer_index =
+                    .position_buffer_srv_index = get_buffer_at_index(mesh.position_buffer_index).srv_index,
+                    .texture_coord_buffer_srv_index = get_buffer_at_index(mesh.texture_coords_buffer_index).srv_index,
+                    .transform_buffer_cbv_index =
                         get_buffer_at_index(model.transform_component.transform_buffer_index).cbv_index,
+                    .scene_buffer_cbv_index = get_buffer_at_index(scene_buffer_index).cbv_index,
+                    .material_buffer_cbv_index =
+                        get_buffer_at_index(model.materials.at(mesh.material_index).material_buffer_index).cbv_index,
                 };
 
                 command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte *>(&render_resources));

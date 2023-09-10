@@ -78,38 +78,41 @@ namespace serenity::asset::ModelLoader
         }
 
         // Get GLTF mesh data.
-        const auto mesh = asset.meshes.at(node.meshIndex.value());
-
-        for (auto &primitive : mesh.primitives)
+        if (node.meshIndex.has_value())
         {
-            auto mesh_data = MeshData{};
-            // Load attributes.
+            const auto &mesh = asset.meshes.at(node.meshIndex.value());
 
-            // Load positions.
-            auto &position_accessor = asset.accessors[primitive.findAttribute("POSITION")->second];
-            mesh_data.positions = get_data_from_accessor<math::XMFLOAT3>(asset, position_accessor);
-
-            // Load normals.
-            auto &normal_accessor = asset.accessors[primitive.findAttribute("NORMAL")->second];
-            mesh_data.normals = get_data_from_accessor<math::XMFLOAT3>(asset, normal_accessor);
-
-            // Load texture coords.
-            auto &texture_coord_accessor = asset.accessors[primitive.findAttribute("TEXCOORD_0")->second];
-            mesh_data.texture_coords = get_data_from_accessor<math::XMFLOAT2>(asset, texture_coord_accessor);
-
-            // Load index buffer.
-            auto &index_accessor = asset.accessors[primitive.indicesAccessor.value()];
-            mesh_data.indices = get_data_from_accessor<uint16_t>(asset, index_accessor);
-
-            if (primitive.materialIndex.has_value())
+            for (auto &primitive : mesh.primitives)
             {
-                mesh_data.material_index = primitive.materialIndex.value();
+                auto mesh_data = MeshData{};
+                // Load attributes.
+
+                // Load positions.
+                auto &position_accessor = asset.accessors[primitive.findAttribute("POSITION")->second];
+                mesh_data.positions = get_data_from_accessor<math::XMFLOAT3>(asset, position_accessor);
+
+                // Load normals.
+                auto &normal_accessor = asset.accessors[primitive.findAttribute("NORMAL")->second];
+                mesh_data.normals = get_data_from_accessor<math::XMFLOAT3>(asset, normal_accessor);
+
+                // Load texture coords.
+                auto &texture_coord_accessor = asset.accessors[primitive.findAttribute("TEXCOORD_0")->second];
+                mesh_data.texture_coords = get_data_from_accessor<math::XMFLOAT2>(asset, texture_coord_accessor);
+
+                // Load index buffer.
+                auto &index_accessor = asset.accessors[primitive.indicesAccessor.value()];
+                mesh_data.indices = get_data_from_accessor<uint16_t>(asset, index_accessor);
+
+                if (primitive.materialIndex.has_value())
+                {
+                    mesh_data.material_index = primitive.materialIndex.value();
+                }
+                else
+                {
+                    mesh_data.material_index = 0;
+                }
+                result_mesh_data.emplace_back(std::move(mesh_data));
             }
-            else
-            {
-                mesh_data.material_index = 0;
-            }
-            result_mesh_data.emplace_back(std::move(mesh_data));
         }
 
         return result_mesh_data;
@@ -123,6 +126,7 @@ namespace serenity::asset::ModelLoader
         for (const auto &material : asset.materials)
         {
             auto material_data = MaterialData{};
+
             material_data.base_color = math::XMFLOAT4{
                 material.pbrData.baseColorFactor[0],
                 material.pbrData.baseColorFactor[1],
@@ -135,10 +139,12 @@ namespace serenity::asset::ModelLoader
                 const auto &base_color_texture_info = material.pbrData.baseColorTexture.value();
                 auto &base_color_texture = asset.textures.at(base_color_texture_info.textureIndex);
 
-                const auto base_image_index =
-                    base_color_texture.imageIndex.has_value() ? base_color_texture.imageIndex.value() : base_color_texture.fallbackImageIndex.value();
+                const auto base_image_index = base_color_texture.imageIndex.has_value()
+                                                  ? base_color_texture.imageIndex.value()
+                                                  : base_color_texture.fallbackImageIndex.value();
 
                 const auto &base_color_image = asset.images.at(base_image_index);
+
                 if (const auto &texture_path = std::get_if<fastgltf::sources::URI>(&base_color_image.data))
                 {
                     material_data.base_color_texture =
@@ -152,7 +158,7 @@ namespace serenity::asset::ModelLoader
                     material_data.base_color_texture = TextureLoader::load_texture(
                         reinterpret_cast<const std::byte *>(texture_data->bytes.data()), texture_data->bytes.size());
 
-                                        auto x = material_data.base_color_texture.dimension;
+                    auto x = material_data.base_color_texture.dimension;
                     auto y = 3;
                 }
             }
@@ -168,16 +174,17 @@ namespace serenity::asset::ModelLoader
         auto model = ModelData{};
 
         auto data = fastgltf::GltfDataBuffer();
-        if (!data.loadFromFile(core::FileSystem::instance().get_relative_path(model_path)))
+        const auto path = std::filesystem::path(core::FileSystem::instance().get_absolute_path(model_path));
+
+        if (!data.loadFromFile(path))
         {
             core::Log::instance().critical(std::format("Failed to load GLTF data from model with path : ", model_path));
         }
 
-        auto path = std::filesystem::path(core::FileSystem::instance().get_relative_path(model_path));
-
-        // These options tell fastgltf that we want it to load all external buffers, images, and GLB buffers into cpu
+        // These options tell fastgltf that we want it to load all external buffers, images, and GLB buffers into CPU
         // memory.
-        constexpr auto options = fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadGLBBuffers;
+        constexpr auto options = fastgltf::Options::LoadExternalBuffers | fastgltf::Options::LoadGLBBuffers |
+                                 fastgltf::Options::LoadExternalImages;
 
         // Create a parser and parse the GLTF.
         auto parser = fastgltf::Parser();
@@ -215,9 +222,11 @@ namespace serenity::asset::ModelLoader
         // Load meshes for all nodes.
         for (const auto &node : asset.nodes)
         {
-            model.mesh_data = get_mesh_data_from_node(asset, node);
+            const auto data = get_mesh_data_from_node(asset, node);
+            model.mesh_data.insert(model.mesh_data.end(), data.begin(), data.end());
         }
 
+        // Load material data.
         model.material_data = get_material_data_from_asset(asset, path.parent_path().string());
 
         core::Log::instance().info(std::format("Loaded model from path :  {}", model_path));

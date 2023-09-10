@@ -7,19 +7,15 @@
 
 namespace serenity::asset::TextureLoader
 {
-    TextureData load_texture(const std::string_view texture_path, const int num_channels)
+    TextureData load_texture(const std::string_view texture_path, const uint32_t num_channels)
     {
         auto texture_data = TextureData{};
 
         // If the texture extension is 'hdr', that means we need to load the texture as vector of floats. Else, a vector
         // of uint8_t's is used.
 
-        auto path = std::string(texture_path);
-        if (path.find("serenity-engine") == std::string::npos)
-        {
-            path = core::FileSystem::instance().get_relative_path(path);
-        }
-        
+        const auto path = core::FileSystem::instance().get_absolute_path(texture_path);
+
         if (const auto extension = std::filesystem::path(path).extension(); extension == ".hdr")
         {
             core::Log::instance().critical("This function is not implemented yet!");
@@ -29,7 +25,7 @@ namespace serenity::asset::TextureLoader
             auto width = static_cast<int>(0);
             auto height = static_cast<int>(0);
 
-            auto data = stbi_load(path.data(), &width, &height, nullptr, num_channels);
+            auto data = stbi_load(path.data(), &width, &height, nullptr, static_cast<int>(num_channels));
 
             texture_data.dimension = Uint2{
                 .x = static_cast<uint32_t>(width),
@@ -55,22 +51,22 @@ namespace serenity::asset::TextureLoader
         return texture_data;
     }
 
-    TextureData load_texture(const std::byte *data, const uint32_t size, const int num_channels)
+    TextureData load_texture(const std::byte *data, const uint32_t size, const uint32_t num_channels)
     {
         auto texture_data = TextureData{};
 
         auto width = static_cast<int>(0);
         auto height = static_cast<int>(0);
 
-        auto data_loaded_from_memory =
-            stbi_load_from_memory(reinterpret_cast<stbi_uc *>(&data), size, &width, &height, nullptr, num_channels);
+        auto data_loaded_from_memory = stbi_load_from_memory(reinterpret_cast<const stbi_uc *>(data), size, &width,
+                                                             &height, nullptr, static_cast<int>(num_channels));
 
         texture_data.dimension = Uint2{
             .x = static_cast<uint32_t>(width),
             .y = static_cast<uint32_t>(height),
         };
 
-        if (!data)
+        if (!data || width == 0 || height == 0)
         {
             core::Log::instance().critical("Failed to load texture");
             return {};

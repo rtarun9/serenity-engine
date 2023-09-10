@@ -6,13 +6,13 @@ namespace serenity::renderer
 {
     ShaderCompiler::ShaderCompiler()
     {
-        // Init core DXC objects.
+        // Initialize core DXC objects.
         rhi::throw_if_failed(::DxcCreateInstance(CLSID_DxcUtils, IID_PPV_ARGS(&m_utils)));
         rhi::throw_if_failed(::DxcCreateInstance(CLSID_DxcCompiler, IID_PPV_ARGS(&m_compiler)));
         rhi::throw_if_failed(m_utils->CreateDefaultIncludeHandler(&m_include_handler));
 
         // Get the shader directory.
-        m_shader_directory = string_to_wstring(core::FileSystem::instance().get_relative_path("shaders/"));
+        m_shader_directory = string_to_wstring(core::FileSystem::instance().get_absolute_path("shaders/"));
 
         core::Log::instance().info("Created shader compiler");
     }
@@ -77,7 +77,7 @@ namespace serenity::renderer
         auto source_blob = comptr<IDxcBlobEncoding>{};
 
         const auto full_shader_path =
-            string_to_wstring(core::FileSystem::instance().get_relative_path(wstring_to_string(shader_path)));
+            string_to_wstring(core::FileSystem::instance().get_absolute_path(wstring_to_string(shader_path)));
 
         rhi::throw_if_failed(m_utils->LoadFile(full_shader_path.data(), nullptr, &source_blob));
 

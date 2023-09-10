@@ -22,7 +22,7 @@ namespace serenity::editor
         ImGui::CreateContext();
         ImGuiIO &io = ImGui::GetIO();
 
-        m_ini_path = core::FileSystem::instance().get_relative_path("data/editor.ini");
+        m_ini_path = core::FileSystem::instance().get_absolute_path("data/editor.ini");
         io.IniFilename = m_ini_path.c_str();
 
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable; // Enable docking.
@@ -126,9 +126,9 @@ namespace serenity::editor
                         {
                             auto &transform_component = model.transform_component;
 
-                            ImGui::SliderFloat("Scale", &transform_component.scale.x, 0.1f, 10.0f);
-                            ImGui::SliderFloat3("Rotation", &transform_component.rotation.x, -180.0f, 180.0f);
-                            ImGui::SliderFloat3("Translation", &transform_component.translation.x, -100.0f, 100.0f);
+                            ImGui::SliderFloat("S", &transform_component.scale.x, 0.1f, 10.0f);
+                            ImGui::SliderFloat3("R", &transform_component.rotation.x, -180.0f, 180.0f);
+                            ImGui::SliderFloat3("T", &transform_component.translation.x, -100.0f, 100.0f);
 
                             model.transform_component.scale.y = model.transform_component.scale.x;
                             model.transform_component.scale.z = model.transform_component.scale.x;

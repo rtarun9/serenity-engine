@@ -6,10 +6,11 @@
 
 namespace serenity::core
 {
-    // A singleton class primarily used to get root source directory / paths relative to the executable.
-    // NOTE : Instance of log will be created by engine, no need to manually define it.
-    // The SingletonInstance<> provides a instance() method, which will be used to access file system - related
-    // functions of this class.
+    // A singleton class primarily used to get root source directory / absolute paths (with respect to main partition,
+    // such as C://).
+    // NOTE : Instance of file system will be created by engine, no need to manually define it. The
+    // SingletonInstance<> provides a instance() method, which will be used to access file system - related functions of
+    // this class.
     class FileSystem final : public SingletonInstance<FileSystem>
     {
       public:
@@ -21,14 +22,35 @@ namespace serenity::core
             return m_root_directory;
         }
 
-        std::string get_relative_path(const std::string_view path) const
+        // Returns (string of) absolute path of given path (with respect to root directory).
+        // If path is already absolute, simply return parameter.
+        std::string get_absolute_path(const std::string_view path) const
         {
+            if (is_path_absolute(path))
+            {
+                return std::string(path);
+            }
+
             return m_root_directory + std::string(path);
         }
 
-        std::wstring get_relative_path(const std::wstring_view path) const
+        // Returns (wstring of) absolute path of given path (with respect to root directory).
+        // If path is already absolute, simply return parameter.
+        std::wstring get_absolute_path(const std::wstring_view path) const
         {
+            if (is_path_absolute(wstring_to_string(path)))
+            {
+                return std::wstring(path);
+            }
+
             return string_to_wstring(m_root_directory) + std::wstring(path);
+        }
+
+      private:
+        // Returns true if the path is already a absolute path, returns false otherwise.
+        bool is_path_absolute(const std::string_view path) const
+        {
+            return m_root_directory.compare(path) >= 1;
         }
 
       private:

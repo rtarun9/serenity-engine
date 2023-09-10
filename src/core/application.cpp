@@ -4,19 +4,22 @@
 
 namespace serenity::core
 {
-    Application::Application()
+    Application::Application(const ApplicationConfig &application_config)
     {
         // Create the engine subsystems.
-        m_log = std::make_unique<Log>();
+        m_log = std::make_unique<Log>(application_config.log_to_console, application_config.log_to_console);
 
         m_file_system = std::make_unique<FileSystem>();
 
-        const auto screen_percent_to_cover = Float2{
-            .x = 90.0f,
-            .y = 90.0f,
-        };
-
-        m_window = std::make_unique<window::Window>(screen_percent_to_cover);
+        if (const auto window_dimensions = std::get_if<Uint2>(&application_config.dimensions); window_dimensions)
+        {
+            m_window = std::make_unique<window::Window>(*window_dimensions);
+        }
+        else if (const auto screen_percent_to_cover = std::get_if<Float2>(&application_config.dimensions);
+                 screen_percent_to_cover)
+        {
+            m_window = std::make_unique<window::Window>(*screen_percent_to_cover);
+        }
 
         m_renderer = std::make_unique<renderer::Renderer>(*(m_window.get()));
 

@@ -27,6 +27,7 @@ namespace serenity::window
 
         // Call this constructor to set the window dimensions to a user set window dimension.
         explicit Window(const Uint2 dimension);
+        
         ~Window();
 
         void poll_events(core::Input &input);

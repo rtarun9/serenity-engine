@@ -74,7 +74,7 @@ namespace serenity::renderer::rhi
         m_rtv_descriptor_heap->offset_current_handle(Swapchain::NUM_BACK_BUFFERS);
 
         m_cbv_srv_uav_descriptor_heap =
-            std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 10'000u);
+            std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 200'000u);
 
         m_dsv_descriptor_heap = std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 3u);
 
