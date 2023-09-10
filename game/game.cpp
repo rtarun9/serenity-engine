@@ -31,6 +31,8 @@ class Game final : public core::Application
             math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), aspect_ratio, 0.1f, 1000.0f);
 
         scene::SceneManager::instance().get_current_scene().update(projection_matrix);
+
+        renderer::Renderer::instance().update_renderpasses();
     }
 
     virtual void render() override

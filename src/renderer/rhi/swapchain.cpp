@@ -15,7 +15,7 @@ namespace serenity::renderer::rhi
         const auto swapchain_desc = DXGI_SWAP_CHAIN_DESC1{
             .Width = dimension.x,
             .Height = dimension.y,
-            .Format = DXGI_FORMAT_R8G8B8A8_UNORM,
+            .Format = SWAPCHAIN_BACK_BUFFER_FORMAT,
             .SampleDesc =
                 {
                     1u,

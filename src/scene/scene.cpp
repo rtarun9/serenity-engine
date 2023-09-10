@@ -82,7 +82,7 @@ namespace serenity::scene
                 const auto albedo_texture_index = renderer::Renderer::instance().create_texture(
                     renderer::rhi::TextureCreationDesc{
                         .usage = renderer::rhi::TextureUsage::ShaderResourceTexture,
-                        .format = DXGI_FORMAT_R8G8B8A8_UNORM,
+                        .format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
                         .bytes_per_pixel = 4u,
                         .dimension = material_data.base_color_texture.dimension,
                         .name = string_to_wstring(model_name) + L" albedo texture",

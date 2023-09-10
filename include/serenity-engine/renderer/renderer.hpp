@@ -2,6 +2,8 @@
 
 #include "serenity-engine/core/singleton_instance.hpp"
 
+#include "renderpass/atmosphere_renderpass.hpp"
+
 #include "serenity-engine/renderer/rhi/device.hpp"
 #include "serenity-engine/renderer/shader_compiler.hpp"
 #include "serenity-engine/window/window.hpp"
@@ -56,6 +58,8 @@ namespace serenity::renderer
         // Render the current scene (uses the SceneManager to fetch this information).
         void render();
 
+        void update_renderpasses();
+
       private:
         // Create resources for rendering.
         void create_resources();
@@ -80,10 +84,19 @@ namespace serenity::renderer
         std::vector<rhi::Buffer> m_allocated_buffers{};
         std::vector<rhi::Texture> m_allocated_textures{};
 
+        // Renderpasses.
+        std::unique_ptr<renderpass::AtmosphereRenderpass> m_atmosphere_renderpass{};
+
         // Resources for rendering.
         rhi::Pipeline m_pipeline{};
+        rhi::Pipeline m_post_process_combine_pipeline{};
 
+        rhi::Buffer m_full_screen_triangle_index_buffer{};
+
+
+        // Textures to render into.
         rhi::Texture m_depth_texture{};
+        rhi::Texture m_render_texture{};
 
         window::Window &window_ref;
     };

@@ -48,6 +48,11 @@ namespace serenity::renderer::rhi
             return *(m_cbv_srv_uav_descriptor_heap.get());
         }
 
+        DescriptorHeap &get_rtv_descriptor_heap() const
+        {
+            return *(m_rtv_descriptor_heap.get());
+        }
+
         DescriptorHeap &get_dsv_descriptor_heap() const
         {
             return *(m_dsv_descriptor_heap.get());

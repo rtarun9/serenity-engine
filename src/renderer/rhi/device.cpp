@@ -70,7 +70,7 @@ namespace serenity::renderer::rhi
         m_copy_command_list = std::make_unique<CommandList>(m_device.Get(), D3D12_COMMAND_LIST_TYPE_COPY);
 
         // Create descriptor heaps.
-        m_rtv_descriptor_heap = std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 3u);
+        m_rtv_descriptor_heap = std::make_unique<DescriptorHeap>(m_device.Get(), D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 4u);
         m_rtv_descriptor_heap->offset_current_handle(Swapchain::NUM_BACK_BUFFERS);
 
         m_cbv_srv_uav_descriptor_heap =
@@ -119,7 +119,8 @@ namespace serenity::renderer::rhi
         // / gpu accesible memory, and finally copied into gpu only memory. This willl be the case for most textures.
 
         if (!(texture_creation_desc.usage == TextureUsage::DepthStencilTexture ||
-              texture_creation_desc.usage == TextureUsage::ShaderResourceTexture))
+              texture_creation_desc.usage == TextureUsage::ShaderResourceTexture ||
+              texture_creation_desc.usage == TextureUsage::RenderTexture))
         {
             core::Log::instance().critical("This function has not been implemented yet!");
         }
@@ -261,7 +262,8 @@ namespace serenity::renderer::rhi
             m_dsv_descriptor_heap->offset_current_handle();
         }
 
-        if (texture_creation_desc.usage == TextureUsage::ShaderResourceTexture)
+        // SRV is created for render textures as well.
+        if (texture_creation_desc.usage == TextureUsage::ShaderResourceTexture || texture_creation_desc.usage == TextureUsage::RenderTexture)
         {
             // Create the shader resource view.
             auto current_srv_descriptor = m_cbv_srv_uav_descriptor_heap->get_current_handle();
@@ -281,6 +283,27 @@ namespace serenity::renderer::rhi
             texture.srv_index = current_srv_descriptor.index;
 
             m_cbv_srv_uav_descriptor_heap->offset_current_handle();
+        }
+
+        if (texture_creation_desc.usage == TextureUsage::RenderTexture)
+        {
+            // Create the render target view.
+            auto current_rtv_descriptor = m_rtv_descriptor_heap->get_current_handle();
+
+            const auto rtv_desc = D3D12_RENDER_TARGET_VIEW_DESC{
+                .Format = texture_creation_desc.format,
+                .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+                .Texture2D{
+                    .MipSlice = 0u,
+                    .PlaneSlice = 0u,
+                },
+            };
+
+            m_device->CreateRenderTargetView(texture.resource.Get(), &rtv_desc,
+                                             current_rtv_descriptor.cpu_descriptor_handle);
+            texture.rtv_index = current_rtv_descriptor.index;
+
+            m_rtv_descriptor_heap->offset_current_handle();
         }
 
         return texture;

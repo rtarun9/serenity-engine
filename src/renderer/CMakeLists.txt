@@ -9,3 +9,4 @@ target_sources(serenity-engine PUBLIC
 )
 
 add_subdirectory(rhi)
+add_subdirectory(renderpass)

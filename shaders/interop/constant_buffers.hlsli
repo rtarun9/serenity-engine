@@ -41,4 +41,14 @@ ConstantBufferStruct MaterialBuffer
     uint albedo_texture_srv_index;
 };
 
+// Parameters requried by the 'preetham sky analytical model for daylight' implementation.
+ConstantBufferStruct AtmosphereRenderPassBuffer
+{
+    float darkening_brightening_of_horizon; // A parameter in perez et al's model.
+    float luminance_gradient_near_horizon; // B parameter in perez et al's model.
+    float circumsolar_region_relative_intensity; // C parameter in perez et al's model.
+    float circumsolor_region_width; // D parameter in perez et al's model.
+    float relative_backscattered_light; // E parameter in perez et al's model.
+};
+
 #endif
