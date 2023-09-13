@@ -88,10 +88,11 @@ namespace serenity::editor
         }
 
         if (render_ui)
-        {
+        { 
             ImGui::ShowDemoWindow();
 
             scene_panel();
+            atmosphere_panel();
         }
 
         ImGui::Render();
@@ -111,6 +112,13 @@ namespace serenity::editor
             ImGui::SliderFloat("Rotation speed", &camrera.m_rotation_speed, 0.0001f, 0.10f);
             ImGui::SliderFloat("Friction", &camrera.m_friction_factor, 0.0001f, 1.0f);
 
+            ImGui::End();
+        }
+
+        if (auto &sun_angle = current_scene.get_scene_buffer().sun_angle; ImGui::Begin("Sun Angle"))
+        {
+            ImGui::SliderFloat("Sun angle", &sun_angle, math::XMConvertToRadians(-180.0f),
+                               math::XMConvertToRadians(0.0f));
             ImGui::End();
         }
 
@@ -145,5 +153,16 @@ namespace serenity::editor
 
             ImGui::End();
         }
+    }
+
+    void Editor::atmosphere_panel()
+    {
+        auto &atmosphere_buffer = renderer::Renderer::instance().get_atmosphere_renderpass_buffer();
+
+        ImGui::Begin("Atmosphere Settings");
+
+        ImGui::SliderFloat("Turbidity", &atmosphere_buffer.turbidity, 0.0f, 4.0f);
+
+        ImGui::End();
     }
 } // namespace serenity::editor

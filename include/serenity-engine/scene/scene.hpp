@@ -33,6 +33,11 @@ namespace serenity::scene
             return m_camera;
         }
 
+        SceneBuffer &get_scene_buffer()
+        {
+            return m_scene_buffer;
+        }
+
         std::vector<Model> &get_models()
         {
             return m_models;

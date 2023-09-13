@@ -55,6 +55,11 @@ namespace serenity::renderer
             return m_allocated_textures.at(index);
         }
 
+        AtmosphereRenderPassBuffer& get_atmosphere_renderpass_buffer()
+        {
+            return m_atmosphere_renderpass->get_atmosphere_renderpass_buffer_data();
+        }
+
         // Render the current scene (uses the SceneManager to fetch this information).
         void render();
 

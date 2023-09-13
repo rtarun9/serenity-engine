@@ -119,7 +119,12 @@ namespace serenity::renderer
             command_list.set_index_buffer(m_full_screen_triangle_index_buffer);
 
             auto post_process_combine_render_resources = PostProcessCombineRenderResources{
-                .atmosphere_buffer_cbv_index = get_buffer_at_index(m_atmosphere_renderpass->get_atmosphere_buffer_index()).cbv_index,
+
+                .atmosphere_buffer_cbv_index =
+                    get_buffer_at_index(m_atmosphere_renderpass->get_atmosphere_buffer_index()).cbv_index,
+                .scene_buffer_cbv_index =
+                    get_buffer_at_index(scene::SceneManager::instance().get_current_scene().get_scene_buffer_index())
+                        .cbv_index,
                 .render_texture_srv_index = m_render_texture.srv_index,
             };
 
@@ -148,7 +153,9 @@ namespace serenity::renderer
 
     void Renderer::update_renderpasses()
     {
-        m_atmosphere_renderpass->update();
+        const auto scene_buffer = scene::SceneManager::instance().get_current_scene().get_scene_buffer();
+
+        m_atmosphere_renderpass->update(scene_buffer.sun_angle);
     }
 
     void Renderer::create_resources()

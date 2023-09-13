@@ -28,7 +28,7 @@ class Game final : public core::Application
         const auto aspect_ratio = static_cast<float>(window_dimensions.x) / static_cast<float>(window_dimensions.y);
 
         const auto projection_matrix =
-            math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), aspect_ratio, 0.1f, 1000.0f);
+            math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), aspect_ratio, 0.1f, 100.0f);
 
         scene::SceneManager::instance().get_current_scene().update(projection_matrix);
 
@@ -50,7 +50,7 @@ std::unique_ptr<serenity::core::Application> serenity::core::create_application(
     return std::make_unique<Game>(serenity::core::ApplicationConfig{.log_to_console = true,
                                                                     .log_to_file = true,
                                                                     .dimensions = Float2{
-                                                                        .x = 92.0f,
-                                                                        .y = 92.0f,
+                                                                        .x = 100.0f,
+                                                                        .y = 100.0f,
                                                                     }});
 }

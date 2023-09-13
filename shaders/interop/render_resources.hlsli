@@ -29,6 +29,7 @@ struct MeshViewerRenderResources
 struct PostProcessCombineRenderResources
 {
     uint atmosphere_buffer_cbv_index;
+    uint scene_buffer_cbv_index;
     uint render_texture_srv_index;
 };
 

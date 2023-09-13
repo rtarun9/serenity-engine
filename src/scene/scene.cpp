@@ -12,6 +12,8 @@ namespace serenity::scene
             renderer::rhi::BufferCreationDesc{.usage = renderer::rhi::BufferUsage::ConstantBuffer,
                                               .name = string_to_wstring(scene_name) + L" Scene Buffer"});
 
+        m_scene_buffer.sun_angle = math::XMConvertToRadians(-90.0f);
+
         core::Log::instance().info(std::format("Created scene {}", scene_name));
     }
 
@@ -113,6 +115,14 @@ namespace serenity::scene
     {
         // Update scene buffer.
         m_scene_buffer.view_projection_matrix = m_camera.get_view_matrix() * projection_matrix;
+        m_scene_buffer.inverse_projection_matrix =
+            math::XMMatrixInverse(nullptr, projection_matrix);
+        m_scene_buffer.inverse_view_projection_matrix =
+            math::XMMatrixInverse(nullptr, m_scene_buffer.view_projection_matrix);
+        m_scene_buffer.view_matrix = m_camera.get_view_matrix();
+        m_scene_buffer.inverse_view_matrix = math::XMMatrixInverse(nullptr, m_camera.get_view_matrix());
+        m_scene_buffer.camera_position =
+            math::XMFLOAT3{m_camera.m_camera_position.x, m_camera.m_camera_position.y, m_camera.m_camera_position.z};
         renderer::Renderer::instance()
             .get_buffer_at_index(m_scene_buffer_index)
             .update(reinterpret_cast<const std::byte *>(&m_scene_buffer), sizeof(SceneBuffer));
