@@ -41,6 +41,11 @@ namespace serenity::renderer
             }
             break;
 
+            case ShaderTypes::Compute: {
+                return L"cs_6_6";
+            }
+            break;
+
             default: {
                 return L"";
             }
@@ -114,27 +119,7 @@ namespace serenity::renderer
 
         shader.blob = compiled_shader_blob;
 
-        const auto shader_type_str = [&](const auto shader_type) -> std::string {
-            switch (shader_type)
-            {
-            case ShaderTypes::Vertex: {
-                return "Vertex";
-            }
-            break;
-
-            case ShaderTypes::Pixel: {
-                return "Pixel";
-            }
-            break;
-
-            default: {
-                return "";
-            }
-            break;
-            };
-        };
-
-        core::Log::instance().info(std::format("Compiled {} shader with path : {}", shader_type_str(shader_type),
+        core::Log::instance().info(std::format("Compiled {} shader with path : {}", shader_type_to_string(shader_type),
                                                wstring_to_string(shader_path)));
         return shader;
     }

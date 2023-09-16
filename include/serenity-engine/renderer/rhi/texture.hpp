@@ -51,6 +51,7 @@ namespace serenity::renderer::rhi
         uint32_t mip_levels{1u};
         uint32_t num_channels{4u};
         uint32_t bytes_per_pixel{4u};
+        uint32_t array_size{1u};   
         Uint2 dimension{};
         std::wstring name{};
     };

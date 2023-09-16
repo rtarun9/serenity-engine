@@ -9,6 +9,13 @@ namespace serenity
         uint32_t y{};
     };
 
+    struct Uint3
+    {
+        uint32_t x{};
+        uint32_t y{};
+        uint32_t z{};
+    };
+
     struct Float2
     {
         float x{};

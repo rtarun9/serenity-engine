@@ -26,6 +26,11 @@ namespace serenity::renderer
             return *(m_device.get());
         }
 
+        Uint2 get_render_area_dimensions() const
+        {
+            return window_ref.get_dimensions();
+        }
+
         // Create GPU buffer and return index to the created buffer.
         template <typename T>
         uint32_t create_buffer(const rhi::BufferCreationDesc &buffer_creation_desc, const std::span<const T> data = {})

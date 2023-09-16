@@ -147,4 +147,19 @@ namespace serenity::renderer::rhi
     {
         m_command_list->DrawIndexedInstanced(indices_count, instance_count, 0u, 0u, 0u);
     }
+
+    void CommandList::set_bindless_compute_root_signature() const
+    {
+        m_command_list->SetComputeRootSignature(RootSignature::instance().get_root_signature().Get());
+    }
+
+    void CommandList::set_compute_32_bit_root_constants(const std::byte *data) const
+    {
+        m_command_list->SetComputeRoot32BitConstants(0u, RootSignature::NUM_32_BIT_ROOT_CONSTANTS, data, 0u);
+    }
+
+    void CommandList::dispatch(const Uint3 num_groups) const
+    {
+        m_command_list->Dispatch(num_groups.x, num_groups.y, num_groups.z);
+    }
 } // namespace serenity::renderer::rhi

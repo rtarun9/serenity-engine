@@ -117,14 +117,6 @@ namespace serenity::renderer::rhi
 
         // If the texture's data is not nullptr, then a upload buffer must be created to upload the data from cpu -> cpu
         // / gpu accesible memory, and finally copied into gpu only memory. This willl be the case for most textures.
-
-        if (!(texture_creation_desc.usage == TextureUsage::DepthStencilTexture ||
-              texture_creation_desc.usage == TextureUsage::ShaderResourceTexture ||
-              texture_creation_desc.usage == TextureUsage::RenderTexture))
-        {
-            core::Log::instance().critical("This function has not been implemented yet!");
-        }
-
         const auto get_texture_flags = [&]() {
             switch (texture_creation_desc.usage)
             {
@@ -161,7 +153,7 @@ namespace serenity::renderer::rhi
             .Alignment = 0u,
             .Width = static_cast<UINT64>(texture_creation_desc.dimension.x),
             .Height = texture_creation_desc.dimension.y,
-            .DepthOrArraySize = 1u,
+            .DepthOrArraySize = static_cast<UINT16>(texture_creation_desc.array_size),
             .MipLevels = static_cast<UINT16>(texture_creation_desc.mip_levels),
             .Format = texture_creation_desc.format,
             .SampleDesc = {1u, 0u},
@@ -172,6 +164,7 @@ namespace serenity::renderer::rhi
         const auto default_heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
 
         // Clear color is only valid for depth texture and render target's.
+        // UAV's are created with intial state as shader resource view.
         if (texture_creation_desc.usage == TextureUsage::DepthStencilTexture)
         {
             const auto depth_clear_color = D3D12_CLEAR_VALUE{
@@ -194,6 +187,12 @@ namespace serenity::renderer::rhi
                 m_device->CreateCommittedResource(&default_heap_properties, D3D12_HEAP_FLAG_NONE,
                                                   &texture_resource_desc, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                   &render_target_clear_color, IID_PPV_ARGS(&texture.resource)));
+        }
+        else if (texture_creation_desc.usage == TextureUsage::UAVTexture)
+        {
+            throw_if_failed(m_device->CreateCommittedResource(
+                &default_heap_properties, D3D12_HEAP_FLAG_NONE, &texture_resource_desc,
+                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, nullptr, IID_PPV_ARGS(&texture.resource)));
         }
         else
         {
@@ -262,24 +261,45 @@ namespace serenity::renderer::rhi
             m_dsv_descriptor_heap->offset_current_handle();
         }
 
-        // SRV is created for render textures as well.
-        if (texture_creation_desc.usage == TextureUsage::ShaderResourceTexture || texture_creation_desc.usage == TextureUsage::RenderTexture)
+        // SRV is created for render textures and UAV's as well.
+        if (texture_creation_desc.usage == TextureUsage::ShaderResourceTexture ||
+            texture_creation_desc.usage == TextureUsage::RenderTexture ||
+            texture_creation_desc.usage == TextureUsage::UAVTexture)
         {
             // Create the shader resource view.
             auto current_srv_descriptor = m_cbv_srv_uav_descriptor_heap->get_current_handle();
 
-            const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{
-                .Format = texture_creation_desc.format,
-                .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
-                .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
-                .Texture2D{
-                    .MostDetailedMip = 0u,
-                    .MipLevels = texture_creation_desc.mip_levels,
-                },
-            };
+            if (texture_creation_desc.array_size == 1u)
+            {
+                const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{
+                    .Format = texture_creation_desc.format,
+                    .ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D,
+                    .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+                    .Texture2D{
+                        .MostDetailedMip = 0u,
+                        .MipLevels = texture_creation_desc.mip_levels,
+                    },
+                };
 
-            m_device->CreateShaderResourceView(texture.resource.Get(), &srv_desc,
-                                               current_srv_descriptor.cpu_descriptor_handle);
+                m_device->CreateShaderResourceView(texture.resource.Get(), &srv_desc,
+                                                   current_srv_descriptor.cpu_descriptor_handle);
+            }
+            else if (texture_creation_desc.array_size == 6u)
+            {
+                const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{
+                    .Format = texture_creation_desc.format,
+                    .ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE,
+                    .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+                    .TextureCube{
+                        .MostDetailedMip = 0u,
+                        .MipLevels = texture_creation_desc.mip_levels,
+                    },
+                };
+
+                m_device->CreateShaderResourceView(texture.resource.Get(), &srv_desc,
+                                                   current_srv_descriptor.cpu_descriptor_handle);
+            }
+
             texture.srv_index = current_srv_descriptor.index;
 
             m_cbv_srv_uav_descriptor_heap->offset_current_handle();
@@ -306,6 +326,55 @@ namespace serenity::renderer::rhi
             m_rtv_descriptor_heap->offset_current_handle();
         }
 
+        if (texture_creation_desc.usage == TextureUsage::UAVTexture)
+        {
+            // Create the unordered access view.
+            auto current_uav_descriptor = m_cbv_srv_uav_descriptor_heap->get_current_handle();
+
+            if (texture_creation_desc.array_size == 1u)
+            {
+                const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{
+                    .Format = texture_creation_desc.format,
+                    .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D,
+                    .Texture2D{
+                        .MipSlice = 0u,
+                        .PlaneSlice = 0u,
+                    },
+                };
+                m_device->CreateUnorderedAccessView(texture.resource.Get(), nullptr, &uav_desc,
+                                                    current_uav_descriptor.cpu_descriptor_handle);
+
+                texture.uav_index = current_uav_descriptor.index;
+
+                m_cbv_srv_uav_descriptor_heap->offset_current_handle();
+            }
+
+            else if (texture_creation_desc.array_size == 6u)
+            {
+                for (const auto i : std::views::iota(0u, 6u))
+                {
+                    const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{
+                        .Format = texture_creation_desc.format,
+                        .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY,
+                        .Texture2DArray{
+                            .MipSlice = 0u,
+                            .ArraySize = texture_creation_desc.array_size,
+                            .PlaneSlice = 0u,
+                        },
+                    };
+                    m_device->CreateUnorderedAccessView(texture.resource.Get(), nullptr, &uav_desc,
+                                                        current_uav_descriptor.cpu_descriptor_handle);
+
+                    const auto uav_index = current_uav_descriptor.index;
+                    if (i == 0)
+                    {
+                        texture.uav_index = uav_index;
+                    }
+
+                    m_cbv_srv_uav_descriptor_heap->offset_current_handle();
+                }
+            }
+        }
         return texture;
     }
 

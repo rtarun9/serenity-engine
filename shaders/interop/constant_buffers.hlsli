@@ -41,7 +41,8 @@ ConstantBufferStruct SceneBuffer
     float3 camera_position;
     float padding;
 
-    float sun_angle;
+    float3 sun_direction;
+    float angle;
 };
 
 ConstantBufferStruct MaterialBuffer
@@ -86,8 +87,11 @@ ConstantBufferStruct AtmosphereRenderPassBuffer
 
     // Zenith luminance : Luminance at the Zenith (the imaginary point directly above the viewer).
     // float3 is of the form Yxy, where Y is the luminance, x and y are the chromaticities.
-    float padding2;
     float3 zenith_luminance_chromaticity;
+    float padding2;
+
+    float magnitude_multiplier;
+    float3 padding3;
 
     PerezParameters perez_parameters;
 };

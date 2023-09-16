@@ -2,6 +2,8 @@
 
 #include "serenity-engine/renderer/renderer.hpp"
 
+#include "shaders/interop/render_resources.hlsli"
+
 namespace serenity::renderer::renderpass
 {
     AtmosphereRenderpass::AtmosphereRenderpass()
@@ -16,6 +18,48 @@ namespace serenity::renderer::renderpass
             });
 
         m_atmosphere_buffer_data.turbidity = 2.0f;
+        m_atmosphere_buffer_data.magnitude_multiplier = 0.5f;
+
+        // Create pipeline object.
+        m_preetham_sky_graphics_pipeline = Renderer::instance().get_device().create_pipeline(rhi::PipelineCreationDesc{
+            .pipeline_variant = rhi::PipelineVariant::Graphics,
+            .vertex_shader = ShaderCompiler::instance()
+                                 .compile(ShaderTypes::Vertex, L"shaders/atmosphere/atmosphere.hlsl", L"vs_main")
+                                 .blob,
+            .pixel_shader = ShaderCompiler::instance()
+                                .compile(ShaderTypes::Pixel, L"shaders/atmosphere/atmosphere.hlsl", L"ps_main")
+                                .blob,
+            .cull_mode = D3D12_CULL_MODE_FRONT,
+            .dsv_format = DXGI_FORMAT_D32_FLOAT,
+            .name = L"Preetham Sky Atmosphere Pipeline",
+        });
+
+        // Load cubemap data (positions and indices).
+        constexpr auto positions = std::array{
+            math::XMFLOAT3(-1.0f, -1.0f, -1.0f), math::XMFLOAT3(-1.0f, +1.0f, -1.0f),
+            math::XMFLOAT3(+1.0f, +1.0f, -1.0f), math::XMFLOAT3(+1.0f, -1.0f, -1.0f),
+            math::XMFLOAT3(-1.0f, -1.0f, +1.0f), math::XMFLOAT3(-1.0f, +1.0f, +1.0f),
+            math::XMFLOAT3(+1.0f, +1.0f, +1.0f), math::XMFLOAT3(+1.0f, -1.0f, +1.0f),
+        };
+
+        m_cubemap_position_buffer_index = Renderer::instance().create_buffer<math::XMFLOAT3>(
+            rhi::BufferCreationDesc{
+                .usage = rhi::BufferUsage::StructuredBuffer,
+                .name = L"Cubemap position buffer",
+            },
+            positions);
+
+        // Create index array
+        constexpr auto indices = std::array<uint16_t, 36>{
+            0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 4, 5, 1, 4, 1, 0, 3, 2, 6, 3, 6, 7, 1, 5, 6, 1, 6, 2, 4, 0, 3, 4, 3, 7,
+        };
+
+        m_cubemap_index_buffer_index = Renderer::instance().create_buffer<uint16_t>(
+            rhi::BufferCreationDesc{
+                .usage = rhi::BufferUsage::StructuredBuffer,
+                .name = L"Cubemap position buffer",
+            },
+            indices);
     }
 
     AtmosphereRenderpass::~AtmosphereRenderpass()
@@ -23,20 +67,36 @@ namespace serenity::renderer::renderpass
         core::Log::instance().info("Destroyed atmosphere render pass");
     }
 
-    void AtmosphereRenderpass::update(const float sun_angle)
+    void AtmosphereRenderpass::update(const math::XMFLOAT3 sun_direction)
     {
         compute_perez_parameters();
 
-        const auto sun_direction = math::XMFLOAT3(0.0f, -1.0f * sinf(sun_angle), -1.0f * cosf(sun_angle));
-
-        // Theta_s is angle between sun and zenith, but while computed sun_direction, angle is between horizontal axis.
-        const auto theta_s = acosf(sun_direction.y);
-
-        compute_zenith_luminance(theta_s);
+        compute_zenith_luminance(sun_direction);
 
         Renderer::instance()
             .get_buffer_at_index(m_atmosphere_buffer_index)
             .update(reinterpret_cast<const std::byte *>(&m_atmosphere_buffer_data), sizeof(AtmosphereRenderPassBuffer));
+    }
+
+    void AtmosphereRenderpass::render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index) const
+    {
+        // Set pipeline and root signature state.
+        command_list.set_bindless_graphics_root_signature();
+        command_list.set_pipeline_state(m_preetham_sky_graphics_pipeline);
+
+        const auto atmosphere_render_resources = AtmosphereRenderResources{
+            .position_buffer_srv_index =
+                Renderer::instance().get_buffer_at_index(m_cubemap_position_buffer_index).srv_index,
+            .scene_buffer_cbv_index = scene_buffer_cbv_index,
+            .atmosphere_buffer_cbv_index =
+                Renderer::instance().get_buffer_at_index(m_atmosphere_buffer_index).cbv_index,
+        };
+
+        command_list.set_graphics_32_bit_root_constants(
+            reinterpret_cast<const std::byte *>(&atmosphere_render_resources));
+
+        command_list.set_index_buffer(Renderer::instance().get_buffer_at_index(m_cubemap_index_buffer_index));
+        command_list.draw_indexed_instanced(36, 1u);
     }
 
     void AtmosphereRenderpass::compute_perez_parameters()
@@ -61,16 +121,19 @@ namespace serenity::renderer::renderpass
             -0.0670f * turbidity + 0.3703f, -0.0033f * turbidity + 0.0452f, -0.0109f * turbidity + 0.0529);
     }
 
-    void AtmosphereRenderpass::compute_zenith_luminance(const float sun_angle)
+    void AtmosphereRenderpass::compute_zenith_luminance(const math::XMFLOAT3 sun_direction)
     {
+        // Theta_s is angle between sun and zenith, but while computed sun_direction, angle is between horizontal axis.
+        const auto theta_s = acosf(sun_direction.y);
+
         const auto turbidity = m_atmosphere_buffer_data.turbidity;
 
-        const auto extinction_factor = (4.0f / 9.0f - turbidity / 120.0f) * (math::XM_PI - 2.0f * sun_angle);
+        const auto chi = (4.0f / 9.0f - turbidity / 120.0f) * (math::XM_PI - 2.0f * theta_s);
 
-        m_atmosphere_buffer_data.zenith_luminance_chromaticity.x = 
-            (4.0453f * turbidity - 4.9710f) * tanf(extinction_factor) - 0.2155f * turbidity + 2.4192f;
+        m_atmosphere_buffer_data.zenith_luminance_chromaticity.x =
+            (4.0453f * turbidity - 4.9710f) * tanf(chi) - 0.2155f * turbidity + 2.4192f;
 
-        const auto theta_s_vector = math::XMFLOAT4(pow(sun_angle, 3), pow(sun_angle, 2), pow(sun_angle, 1), 1);
+        const auto theta_s_vector = math::XMFLOAT4(pow(theta_s, 3), pow(theta_s, 2), pow(theta_s, 1), 1);
 
         const auto turbidity_vector = math::XMFLOAT3(pow(turbidity, 2), turbidity, 1);
 

@@ -19,6 +19,10 @@ namespace serenity::renderer::rhi
         Shader vertex_shader{};
         Shader pixel_shader{};
 
+        Shader compute_shader{};
+
+        D3D12_CULL_MODE cull_mode{D3D12_CULL_MODE_BACK};
+
         DXGI_FORMAT dsv_format{DXGI_FORMAT_UNKNOWN};
 
         std::wstring name{};

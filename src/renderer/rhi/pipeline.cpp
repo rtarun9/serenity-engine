@@ -31,7 +31,10 @@ namespace serenity::renderer::rhi
                     },
                 .BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT),
                 .SampleMask = D3D12_DEFAULT_SAMPLE_MASK,
-                .RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT),
+                .RasterizerState = CD3DX12_RASTERIZER_DESC(
+                    D3D12_FILL_MODE_SOLID, pipeline_creation_desc.cull_mode, false, D3D12_DEFAULT_DEPTH_BIAS,
+                    D3D12_DEFAULT_DEPTH_BIAS_CLAMP, D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, true, false, false, 0,
+                    D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF),
                 .DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(
                     depth_enable, D3D12_DEPTH_WRITE_MASK_ALL, D3D12_COMPARISON_FUNC_LESS_EQUAL, false, 0u, 0u,
                     D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO,
@@ -51,6 +54,20 @@ namespace serenity::renderer::rhi
         }
         else if (pipeline_creation_desc.pipeline_variant == PipelineVariant::Compute)
         {
+            const auto compute_pipeline_state_desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
+                .pRootSignature = RootSignature::instance().get_root_signature().Get(),
+                .CS =
+                    {
+                        .pShaderBytecode = pipeline_creation_desc.compute_shader.blob->GetBufferPointer(),
+                        .BytecodeLength = pipeline_creation_desc.compute_shader.blob->GetBufferSize(),
+
+                    },
+                .NodeMask = 0u,
+                .Flags = D3D12_PIPELINE_STATE_FLAG_NONE,
+            };
+
+            throw_if_failed(
+                device->CreateComputePipelineState(&compute_pipeline_state_desc, IID_PPV_ARGS(&m_pipeline_state)));
         }
     }
 } // namespace serenity::renderer::rhi

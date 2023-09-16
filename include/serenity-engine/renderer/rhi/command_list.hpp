@@ -42,6 +42,7 @@ namespace serenity::renderer::rhi
         // Example : calling IASetPrimitiveToplogy on a command list of type COPY should not be done and this class
         // won't prevent user from doing that, but debug layer will set breakpoint and tell about the error.
 
+        // Graphics (Direct) command list functions.
         void clear_render_target_views(const DescriptorHandle rtv_descriptor_handle,
                                        const std::span<const float, 4u> clear_color) const;
 
@@ -65,6 +66,13 @@ namespace serenity::renderer::rhi
 
         void draw_instanced(const uint32_t vertex_count, const uint32_t instance_count) const;
         void draw_indexed_instanced(const uint32_t indices_count, const uint32_t instance_count) const;
+
+        // Compute command list functions.
+        void set_bindless_compute_root_signature() const;
+
+        void set_compute_32_bit_root_constants(const std::byte *data) const;
+
+        void dispatch(const Uint3 num_groups) const;
 
       private:
         CommandList(const CommandList &other) = delete;

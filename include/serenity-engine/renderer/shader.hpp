@@ -15,6 +15,7 @@ namespace serenity::renderer
     {
         Vertex,
         Pixel,
+        Compute,
     };
 
     inline std::string shader_type_to_string(const ShaderTypes shader_type)
@@ -32,10 +33,16 @@ namespace serenity::renderer
         }
         break;
 
+        case ShaderTypes::Compute: {
+            return "Compute Shader";
+        }
+        break;
+
         default: {
+            return "";
         }
         break;
         }
     }
 
-} // namespace serenity::renderer::rhi
+} // namespace serenity::renderer

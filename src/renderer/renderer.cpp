@@ -73,11 +73,16 @@ namespace serenity::renderer
 
             command_list.set_viewport_and_scissor_rect(viewport, scissor_rect);
 
-            command_list.set_bindless_graphics_root_signature();
-            command_list.set_pipeline_state(m_pipeline);
-
             const auto &scene_buffer_index =
                 scene::SceneManager::instance().get_current_scene().get_scene_buffer_index();
+
+            // Render the atmosphere render pass.
+            {
+                m_atmosphere_renderpass->render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index);
+            }
+
+            command_list.set_bindless_graphics_root_signature();
+            command_list.set_pipeline_state(m_pipeline);
 
             for (auto models = scene::SceneManager::instance().get_current_scene().get_models(); auto &model : models)
             {
@@ -119,12 +124,6 @@ namespace serenity::renderer
             command_list.set_index_buffer(m_full_screen_triangle_index_buffer);
 
             auto post_process_combine_render_resources = PostProcessCombineRenderResources{
-
-                .atmosphere_buffer_cbv_index =
-                    get_buffer_at_index(m_atmosphere_renderpass->get_atmosphere_buffer_index()).cbv_index,
-                .scene_buffer_cbv_index =
-                    get_buffer_at_index(scene::SceneManager::instance().get_current_scene().get_scene_buffer_index())
-                        .cbv_index,
                 .render_texture_srv_index = m_render_texture.srv_index,
             };
 
@@ -153,9 +152,9 @@ namespace serenity::renderer
 
     void Renderer::update_renderpasses()
     {
-        const auto scene_buffer = scene::SceneManager::instance().get_current_scene().get_scene_buffer();
+        const auto &scene_buffer = scene::SceneManager::instance().get_current_scene().get_scene_buffer();
 
-        m_atmosphere_renderpass->update(scene_buffer.sun_angle);
+        m_atmosphere_renderpass->update(scene_buffer.sun_direction);
     }
 
     void Renderer::create_resources()
@@ -172,7 +171,7 @@ namespace serenity::renderer
         // Create render texture.
         m_render_texture = m_device->create_texture(rhi::TextureCreationDesc{
             .usage = rhi::TextureUsage::RenderTexture,
-            .format = DXGI_FORMAT_R8G8B8A8_UNORM,
+            .format = rhi::Swapchain::SWAPCHAIN_BACK_BUFFER_FORMAT,
             .dimension = window_ref.get_dimensions(),
             .name = L"Render Texture",
         });

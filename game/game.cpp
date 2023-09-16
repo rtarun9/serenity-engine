@@ -12,7 +12,7 @@ class Game final : public core::Application
     {
         auto default_scene = scene::Scene("Default Scene");
         default_scene.add_model("data/Cube/glTF/Cube.gltf", "Cube");
-        default_scene.add_model("data/sketchfab_pbr_material_reference_chart/scene.gltf", "PBR_References");
+        //default_scene.add_model("data/sketchfab_pbr_material_reference_chart/scene.gltf", "PBR_References");
         scene::SceneManager::instance().add_scene(std::move(default_scene));
     }
 

@@ -12,8 +12,6 @@ namespace serenity::scene
             renderer::rhi::BufferCreationDesc{.usage = renderer::rhi::BufferUsage::ConstantBuffer,
                                               .name = string_to_wstring(scene_name) + L" Scene Buffer"});
 
-        m_scene_buffer.sun_angle = math::XMConvertToRadians(-90.0f);
-
         core::Log::instance().info(std::format("Created scene {}", scene_name));
     }
 

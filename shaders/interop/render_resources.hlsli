@@ -25,16 +25,15 @@ struct MeshViewerRenderResources
     uint material_buffer_cbv_index;
 };
 
-// NOTE : For now atmoshpere computation is done herin post process combine shader itself. This is for experiemental purposes and will be changed in future.
 struct PostProcessCombineRenderResources
 {
-    uint atmosphere_buffer_cbv_index;
-    uint scene_buffer_cbv_index;
     uint render_texture_srv_index;
 };
 
 struct AtmosphereRenderResources
 {
+    uint position_buffer_srv_index;
+    uint scene_buffer_cbv_index;
     uint atmosphere_buffer_cbv_index;
 };
 
