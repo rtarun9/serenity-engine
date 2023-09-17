@@ -63,20 +63,20 @@ namespace serenity::scene
 
         if (keyboard.is_key_pressed(core::Keys::ArrowUp))
         {
-            pitch_to += rotation_speed;
+            pitch_to -= rotation_speed;
         }
         else if (keyboard.is_key_pressed(core::Keys::ArrowDown))
         {
-            pitch_to -= rotation_speed;
+            pitch_to += rotation_speed;
         }
 
         if (keyboard.is_key_pressed(core::Keys::ArrowLeft))
         {
-            yaw_to += rotation_speed;
+            yaw_to -= rotation_speed;
         }
         else if (keyboard.is_key_pressed(core::Keys::ArrowRight))
         {
-            yaw_to -= rotation_speed;
+            yaw_to += rotation_speed;
         }
 
         camera_move_to_direction = math::XMVector3Normalize(camera_move_to_direction) * movement_speed;

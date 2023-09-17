@@ -42,11 +42,12 @@ namespace serenity::core
                 quit = true;
             }
 
-            timer.tick();
             const auto delta_time = timer.get_delta_time();
-
             update(delta_time);
+
             render();
+
+            timer.tick();
         }
     }
 } // namespace serenity::core

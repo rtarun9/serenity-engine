@@ -115,19 +115,8 @@ namespace serenity::editor
 
         if (ImGui::Begin("Sun Angle"))
         {
-            static auto sun_angle = -180.0f;
-            ImGui::SliderFloat("Sun angle", &sun_angle, -180.0f, 0.0f);
-
-            current_scene.get_scene_buffer().sun_direction = {0.0f, -1.0f * sinf(math::XMConvertToRadians(sun_angle)),
-                                                              -1.0f * cosf(math::XMConvertToRadians(sun_angle))};
-
-            auto &sun_direction = current_scene.get_scene_buffer().sun_direction;
-
-            const auto magnitude = std::sqrtf(sun_direction.x * sun_direction.x + sun_direction.y * sun_direction.y +
-                                              sun_direction.z * sun_direction.z);
-
-            sun_direction = {sun_direction.x / magnitude, sun_direction.y / magnitude, sun_direction.z / magnitude};
-
+            ImGui::SliderFloat("Sun angle", &current_scene.get_scene_buffer().sun_angle, -180.0f, 0.0f);
+         
             ImGui::End();
         }
 
@@ -165,7 +154,7 @@ namespace serenity::editor
 
         ImGui::Begin("Atmosphere Settings");
 
-        ImGui::SliderFloat("Turbidity", &atmosphere_buffer.turbidity, 0.0f, 4.0f);
+        ImGui::SliderFloat("Turbidity", &atmosphere_buffer.turbidity, 2.0f, 10.0f);
         ImGui::SliderFloat("Magnitude Multiplier", &atmosphere_buffer.magnitude_multiplier, 0.0f, 1.0f);
 
         ImGui::End();

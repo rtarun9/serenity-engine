@@ -1,7 +1,5 @@
 #include "serenity-engine/serenity-engine.hpp"
 
-#include "shaders/interop/render_resources.hlsli"
-
 using namespace serenity;
 
 class Game final : public core::Application
@@ -12,7 +10,7 @@ class Game final : public core::Application
     {
         auto default_scene = scene::Scene("Default Scene");
         default_scene.add_model("data/Cube/glTF/Cube.gltf", "Cube");
-        //default_scene.add_model("data/sketchfab_pbr_material_reference_chart/scene.gltf", "PBR_References");
+        // default_scene.add_model("data/sketchfab_pbr_material_reference_chart/scene.gltf", "PBR_References");
         scene::SceneManager::instance().add_scene(std::move(default_scene));
     }
 
@@ -24,11 +22,28 @@ class Game final : public core::Application
         auto &current_scene_camera = scene::SceneManager::instance().get_current_scene().get_camera();
         current_scene_camera.update(delta_time, m_input);
 
+        // Make the sun bounce from one side of the horizon to another for visualization purposes.
+        auto &current_scene_buffer = scene::SceneManager::instance().get_current_scene().get_scene_buffer();
+
+        static float increment_direction = -1.0f;
+
+        if (current_scene_buffer.sun_angle >= 0.0f)
+        {
+            increment_direction = -1.0f;
+        }
+        else if (current_scene_buffer.sun_angle <= -180.0f)
+        {
+            increment_direction = 1.0f;
+        }
+
+        current_scene_buffer.sun_angle += delta_time * 0.04f * increment_direction;
+        current_scene_buffer.sun_angle = std::clamp(current_scene_buffer.sun_angle, -180.0f, 0.0f);
+
         const auto window_dimensions = m_window->get_dimensions();
         const auto aspect_ratio = static_cast<float>(window_dimensions.x) / static_cast<float>(window_dimensions.y);
 
         const auto projection_matrix =
-            math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(45.0f), aspect_ratio, 0.1f, 100.0f);
+            math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f), aspect_ratio, 0.1f, 1000.0f);
 
         scene::SceneManager::instance().get_current_scene().update(projection_matrix);
 

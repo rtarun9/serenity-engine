@@ -17,11 +17,11 @@ namespace serenity::renderer::renderpass
                 .name = L"Atmosphere Render Pass buffer",
             });
 
-        m_atmosphere_buffer_data.turbidity = 2.0f;
-        m_atmosphere_buffer_data.magnitude_multiplier = 0.05f;
+        m_atmosphere_buffer_data.turbidity = 2.9f;
+        m_atmosphere_buffer_data.magnitude_multiplier = 0.019f;
 
         // Create pipeline object.
-        m_preetham_sky_graphics_pipeline = Renderer::instance().get_device().create_pipeline(rhi::PipelineCreationDesc{
+        m_preetham_sky_pipeline = Renderer::instance().get_device().create_pipeline(rhi::PipelineCreationDesc{
             .pipeline_variant = rhi::PipelineVariant::Graphics,
             .vertex_shader = ShaderCompiler::instance()
                                  .compile(ShaderTypes::Vertex, L"shaders/atmosphere/atmosphere.hlsl", L"vs_main")
@@ -83,7 +83,7 @@ namespace serenity::renderer::renderpass
     {
         // Set pipeline and root signature state.
         command_list.set_bindless_graphics_root_signature();
-        command_list.set_pipeline_state(m_preetham_sky_graphics_pipeline);
+        command_list.set_pipeline_state(m_preetham_sky_pipeline);
 
         const auto atmosphere_render_resources = AtmosphereRenderResources{
             .position_buffer_srv_index =
@@ -105,7 +105,7 @@ namespace serenity::renderer::renderpass
         // Formulas given in section A.2 of the A.J. Preetham paper.
         const auto turbidity = m_atmosphere_buffer_data.turbidity;
 
-        // Calculation of Y, x and y.
+        // Calculation of Y, x and y of perez parameters.
         m_atmosphere_buffer_data.perez_parameters.A = math::XMFLOAT3(
             0.1787f * turbidity - 1.4630f, -0.0193f * turbidity - 0.2592f, -0.0167f * turbidity - 0.2608f);
 
@@ -125,7 +125,7 @@ namespace serenity::renderer::renderpass
     void AtmosphereRenderpass::compute_zenith_luminance(const math::XMFLOAT3 sun_direction)
     {
         // Theta_s is angle between sun and zenith, but while computed sun_direction, angle is between horizontal axis.
-        const auto theta_s = acosf(sun_direction.y);
+        const auto theta_s = acosf(std::clamp(sun_direction.y, 0.0f, 1.0f));
 
         const auto turbidity = m_atmosphere_buffer_data.turbidity;
 
@@ -139,7 +139,7 @@ namespace serenity::renderer::renderpass
         const auto turbidity_vector = math::XMFLOAT3(pow(turbidity, 2), turbidity, 1);
 
         m_atmosphere_buffer_data.zenith_luminance_chromaticity.y =
-            (turbidity_vector.x * (0.0017f * theta_s_vector.x - 0.0037f * theta_s_vector.y +
+            (turbidity_vector.x * (0.0017f * theta_s_vector.x - 0.00375f * theta_s_vector.y +
                                    0.0021f * theta_s_vector.z + 0.0f * theta_s_vector.w)) +
             (turbidity_vector.y * (-0.0290f * theta_s_vector.x + 0.0638f * theta_s_vector.y -
                                    0.0320f * theta_s_vector.z + 0.0039f * theta_s_vector.w)) +

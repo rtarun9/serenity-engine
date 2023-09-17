@@ -42,7 +42,7 @@ ConstantBufferStruct SceneBuffer
     float padding;
 
     float3 sun_direction;
-    float angle;
+    float sun_angle;
 };
 
 ConstantBufferStruct MaterialBuffer

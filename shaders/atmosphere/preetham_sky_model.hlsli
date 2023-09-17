@@ -13,12 +13,12 @@
 // Formula (3) as mentioned in Preetham sky model paper.
 float3 perez(const PerezParameters perez_params, const float theta, const float gamma)
 {
-    return (1.0f + perez_params.A * exp(perez_params.B / max(cos(theta), 0.01f))) * (1.0f + perez_params.C * exp(perez_params.D * gamma) + perez_params.E * (cos(gamma) * cos(gamma)));
+    return (1.0f + perez_params.A * exp(perez_params.B / max(cos(theta), 0.01f))) * (1.0f + perez_params.C * exp(perez_params.D * gamma) + perez_params.E * cos(gamma) * cos(gamma));
 }
 
 float3 preetham_sky_luminance_and_chromaticity(const AtmosphereRenderPassBuffer atmosphere_buffer, const float3 view_direction, const float3 sun_direction)
 {
-    const float cos_gamma = saturate(dot(view_direction, sun_direction));
+    const float cos_gamma = dot(view_direction, sun_direction);
     const float gamma = acos(cos_gamma);
 
     // Since zenith is essentially the y axis, we can easily compute theta and theta_s by taking the dot product of view_direction and sun_direction
@@ -32,11 +32,7 @@ float3 preetham_sky_luminance_and_chromaticity(const AtmosphereRenderPassBuffer 
     
     const float3 perez_fraction = perez_theta_gamma / perez_zero_theta_s;
 
-    // Normalizing luminance in LDR cases (which is always for now), to have fixed value for sun.
-    // Reference : https://github.com/diharaw/sky-models/blob/c74ce88ccec91aeb9502fb24a7e51e0fb3bfc51a/src/preetham_sky_model.cpp#L83
-    const float luminance = atmosphere_buffer.zenith_luminance_chromaticity.x / perez(atmosphere_buffer.perez_parameters, theta_s, 0.0f).x;
-
-    const float3 result_yxy = float3(luminance, atmosphere_buffer.zenith_luminance_chromaticity.yz) * perez_fraction;
+    const float3 result_yxy = atmosphere_buffer.zenith_luminance_chromaticity.xyz * perez_fraction;
     
     // Convertion from yxy to XYZ (based on formulas from https://en.wikipedia.org/wiki/CIE_1931_color_space).
     const float Y = result_yxy.r;

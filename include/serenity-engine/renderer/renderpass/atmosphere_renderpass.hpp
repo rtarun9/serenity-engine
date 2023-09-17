@@ -61,6 +61,6 @@ namespace serenity::renderer::renderpass
         uint32_t m_cubemap_position_buffer_index{};
         uint32_t m_cubemap_index_buffer_index{};
 
-        rhi::Pipeline m_preetham_sky_graphics_pipeline{};
+        rhi::Pipeline m_preetham_sky_pipeline{};
     };
 } // namespace serenity::renderer::renderpass

@@ -13,7 +13,7 @@ struct VsOutput
 
 ConstantBuffer<AtmosphereRenderResources> render_resources : register(b0);
 
-VsOutput vs_main(uint vertex_id : SV_VertexID)  
+VsOutput vs_main(uint vertex_id : SV_VertexID)      
 {
     StructuredBuffer<float3> position_buffer = ResourceDescriptorHeap[render_resources.position_buffer_srv_index];
 
