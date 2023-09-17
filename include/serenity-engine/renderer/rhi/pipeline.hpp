@@ -23,6 +23,7 @@ namespace serenity::renderer::rhi
 
         D3D12_CULL_MODE cull_mode{D3D12_CULL_MODE_BACK};
 
+        std::vector<DXGI_FORMAT> rtv_formats{};
         DXGI_FORMAT dsv_format{DXGI_FORMAT_UNKNOWN};
 
         std::wstring name{};

@@ -36,7 +36,7 @@ namespace serenity::editor
         ImGui_ImplSDL3_InitForD3D(window.get_internal_window());
         ImGui_ImplDX12_Init(
             renderer::Renderer::instance().get_device().get_device().Get(), renderer::rhi::Swapchain::NUM_BACK_BUFFERS,
-            DXGI_FORMAT_R8G8B8A8_UNORM,
+            renderer::rhi::Swapchain::SWAPCHAIN_BACK_BUFFER_FORMAT,
             renderer::Renderer::instance().get_device().get_cbv_srv_uav_descriptor_heap().get_descriptor_heap().Get(),
             current_srv_descriptor.cpu_descriptor_handle, current_srv_descriptor.gpu_descriptor_handle);
 
@@ -89,8 +89,6 @@ namespace serenity::editor
 
         if (render_ui)
         {
-            ImGui::ShowDemoWindow();
-
             scene_panel();
             atmosphere_panel();
         }
@@ -119,7 +117,6 @@ namespace serenity::editor
         {
             static auto sun_angle = -180.0f;
             ImGui::SliderFloat("Sun angle", &sun_angle, -180.0f, 0.0f);
-            ImGui::End();
 
             current_scene.get_scene_buffer().sun_direction = {0.0f, -1.0f * sinf(math::XMConvertToRadians(sun_angle)),
                                                               -1.0f * cosf(math::XMConvertToRadians(sun_angle))};
@@ -130,35 +127,32 @@ namespace serenity::editor
                                               sun_direction.z * sun_direction.z);
 
             sun_direction = {sun_direction.x / magnitude, sun_direction.y / magnitude, sun_direction.z / magnitude};
+
+            ImGui::End();
         }
 
-        if (ImGui::Begin("Scene Hierarchy"))
+        if (ImGui::Begin(current_scene.get_scene_name().c_str()))
         {
-            if (ImGui::TreeNode(current_scene.get_scene_name().c_str()))
+            for (auto &model : current_scene.get_models())
             {
-                for (auto &model : current_scene.get_models())
+                if (ImGui::TreeNode(model.model_name.c_str()))
                 {
-                    if (ImGui::TreeNode(model.model_name.c_str()))
+                    if (ImGui::TreeNode("Transform"))
                     {
-                        if (ImGui::TreeNode("Transform"))
-                        {
-                            auto &transform_component = model.transform_component;
+                        auto &transform_component = model.transform_component;
 
-                            ImGui::SliderFloat("S", &transform_component.scale.x, 0.1f, 10.0f);
-                            ImGui::SliderFloat3("R", &transform_component.rotation.x, -180.0f, 180.0f);
-                            ImGui::SliderFloat3("T", &transform_component.translation.x, -100.0f, 100.0f);
+                        ImGui::SliderFloat("S", &transform_component.scale.x, 0.1f, 10.0f);
+                        ImGui::SliderFloat3("R", &transform_component.rotation.x, -180.0f, 180.0f);
+                        ImGui::SliderFloat3("T", &transform_component.translation.x, -100.0f, 100.0f);
 
-                            model.transform_component.scale.y = model.transform_component.scale.x;
-                            model.transform_component.scale.z = model.transform_component.scale.x;
-
-                            ImGui::TreePop();
-                        }
+                        model.transform_component.scale.y = model.transform_component.scale.x;
+                        model.transform_component.scale.z = model.transform_component.scale.x;
 
                         ImGui::TreePop();
                     }
-                }
 
-                ImGui::TreePop();
+                    ImGui::TreePop();
+                }
             }
 
             ImGui::End();

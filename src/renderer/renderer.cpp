@@ -171,7 +171,7 @@ namespace serenity::renderer
         // Create render texture.
         m_render_texture = m_device->create_texture(rhi::TextureCreationDesc{
             .usage = rhi::TextureUsage::RenderTexture,
-            .format = rhi::Swapchain::SWAPCHAIN_BACK_BUFFER_FORMAT,
+            .format = DXGI_FORMAT_R16G16B16A16_FLOAT,
             .dimension = window_ref.get_dimensions(),
             .name = L"Render Texture",
         });
@@ -190,6 +190,7 @@ namespace serenity::renderer
                 ShaderCompiler::instance().compile(ShaderTypes::Vertex, L"shaders/mesh_viewer.hlsl", L"vs_main"),
             .pixel_shader =
                 ShaderCompiler::instance().compile(ShaderTypes::Pixel, L"shaders/mesh_viewer.hlsl", L"ps_main"),
+            .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
             .dsv_format = DXGI_FORMAT_D32_FLOAT,
             .name = L"Mesh Viewer pipeline",
         });
@@ -199,6 +200,7 @@ namespace serenity::renderer
                                                                 L"shaders/post_process_combine.hlsl", L"vs_main"),
             .pixel_shader = ShaderCompiler::instance().compile(ShaderTypes::Pixel, L"shaders/post_process_combine.hlsl",
                                                                L"ps_main"),
+            .rtv_formats = {rhi::Swapchain::SWAPCHAIN_BACK_BUFFER_FORMAT},
             .dsv_format = DXGI_FORMAT_UNKNOWN,
             .name = L"Post process combine pipeline",
         });

@@ -18,7 +18,7 @@ namespace serenity::renderer::renderpass
             });
 
         m_atmosphere_buffer_data.turbidity = 2.0f;
-        m_atmosphere_buffer_data.magnitude_multiplier = 0.5f;
+        m_atmosphere_buffer_data.magnitude_multiplier = 0.05f;
 
         // Create pipeline object.
         m_preetham_sky_graphics_pipeline = Renderer::instance().get_device().create_pipeline(rhi::PipelineCreationDesc{
@@ -30,6 +30,7 @@ namespace serenity::renderer::renderpass
                                 .compile(ShaderTypes::Pixel, L"shaders/atmosphere/atmosphere.hlsl", L"ps_main")
                                 .blob,
             .cull_mode = D3D12_CULL_MODE_FRONT,
+            .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
             .dsv_format = DXGI_FORMAT_D32_FLOAT,
             .name = L"Preetham Sky Atmosphere Pipeline",
         });
@@ -104,7 +105,7 @@ namespace serenity::renderer::renderpass
         // Formulas given in section A.2 of the A.J. Preetham paper.
         const auto turbidity = m_atmosphere_buffer_data.turbidity;
 
-        // Calculation of luminance (Y), chromaticity (x) and chromaticity (y).
+        // Calculation of Y, x and y.
         m_atmosphere_buffer_data.perez_parameters.A = math::XMFLOAT3(
             0.1787f * turbidity - 1.4630f, -0.0193f * turbidity - 0.2592f, -0.0167f * turbidity - 0.2608f);
 
@@ -132,7 +133,7 @@ namespace serenity::renderer::renderpass
 
         m_atmosphere_buffer_data.zenith_luminance_chromaticity.x =
             (4.0453f * turbidity - 4.9710f) * tanf(chi) - 0.2155f * turbidity + 2.4192f;
-
+        
         const auto theta_s_vector = math::XMFLOAT4(pow(theta_s, 3), pow(theta_s, 2), pow(theta_s, 1), 1);
 
         const auto turbidity_vector = math::XMFLOAT3(pow(turbidity, 2), turbidity, 1);

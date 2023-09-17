@@ -14,7 +14,7 @@ namespace serenity::renderer::rhi
         {
             const auto depth_enable = pipeline_creation_desc.dsv_format != DXGI_FORMAT_UNKNOWN;
 
-            const auto graphics_pipeline_state_desc = D3D12_GRAPHICS_PIPELINE_STATE_DESC{
+            auto graphics_pipeline_state_desc = D3D12_GRAPHICS_PIPELINE_STATE_DESC{
 
                 .pRootSignature = RootSignature::instance().get_root_signature().Get(),
                 .VS =
@@ -41,13 +41,17 @@ namespace serenity::renderer::rhi
                     D3D12_COMPARISON_FUNC_LESS_EQUAL, D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO,
                     D3D12_STENCIL_OP_ZERO, D3D12_COMPARISON_FUNC_EQUAL),
                 .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
-                .NumRenderTargets = 1u,
-                .RTVFormats = {DXGI_FORMAT_R8G8B8A8_UNORM},
+                .NumRenderTargets = static_cast<uint32_t>(pipeline_creation_desc.rtv_formats.size()),
                 .DSVFormat = pipeline_creation_desc.dsv_format,
                 .SampleDesc = {1u, 0u},
                 .NodeMask = 0u,
                 .Flags = D3D12_PIPELINE_STATE_FLAG_NONE,
             };
+
+            for (const auto &i : std::views::iota(0u, pipeline_creation_desc.rtv_formats.size()))
+            {
+                graphics_pipeline_state_desc.RTVFormats[i] = pipeline_creation_desc.rtv_formats[i];
+            }
 
             throw_if_failed(
                 device->CreateGraphicsPipelineState(&graphics_pipeline_state_desc, IID_PPV_ARGS(&m_pipeline_state)));
