@@ -25,6 +25,9 @@
 // Renderer RHI
 #include "renderer/rhi/rhi.hpp"
 
+// Renderer renderpass
+#include "renderer/renderpass/atmosphere_renderpass.hpp"
+
 // Scene
 #include "scene/camera.hpp"
 #include "scene/model.hpp"

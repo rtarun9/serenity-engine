@@ -90,7 +90,7 @@ namespace serenity::editor
         if (render_ui)
         {
             scene_panel();
-            atmosphere_panel();
+            renderer_panel();
         }
 
         ImGui::Render();
@@ -104,59 +104,83 @@ namespace serenity::editor
     {
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
 
-        if (auto &camrera = current_scene.get_camera(); ImGui::Begin("Camera Settings"))
-        {
-            ImGui::SliderFloat("Movement speed", &camrera.m_movement_speed, 0.0001f, 1.0f);
-            ImGui::SliderFloat("Rotation speed", &camrera.m_rotation_speed, 0.0001f, 0.10f);
-            ImGui::SliderFloat("Friction", &camrera.m_friction_factor, 0.0001f, 1.0f);
-
-            ImGui::End();
-        }
-
-        if (ImGui::Begin("Sun Angle"))
-        {
-            ImGui::SliderFloat("Sun angle", &current_scene.get_scene_buffer().sun_angle, -180.0f, 0.0f);
-         
-            ImGui::End();
-        }
-
         if (ImGui::Begin(current_scene.get_scene_name().c_str()))
         {
-            for (auto &model : current_scene.get_models())
+            if (ImGui::TreeNode("Scene Hierarchy"))
             {
-                if (ImGui::TreeNode(model.model_name.c_str()))
+                for (auto &model : current_scene.get_models())
                 {
-                    if (ImGui::TreeNode("Transform"))
+                    if (ImGui::TreeNode(model.model_name.c_str()))
                     {
-                        auto &transform_component = model.transform_component;
+                        if (ImGui::TreeNode("Transform"))
+                        {
+                            auto &transform_component = model.transform_component;
 
-                        ImGui::SliderFloat("S", &transform_component.scale.x, 0.1f, 10.0f);
-                        ImGui::SliderFloat3("R", &transform_component.rotation.x, -180.0f, 180.0f);
-                        ImGui::SliderFloat3("T", &transform_component.translation.x, -100.0f, 100.0f);
+                            ImGui::SliderFloat("S", &transform_component.scale.x, 0.1f, 10.0f);
+                            ImGui::SliderFloat3("R", &transform_component.rotation.x, -180.0f, 180.0f);
+                            ImGui::SliderFloat3("T", &transform_component.translation.x, -100.0f, 100.0f);
 
-                        model.transform_component.scale.y = model.transform_component.scale.x;
-                        model.transform_component.scale.z = model.transform_component.scale.x;
+                            model.transform_component.scale.y = model.transform_component.scale.x;
+                            model.transform_component.scale.z = model.transform_component.scale.x;
+
+                            ImGui::TreePop();
+                        }
 
                         ImGui::TreePop();
                     }
-
-                    ImGui::TreePop();
                 }
+
+                ImGui::TreePop();
+            }
+
+            if (auto &camera = current_scene.get_camera(); ImGui::TreeNode("Camera Settings"))
+            {
+                ImGui::SliderFloat("Movement speed", &camera.m_movement_speed, 0.0001f, 1.0f);
+                ImGui::SliderFloat("Rotation speed", &camera.m_rotation_speed, 0.0001f, 0.10f);
+                ImGui::SliderFloat("Friction", &camera.m_friction_factor, 0.0001f, 1.0f);
+
+                ImGui::TreePop();
+            }
+
+            if (ImGui::TreeNode("Sun Angle"))
+            {
+                ImGui::SliderFloat("Sun angle", &current_scene.get_scene_buffer().sun_angle, -180.0f, 0.0f);
+
+                ImGui::TreePop();
             }
 
             ImGui::End();
         }
     }
 
-    void Editor::atmosphere_panel()
+    void Editor::renderer_panel()
     {
-        auto &atmosphere_buffer = renderer::Renderer::instance().get_atmosphere_renderpass_buffer();
+        if (ImGui::Begin("Renderer Panel"))
+        {
+            auto &atmosphere_buffer = renderer::Renderer::instance().get_atmosphere_renderpass_buffer();
 
-        ImGui::Begin("Atmosphere Settings");
+            if (ImGui::TreeNode("Atmosphere Renderpass"))
+            {
+                ImGui::SliderFloat("Turbidity", &atmosphere_buffer.turbidity, 2.0f, 10.0f);
+                ImGui::SliderFloat("Magnitude Multiplier", &atmosphere_buffer.magnitude_multiplier, 0.0f, 1.0f);
 
-        ImGui::SliderFloat("Turbidity", &atmosphere_buffer.turbidity, 2.0f, 10.0f);
-        ImGui::SliderFloat("Magnitude Multiplier", &atmosphere_buffer.magnitude_multiplier, 0.0f, 1.0f);
+                ImGui::TreePop();
+            }
 
-        ImGui::End();
+            if (const auto &pipelines = renderer::Renderer::instance().get_pipelines(); ImGui::TreeNode("Pipelines"))
+            {
+                for (const auto &pipeline : pipelines)
+                {
+                    if (const auto pipeline_name = pipeline.pipeline_creation_desc.name;
+                        ImGui::Button(std::string("Reload "s + wstring_to_string(pipeline_name)).c_str()))
+                    {
+                        renderer::Renderer::instance().schedule_pipeline_for_reload(pipeline.index);
+                    }
+                }
+                ImGui::TreePop();
+            }
+
+            ImGui::End();
+        }
     }
 } // namespace serenity::editor

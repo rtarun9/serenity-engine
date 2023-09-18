@@ -14,8 +14,7 @@ namespace serenity::renderer
         explicit ShaderCompiler();
         ~ShaderCompiler();
 
-        [[nodiscard]] Shader compile(const ShaderTypes &shader_type, const std::wstring_view shader_path,
-                                     const std::wstring_view entry_point);
+        [[nodiscard]] Shader compile(const ShaderCreationDesc &shader_creation_desc);
 
       private:
         ShaderCompiler(const ShaderCompiler &other) = delete;

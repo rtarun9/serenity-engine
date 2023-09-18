@@ -82,7 +82,7 @@ namespace serenity::renderer
             }
 
             command_list.set_bindless_graphics_root_signature();
-            command_list.set_pipeline_state(m_pipeline);
+            command_list.set_pipeline_state(m_pipelines[m_pipeline_index]);
 
             for (auto models = scene::SceneManager::instance().get_current_scene().get_models(); auto &model : models)
             {
@@ -120,7 +120,7 @@ namespace serenity::renderer
             command_list.set_descriptor_heaps(std::array{&graphics_device.get_cbv_srv_uav_descriptor_heap()});
             command_list.set_bindless_graphics_root_signature();
 
-            command_list.set_pipeline_state(m_post_process_combine_pipeline);
+            command_list.set_pipeline_state(m_pipelines[m_post_process_combine_pipeline_index]);
             command_list.set_index_buffer(m_full_screen_triangle_index_buffer);
 
             auto post_process_combine_render_resources = PostProcessCombineRenderResources{
@@ -148,6 +148,8 @@ namespace serenity::renderer
         swapchain.present();
 
         graphics_device.frame_end();
+
+        reload_pipelines();
     }
 
     void Renderer::update_renderpasses()
@@ -185,21 +187,25 @@ namespace serenity::renderer
             std::array{0u, 1u, 2u});
 
         // Create pipeline.
-        m_pipeline = m_device->create_pipeline(rhi::PipelineCreationDesc{
-            .vertex_shader =
-                ShaderCompiler::instance().compile(ShaderTypes::Vertex, L"shaders/mesh_viewer.hlsl", L"vs_main"),
-            .pixel_shader =
-                ShaderCompiler::instance().compile(ShaderTypes::Pixel, L"shaders/mesh_viewer.hlsl", L"ps_main"),
+        m_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{
+            .vertex_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Vertex,
+                                                              .shader_path = L"shaders/mesh_viewer.hlsl",
+                                                              .shader_entry_point = L"vs_main"},
+            .pixel_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Pixel,
+                                                             .shader_path = L"shaders/mesh_viewer.hlsl",
+                                                             .shader_entry_point = L"ps_main"},
             .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
             .dsv_format = DXGI_FORMAT_D32_FLOAT,
             .name = L"Mesh Viewer pipeline",
         });
 
-        m_post_process_combine_pipeline = m_device->create_pipeline(rhi::PipelineCreationDesc{
-            .vertex_shader = ShaderCompiler::instance().compile(ShaderTypes::Vertex,
-                                                                L"shaders/post_process_combine.hlsl", L"vs_main"),
-            .pixel_shader = ShaderCompiler::instance().compile(ShaderTypes::Pixel, L"shaders/post_process_combine.hlsl",
-                                                               L"ps_main"),
+        m_post_process_combine_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{
+            .vertex_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Vertex,
+                                                              .shader_path = L"shaders/post_process_combine.hlsl",
+                                                              .shader_entry_point = L"vs_main"},
+            .pixel_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Pixel,
+                                                             .shader_path = L"shaders/post_process_combine.hlsl",
+                                                             .shader_entry_point = L"ps_main"},
             .rtv_formats = {rhi::Swapchain::SWAPCHAIN_BACK_BUFFER_FORMAT},
             .dsv_format = DXGI_FORMAT_UNKNOWN,
             .name = L"Post process combine pipeline",
@@ -209,5 +215,23 @@ namespace serenity::renderer
     void Renderer::create_renderpasses()
     {
         m_atmosphere_renderpass = std::make_unique<renderpass::AtmosphereRenderpass>();
+    }
+
+    void Renderer::reload_pipelines()
+    {
+        for (const auto &index : m_pipeline_reload_buffer)
+        {
+            if (index >= m_pipelines.size())
+            {
+                core::Log::instance().warn(
+                    std::format("{} was not a valid pipeline index. No further action is performed", index));
+                return;
+            }
+
+            m_pipelines[index] = m_device->create_pipeline(m_pipelines[index].pipeline_creation_desc);
+            m_pipelines[index].index = index;
+        }
+
+        m_pipeline_reload_buffer.clear();
     }
 } // namespace serenity::renderer

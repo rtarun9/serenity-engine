@@ -31,6 +31,26 @@ namespace serenity::renderer
             return window_ref.get_dimensions();
         }
 
+        rhi::Buffer &get_buffer_at_index(const uint32_t index)
+        {
+            return m_allocated_buffers.at(index);
+        }
+
+        rhi::Texture &get_texture_at_index(const uint32_t index)
+        {
+            return m_allocated_textures.at(index);
+        }
+
+        rhi::Pipeline &get_pipeline_at_index(const uint32_t index)
+        {
+            return m_pipelines.at(index);
+        }
+
+        AtmosphereRenderPassBuffer &get_atmosphere_renderpass_buffer()
+        {
+            return m_atmosphere_renderpass->get_atmosphere_renderpass_buffer_data();
+        }
+
         // Create GPU buffer and return index to the created buffer.
         template <typename T>
         uint32_t create_buffer(const rhi::BufferCreationDesc &buffer_creation_desc, const std::span<const T> data = {})
@@ -50,19 +70,29 @@ namespace serenity::renderer
             return index;
         }
 
-        rhi::Buffer &get_buffer_at_index(const uint32_t index)
+        // Create a pipeline and return index to pipeline.
+        uint32_t create_pipeline(const rhi::PipelineCreationDesc &pipeline_creation_desc)
         {
-            return m_allocated_buffers.at(index);
+            auto pipeline = m_device->create_pipeline(pipeline_creation_desc);
+            const auto pipeline_name = wstring_to_string(pipeline_creation_desc.name);
+
+            const auto index = m_pipelines.size();
+            pipeline.index = index;
+
+            m_pipelines.emplace_back(pipeline);
+
+            return index;
         }
 
-        rhi::Texture &get_texture_at_index(const uint32_t index)
+        // Pipelines are reloaded at the end of the frame.
+        void schedule_pipeline_for_reload(const uint32_t index)
         {
-            return m_allocated_textures.at(index);
+            m_pipeline_reload_buffer.push_back(index);
         }
 
-        AtmosphereRenderPassBuffer& get_atmosphere_renderpass_buffer()
+        std::vector<rhi::Pipeline> &get_pipelines()
         {
-            return m_atmosphere_renderpass->get_atmosphere_renderpass_buffer_data();
+            return m_pipelines;
         }
 
         // Render the current scene (uses the SceneManager to fetch this information).
@@ -76,6 +106,9 @@ namespace serenity::renderer
 
         // Create the renderpasses.
         void create_renderpasses();
+
+        // Note : reloading of pipelines can ONLY occur at the end of the current frame.
+        void reload_pipelines();
 
       private:
         Renderer(const Renderer &other) = delete;
@@ -94,15 +127,23 @@ namespace serenity::renderer
         std::vector<rhi::Buffer> m_allocated_buffers{};
         std::vector<rhi::Texture> m_allocated_textures{};
 
+        // Renderer will hold a vector of pipelines so pipelines can be reloaded at runtime.
+        // The application / game will only have a index to the pipeline in the vector. This might not be the most
+        // scalable solution for the current state of engine is a good solution for convenience.
+        std::vector<rhi::Pipeline> m_pipelines{};
+
+        // Since reloading of pipelines can only occur at the end of each frame, we hold pipeline reload requests in
+        // this vector (for the current frame).
+        std::vector<uint32_t> m_pipeline_reload_buffer{};
+
         // Renderpasses.
         std::unique_ptr<renderpass::AtmosphereRenderpass> m_atmosphere_renderpass{};
 
         // Resources for rendering.
-        rhi::Pipeline m_pipeline{};
-        rhi::Pipeline m_post_process_combine_pipeline{};
+        uint32_t m_pipeline_index{};
+        uint32_t m_post_process_combine_pipeline_index{};
 
         rhi::Buffer m_full_screen_triangle_index_buffer{};
-
 
         // Textures to render into.
         rhi::Texture m_depth_texture{};

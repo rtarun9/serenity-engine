@@ -16,10 +16,9 @@ namespace serenity::renderer::rhi
     {
         PipelineVariant pipeline_variant{};
 
-        Shader vertex_shader{};
-        Shader pixel_shader{};
-
-        Shader compute_shader{};
+        std::optional<ShaderCreationDesc> vertex_shader_creation_desc{};
+        std::optional<ShaderCreationDesc> pixel_shader_creation_desc{};
+        std::optional<ShaderCreationDesc> compute_shader_creation_desc{};
 
         D3D12_CULL_MODE cull_mode{D3D12_CULL_MODE_BACK};
 
@@ -31,46 +30,14 @@ namespace serenity::renderer::rhi
 
     // Abstraction for the pipeline state object, which represents the state of set shaders and the other fixed function
     // state objects.
-    // The same constructor is used to determine if a graphics or compute pipeline is to be created (according to the
-    // pipeline_variant field in the pipeline creation desc).
-    // note(rtarun9) : Currently this classes move constructor and assignment operator will be used quite a lot,
-    // evaluate if this is ok.
-    class Pipeline
+    // Holds the pipeline creation desc since for shader hot-reloading that information would be required.
+    struct Pipeline
     {
-      public:
-        Pipeline() = default;
-        Pipeline(const comptr<ID3D12Device> &device, const PipelineCreationDesc &pipeline_creation_desc);
-        ~Pipeline() = default;
+        comptr<ID3D12PipelineState> pipeline_state{};
 
-        Pipeline(const Pipeline &other) = delete;
-        Pipeline &operator=(const Pipeline &other) = delete;
+        PipelineCreationDesc pipeline_creation_desc{};
 
-        Pipeline(Pipeline &&other) noexcept
-        {
-            if (this != &other)
-            {
-                this->m_pipeline_state = other.m_pipeline_state;
-                other.m_pipeline_state.Reset();
-            }
-        }
-
-        Pipeline &operator=(Pipeline &&other) noexcept
-        {
-            if (this != &other)
-            {
-                this->m_pipeline_state = other.m_pipeline_state;
-                other.m_pipeline_state.Reset();
-            }
-
-            return *this;
-        }
-
-        comptr<ID3D12PipelineState> get_pipeline_state() const
-        {
-            return m_pipeline_state;
-        }
-
-      private:
-        comptr<ID3D12PipelineState> m_pipeline_state{};
+        // Index into the renderer's vector of pipelines.
+        uint32_t index{};
     };
 } // namespace serenity::renderer::rhi

@@ -18,6 +18,13 @@ namespace serenity::renderer
         Compute,
     };
 
+    struct ShaderCreationDesc
+    {
+        ShaderTypes shader_type{};
+        std::wstring shader_path{};
+        std::wstring shader_entry_point{};
+    };
+
     inline std::string shader_type_to_string(const ShaderTypes shader_type)
     {
         switch (shader_type)

@@ -17,18 +17,18 @@ namespace serenity::renderer::renderpass
                 .name = L"Atmosphere Render Pass buffer",
             });
 
-        m_atmosphere_buffer_data.turbidity = 2.9f;
+        m_atmosphere_buffer_data.turbidity = 4.0f;
         m_atmosphere_buffer_data.magnitude_multiplier = 0.019f;
 
         // Create pipeline object.
-        m_preetham_sky_pipeline = Renderer::instance().get_device().create_pipeline(rhi::PipelineCreationDesc{
+        m_preetham_sky_pipeline_index = Renderer::instance().create_pipeline(rhi::PipelineCreationDesc{
             .pipeline_variant = rhi::PipelineVariant::Graphics,
-            .vertex_shader = ShaderCompiler::instance()
-                                 .compile(ShaderTypes::Vertex, L"shaders/atmosphere/atmosphere.hlsl", L"vs_main")
-                                 .blob,
-            .pixel_shader = ShaderCompiler::instance()
-                                .compile(ShaderTypes::Pixel, L"shaders/atmosphere/atmosphere.hlsl", L"ps_main")
-                                .blob,
+            .vertex_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Vertex,
+                                                              .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
+                                                              .shader_entry_point = L"vs_main"},
+            .pixel_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Pixel,
+                                                             .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
+                                                             .shader_entry_point = L"ps_main"},
             .cull_mode = D3D12_CULL_MODE_FRONT,
             .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
             .dsv_format = DXGI_FORMAT_D32_FLOAT,
@@ -83,7 +83,8 @@ namespace serenity::renderer::renderpass
     {
         // Set pipeline and root signature state.
         command_list.set_bindless_graphics_root_signature();
-        command_list.set_pipeline_state(m_preetham_sky_pipeline);
+        command_list.set_pipeline_state(
+            renderer::Renderer::instance().get_pipeline_at_index(m_preetham_sky_pipeline_index));
 
         const auto atmosphere_render_resources = AtmosphereRenderResources{
             .position_buffer_srv_index =
@@ -133,7 +134,7 @@ namespace serenity::renderer::renderpass
 
         m_atmosphere_buffer_data.zenith_luminance_chromaticity.x =
             (4.0453f * turbidity - 4.9710f) * tanf(chi) - 0.2155f * turbidity + 2.4192f;
-        
+
         const auto theta_s_vector = math::XMFLOAT4(pow(theta_s, 3), pow(theta_s, 2), pow(theta_s, 1), 1);
 
         const auto turbidity_vector = math::XMFLOAT3(pow(turbidity, 2), turbidity, 1);

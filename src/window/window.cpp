@@ -192,7 +192,7 @@ namespace serenity::window
         }
 
         // Get the underlying OS window handle.
-        SDL_SysWMinfo window_info{};
+        auto window_info = SDL_SysWMinfo{};
         SDL_GetWindowWMInfo(m_window, &window_info, SDL_SYSWM_CURRENT_VERSION);
 
         m_window_handle = window_info.info.win.window;

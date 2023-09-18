@@ -88,19 +88,19 @@ namespace serenity::asset::ModelLoader
                 // Load attributes.
 
                 // Load positions.
-                auto &position_accessor = asset.accessors[primitive.findAttribute("POSITION")->second];
+                const auto &position_accessor = asset.accessors[primitive.findAttribute("POSITION")->second];
                 mesh_data.positions = get_data_from_accessor<math::XMFLOAT3>(asset, position_accessor);
 
                 // Load normals.
-                auto &normal_accessor = asset.accessors[primitive.findAttribute("NORMAL")->second];
+                const auto &normal_accessor = asset.accessors[primitive.findAttribute("NORMAL")->second];
                 mesh_data.normals = get_data_from_accessor<math::XMFLOAT3>(asset, normal_accessor);
 
                 // Load texture coords.
-                auto &texture_coord_accessor = asset.accessors[primitive.findAttribute("TEXCOORD_0")->second];
+                const auto &texture_coord_accessor = asset.accessors[primitive.findAttribute("TEXCOORD_0")->second];
                 mesh_data.texture_coords = get_data_from_accessor<math::XMFLOAT2>(asset, texture_coord_accessor);
 
                 // Load index buffer.
-                auto &index_accessor = asset.accessors[primitive.indicesAccessor.value()];
+                const auto &index_accessor = asset.accessors[primitive.indicesAccessor.value()];
                 mesh_data.indices = get_data_from_accessor<uint16_t>(asset, index_accessor);
 
                 if (primitive.materialIndex.has_value())
@@ -149,17 +149,11 @@ namespace serenity::asset::ModelLoader
                 {
                     material_data.base_color_texture =
                         TextureLoader::load_texture(path + "/"s + texture_path->uri.path().data(), 4u);
-
-                    auto x = material_data.base_color_texture.dimension;
-                    auto y = 3;
                 }
                 else if (const auto &texture_data = std::get_if<fastgltf::sources::Vector>(&base_color_image.data))
                 {
                     material_data.base_color_texture = TextureLoader::load_texture(
                         reinterpret_cast<const std::byte *>(texture_data->bytes.data()), texture_data->bytes.size());
-
-                    auto x = material_data.base_color_texture.dimension;
-                    auto y = 3;
                 }
             }
 

@@ -18,14 +18,10 @@ class Game final : public core::Application
 
     virtual void update(const float delta_time) override
     {
-        // Update scene objects (camera and models).
-        auto &current_scene_camera = scene::SceneManager::instance().get_current_scene().get_camera();
-        current_scene_camera.update(delta_time, m_input);
-
         // Make the sun bounce from one side of the horizon to another for visualization purposes.
         auto &current_scene_buffer = scene::SceneManager::instance().get_current_scene().get_scene_buffer();
 
-        static float increment_direction = -1.0f;
+        static auto increment_direction = -1.0f;
 
         if (current_scene_buffer.sun_angle >= 0.0f)
         {
@@ -45,7 +41,7 @@ class Game final : public core::Application
         const auto projection_matrix =
             math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f), aspect_ratio, 0.1f, 1000.0f);
 
-        scene::SceneManager::instance().get_current_scene().update(projection_matrix);
+        scene::SceneManager::instance().get_current_scene().update(projection_matrix, delta_time, m_input);
 
         renderer::Renderer::instance().update_renderpasses();
     }

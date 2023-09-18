@@ -123,7 +123,7 @@ namespace serenity::renderer::rhi
 
     void CommandList::set_pipeline_state(const Pipeline &pipeline) const
     {
-        m_command_list->SetPipelineState(pipeline.get_pipeline_state().Get());
+        m_command_list->SetPipelineState(pipeline.pipeline_state.Get());
     }
 
     void CommandList::set_graphics_32_bit_root_constants(const std::byte *data) const

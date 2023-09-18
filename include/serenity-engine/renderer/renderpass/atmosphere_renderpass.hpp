@@ -9,10 +9,6 @@ namespace serenity::renderer::renderpass
 {
     // Implementation of A.J.Preetham's analytical model for daylight.
     // (https://courses.cs.duke.edu/fall01/cps124/resources/p91-preetham.pdf).
-    // Some notations to keep in mind (from figure 4 in the paper): 
-    // theta_s - angle between zenith and the sun.
-    // theta - angle between view direction and zenith.
-    // gamma - angle between sun and view direction.
     class AtmosphereRenderpass
     {
       public:
@@ -61,6 +57,6 @@ namespace serenity::renderer::renderpass
         uint32_t m_cubemap_position_buffer_index{};
         uint32_t m_cubemap_index_buffer_index{};
 
-        rhi::Pipeline m_preetham_sky_pipeline{};
+        uint32_t m_preetham_sky_pipeline_index{};
     };
 } // namespace serenity::renderer::renderpass

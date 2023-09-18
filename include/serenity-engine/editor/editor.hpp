@@ -25,7 +25,7 @@ namespace serenity::editor
 
       private:
         void scene_panel();
-        void atmosphere_panel();
+        void renderer_panel();
 
       private:
         std::string m_ini_path{};

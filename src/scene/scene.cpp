@@ -13,7 +13,7 @@ namespace serenity::scene
                                               .name = string_to_wstring(scene_name) + L" Scene Buffer"});
 
         m_scene_buffer.sun_angle = -90.0f;
-        
+
         core::Log::instance().info(std::format("Created scene {}", scene_name));
     }
 
@@ -111,8 +111,10 @@ namespace serenity::scene
         m_models.emplace_back(model);
     }
 
-    void Scene::update(const math::XMMATRIX projection_matrix)
+    void Scene::update(const math::XMMATRIX projection_matrix, const float delta_time, const core::Input &input)
     {
+        m_camera.update(delta_time, input);
+
         // Update scene buffer.
         m_scene_buffer.view_projection_matrix = m_camera.get_view_matrix() * projection_matrix;
         m_scene_buffer.inverse_projection_matrix = math::XMMatrixInverse(nullptr, projection_matrix);
@@ -120,11 +122,9 @@ namespace serenity::scene
             math::XMMatrixInverse(nullptr, m_scene_buffer.view_projection_matrix);
         m_scene_buffer.view_matrix = m_camera.get_view_matrix();
         m_scene_buffer.inverse_view_matrix = math::XMMatrixInverse(nullptr, m_camera.get_view_matrix());
+
         m_scene_buffer.camera_position =
             math::XMFLOAT3{m_camera.m_camera_position.x, m_camera.m_camera_position.y, m_camera.m_camera_position.z};
-        renderer::Renderer::instance()
-            .get_buffer_at_index(m_scene_buffer_index)
-            .update(reinterpret_cast<const std::byte *>(&m_scene_buffer), sizeof(SceneBuffer));
 
         m_scene_buffer.sun_direction =
             math::XMFLOAT3{0.0f, -1.0f * sinf(math::XMConvertToRadians(m_scene_buffer.sun_angle)),
@@ -138,6 +138,10 @@ namespace serenity::scene
         // Normalizing the sun direction.
         m_scene_buffer.sun_direction = {sun_direction.x / magnitude, sun_direction.y / magnitude,
                                         sun_direction.z / magnitude};
+
+        renderer::Renderer::instance()
+            .get_buffer_at_index(m_scene_buffer_index)
+            .update(reinterpret_cast<const std::byte *>(&m_scene_buffer), sizeof(SceneBuffer));
 
         for (auto &model : m_models)
         {

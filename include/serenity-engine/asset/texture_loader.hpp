@@ -18,7 +18,7 @@ namespace serenity::asset
         // Load data from file on disk and the texture path is known.
         [[nodiscard]] TextureData load_texture(const std::string_view texture_path, const uint32_t num_channels = 4);
 
-        // Load data (which is in memory).
+        // Load data which is in memory.
         // Internally uses stbi_load_from_memory.
         [[nodiscard]] TextureData load_texture(const std::byte *data, const uint32_t size,
                                                const uint32_t num_channels = 4);

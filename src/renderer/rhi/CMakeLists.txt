@@ -3,6 +3,7 @@ target_sources(serenity-engine PUBLIC
 	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/d3d_utils.hpp"
 	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/buffer.hpp"
 	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/texture.hpp"
+	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/pipeline.hpp"
 
 	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/command_list.hpp"
 	"command_list.cpp"
@@ -21,7 +22,4 @@ target_sources(serenity-engine PUBLIC
 
 	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/root_signature.hpp"
 	"root_signature.cpp"
-
-	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/pipeline.hpp"
-	"pipeline.cpp"
 )

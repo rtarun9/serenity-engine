@@ -8,7 +8,7 @@ namespace serenity
       public:
         explicit Timer() = default;
         ~Timer() = default;
-       
+
         // Call this at the end of the frame (else negative delta times can occur).
         void tick();
 

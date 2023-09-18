@@ -4,6 +4,8 @@
 
 namespace serenity::asset
 {
+    // Mesh / Material data is the data extracted after processing the gltf / image files.
+    // The actual GPU buffer will be created by relevant abstractions.
     struct MeshData
     {
         std::vector<math::XMFLOAT3> positions{};

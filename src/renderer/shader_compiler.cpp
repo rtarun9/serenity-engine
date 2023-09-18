@@ -22,14 +22,13 @@ namespace serenity::renderer
         core::Log::instance().info("Destroyed shader compiler");
     }
 
-    Shader ShaderCompiler::compile(const ShaderTypes &shader_type, const std::wstring_view shader_path,
-                                   const std::wstring_view entry_point)
+    Shader ShaderCompiler::compile(const ShaderCreationDesc &shader_creation_desc)
     {
         auto shader = Shader{};
 
         // Setup compilation arguments.
         const auto target_profile = [=]() -> std::wstring {
-            switch (shader_type)
+            switch (shader_creation_desc.shader_type)
             {
             case ShaderTypes::Vertex: {
                 return L"vs_6_6";
@@ -55,7 +54,7 @@ namespace serenity::renderer
 
         auto compilation_args = std::vector<LPCWSTR>{
             L"-E",
-            entry_point.data(),
+            shader_creation_desc.shader_entry_point.data(),
             L"-T",
             target_profile.c_str(),
             DXC_ARG_PACK_MATRIX_ROW_MAJOR,
@@ -81,8 +80,8 @@ namespace serenity::renderer
         // Load the shader source file to a blob.
         auto source_blob = comptr<IDxcBlobEncoding>{};
 
-        const auto full_shader_path =
-            string_to_wstring(core::FileSystem::instance().get_absolute_path(wstring_to_string(shader_path)));
+        const auto full_shader_path = string_to_wstring(
+            core::FileSystem::instance().get_absolute_path(wstring_to_string(shader_creation_desc.shader_path)));
 
         rhi::throw_if_failed(m_utils->LoadFile(full_shader_path.data(), nullptr, &source_blob));
 
@@ -99,8 +98,8 @@ namespace serenity::renderer
                                 m_include_handler.Get(), IID_PPV_ARGS(&compiled_shader_buffer));
         if (FAILED(hr))
         {
-            core::Log::instance().critical(
-                std::format("Failed to compile shader with path : {}", wstring_to_string(shader_path)));
+            core::Log::instance().critical(std::format("Failed to compile shader with path : {}",
+                                                       wstring_to_string(shader_creation_desc.shader_path)));
         }
 
         // Get compilation errors (if any).
@@ -109,8 +108,8 @@ namespace serenity::renderer
         if (errors && errors->GetStringLength() > 0)
         {
             const auto error_message = errors->GetStringPointer();
-            core::Log::instance().critical(
-                std::format("Shader path : {}, Error : {}", wstring_to_string(shader_path), error_message));
+            core::Log::instance().critical(std::format(
+                "Shader path : {}, Error : {}", wstring_to_string(shader_creation_desc.shader_path), error_message));
         }
 
         auto compiled_shader_blob = comptr<IDxcBlob>{};
@@ -119,8 +118,9 @@ namespace serenity::renderer
 
         shader.blob = compiled_shader_blob;
 
-        core::Log::instance().info(std::format("Compiled {} shader with path : {}", shader_type_to_string(shader_type),
-                                               wstring_to_string(shader_path)));
+        core::Log::instance().info(std::format("Compiled {} shader with path : {}",
+                                               shader_type_to_string(shader_creation_desc.shader_type),
+                                               wstring_to_string(shader_creation_desc.shader_path)));
         return shader;
     }
 } // namespace serenity::renderer

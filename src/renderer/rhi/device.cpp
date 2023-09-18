@@ -1,4 +1,5 @@
 #include "serenity-engine/renderer/rhi/device.hpp"
+#include "serenity-engine/renderer/shader_compiler.hpp"
 
 #include "serenity-engine/renderer/rhi/d3d_utils.hpp"
 
@@ -380,6 +381,104 @@ namespace serenity::renderer::rhi
 
     Pipeline Device::create_pipeline(const PipelineCreationDesc &pipeline_creation_desc)
     {
-        return std::move(Pipeline(m_device, pipeline_creation_desc));
+        if (pipeline_creation_desc.name.empty())
+        {
+            core::Log::instance().error("All Pipeline's must have a name set (required due to hot-reloading)");
+        }
+
+        auto pipeline = Pipeline{};
+        pipeline.pipeline_creation_desc = pipeline_creation_desc;
+
+        // Create pipeline state object.
+        if (pipeline_creation_desc.pipeline_variant == PipelineVariant::Graphics)
+        {
+            if (!pipeline_creation_desc.vertex_shader_creation_desc.has_value())
+            {
+                core::Log::instance().error("Pipeline variant is Graphics but no vertex shader creation desc");
+            }
+
+            if (!pipeline_creation_desc.pixel_shader_creation_desc.has_value())
+            {
+                core::Log::instance().error("Pipeline variant is Graphics but no pixel shader creation desc");
+            }
+
+            const auto depth_enable = pipeline_creation_desc.dsv_format != DXGI_FORMAT_UNKNOWN;
+            const auto vertex_shader =
+                ShaderCompiler::instance().compile(pipeline_creation_desc.vertex_shader_creation_desc.value());
+            const auto pixel_shader =
+                ShaderCompiler::instance().compile(pipeline_creation_desc.pixel_shader_creation_desc.value());
+
+            auto graphics_pipeline_state_desc = D3D12_GRAPHICS_PIPELINE_STATE_DESC{
+
+                .pRootSignature = RootSignature::instance().get_root_signature().Get(),
+                .VS =
+                    {
+
+                        .pShaderBytecode = vertex_shader.blob->GetBufferPointer(),
+                        .BytecodeLength = vertex_shader.blob->GetBufferSize(),
+                    },
+                .PS =
+                    {
+
+                        .pShaderBytecode = pixel_shader.blob->GetBufferPointer(),
+                        .BytecodeLength = pixel_shader.blob->GetBufferSize(),
+                    },
+                .BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT),
+                .SampleMask = D3D12_DEFAULT_SAMPLE_MASK,
+                .RasterizerState = CD3DX12_RASTERIZER_DESC(
+                    D3D12_FILL_MODE_SOLID, pipeline_creation_desc.cull_mode, false, D3D12_DEFAULT_DEPTH_BIAS,
+                    D3D12_DEFAULT_DEPTH_BIAS_CLAMP, D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS, true, false, false, 0,
+                    D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF),
+                .DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(
+                    depth_enable, D3D12_DEPTH_WRITE_MASK_ALL, D3D12_COMPARISON_FUNC_LESS_EQUAL, false, 0u, 0u,
+                    D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO,
+                    D3D12_COMPARISON_FUNC_LESS_EQUAL, D3D12_STENCIL_OP_ZERO, D3D12_STENCIL_OP_ZERO,
+                    D3D12_STENCIL_OP_ZERO, D3D12_COMPARISON_FUNC_EQUAL),
+                .PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE,
+                .NumRenderTargets = static_cast<uint32_t>(pipeline_creation_desc.rtv_formats.size()),
+                .DSVFormat = pipeline_creation_desc.dsv_format,
+                .SampleDesc = {1u, 0u},
+                .NodeMask = 0u,
+                .Flags = D3D12_PIPELINE_STATE_FLAG_NONE,
+            };
+
+            for (const auto &i : std::views::iota(0u, pipeline_creation_desc.rtv_formats.size()))
+            {
+                graphics_pipeline_state_desc.RTVFormats[i] = pipeline_creation_desc.rtv_formats[i];
+            }
+
+            throw_if_failed(m_device->CreateGraphicsPipelineState(&graphics_pipeline_state_desc,
+                                                                  IID_PPV_ARGS(&pipeline.pipeline_state)));
+        }
+        else if (pipeline_creation_desc.pipeline_variant == PipelineVariant::Compute)
+        {
+            if (!pipeline_creation_desc.compute_shader_creation_desc.has_value())
+            {
+                core::Log::instance().error("Pipeline variant is Compute but no compute shader creation desc");
+            }
+
+            const auto compute_shader =
+                ShaderCompiler::instance().compile(pipeline_creation_desc.compute_shader_creation_desc.value());
+
+            const auto compute_pipeline_state_desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
+                .pRootSignature = RootSignature::instance().get_root_signature().Get(),
+                .CS =
+                    {
+                        .pShaderBytecode = compute_shader.blob->GetBufferPointer(),
+                        .BytecodeLength = compute_shader.blob->GetBufferSize(),
+
+                    },
+                .NodeMask = 0u,
+                .Flags = D3D12_PIPELINE_STATE_FLAG_NONE,
+            };
+
+            throw_if_failed(m_device->CreateComputePipelineState(&compute_pipeline_state_desc,
+                                                                 IID_PPV_ARGS(&pipeline.pipeline_state)));
+        }
+
+        core::Log::instance().info(
+            std::format("Created pipeline object with name {}", wstring_to_string(pipeline_creation_desc.name)));
+
+        return pipeline;
     }
 } // namespace serenity::renderer::rhi

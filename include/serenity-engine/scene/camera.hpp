@@ -28,6 +28,7 @@ namespace serenity::scene
         // Euler angle for y axis.
         float m_yaw{};
 
+        // Speed control variables.
         float m_movement_speed{0.1f};
         float m_rotation_speed{0.0015f};
 
