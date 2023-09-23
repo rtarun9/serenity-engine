@@ -26,7 +26,7 @@ namespace serenity::renderer::renderpass
         }
 
         void update(const math::XMFLOAT3 sun_direction);
-        void render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index) const;
+        void render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index, const uint32_t light_buffer_cbv_index) const;
 
       private:
         AtmosphereRenderpass(const AtmosphereRenderpass &other) = delete;

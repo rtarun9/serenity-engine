@@ -379,7 +379,8 @@ namespace serenity::renderer::rhi
         return texture;
     }
 
-    Pipeline Device::create_pipeline(const PipelineCreationDesc &pipeline_creation_desc)
+    Pipeline Device::create_pipeline(const PipelineCreationDesc &pipeline_creation_desc,
+                                     const bool ignore_shader_errors)
     {
         if (pipeline_creation_desc.name.empty())
         {
@@ -403,10 +404,15 @@ namespace serenity::renderer::rhi
             }
 
             const auto depth_enable = pipeline_creation_desc.dsv_format != DXGI_FORMAT_UNKNOWN;
-            const auto vertex_shader =
-                ShaderCompiler::instance().compile(pipeline_creation_desc.vertex_shader_creation_desc.value());
-            const auto pixel_shader =
-                ShaderCompiler::instance().compile(pipeline_creation_desc.pixel_shader_creation_desc.value());
+            const auto vertex_shader = ShaderCompiler::instance().compile(
+                pipeline_creation_desc.vertex_shader_creation_desc.value(), ignore_shader_errors);
+            const auto pixel_shader = ShaderCompiler::instance().compile(
+                pipeline_creation_desc.pixel_shader_creation_desc.value(), ignore_shader_errors);
+
+            if (vertex_shader.blob->GetBufferPointer() == nullptr || pixel_shader.blob->GetBufferPointer() == nullptr)
+            {
+                return pipeline;
+            }
 
             auto graphics_pipeline_state_desc = D3D12_GRAPHICS_PIPELINE_STATE_DESC{
 
@@ -457,8 +463,13 @@ namespace serenity::renderer::rhi
                 core::Log::instance().error("Pipeline variant is Compute but no compute shader creation desc");
             }
 
-            const auto compute_shader =
-                ShaderCompiler::instance().compile(pipeline_creation_desc.compute_shader_creation_desc.value());
+            const auto compute_shader = ShaderCompiler::instance().compile(
+                pipeline_creation_desc.compute_shader_creation_desc.value(), ignore_shader_errors);
+
+            if (compute_shader.blob->GetBufferPointer()  == nullptr)
+            {
+                return pipeline;
+            }
 
             const auto compute_pipeline_state_desc = D3D12_COMPUTE_PIPELINE_STATE_DESC{
                 .pRootSignature = RootSignature::instance().get_root_signature().Get(),

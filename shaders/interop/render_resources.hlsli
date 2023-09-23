@@ -34,6 +34,7 @@ struct AtmosphereRenderResources
 {
     uint position_buffer_srv_index;
     uint scene_buffer_cbv_index;
+    uint light_buffer_cbv_index;
     uint atmosphere_buffer_cbv_index;
 };
 

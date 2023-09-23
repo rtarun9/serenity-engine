@@ -4,7 +4,7 @@ include(FetchContent)
 FetchContent_Declare(
     SDL3
 	GIT_REPOSITORY https://github.com/libsdl-org/SDL
-	GIT_TAG 2471d8cc2ac07511e60c062748ed1952bd18144e # The latest commit as of writing this cmake script.
+	GIT_TAG 2471d8cc2ac07511e60c062748ed1952bd18144e 
 	GIT_PROGRESS TRUE
 )
 
@@ -12,15 +12,16 @@ FetchContent_Declare(
 FetchContent_Declare(
     spdlog
     GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG        v1.10.0
-    GIT_PROGRESS   TRUE
+    GIT_TAG v1.10.0
+    GIT_PROGRESS TRUE
 )
 
 # fastgltf for GLTF asset loading.
 FetchContent_Declare(
     fastgltf
     GIT_REPOSITORY https://github.com/spnda/fastgltf.git
-    GIT_TAG        b857a186c21262d0749ab31f5a2954f02725f47c
+    GIT_TAG b857a186c21262d0749ab31f5a2954f02725f47c
+    GIT_PROGRESS TRUE
 )
 
 # stb for image loading.

@@ -50,4 +50,11 @@ namespace serenity::core
             timer.tick();
         }
     }
+
+    void Application::render()
+    {
+        renderer::Renderer::instance().render();
+
+        ++m_frame_count;
+    }
 } // namespace serenity::core

@@ -79,7 +79,7 @@ namespace serenity::renderer::rhi
         [[nodiscard]] Texture create_texture(const TextureCreationDesc &texture_creation_desc,
                                              const std::byte *data = nullptr);
 
-        [[nodiscard]] Pipeline create_pipeline(const PipelineCreationDesc &pipeline_creation_desc);
+        [[nodiscard]] Pipeline create_pipeline(const PipelineCreationDesc &pipeline_creation_desc, const bool ignore_shader_errors = false);
 
       private:
         Device(const Device &other) = delete;

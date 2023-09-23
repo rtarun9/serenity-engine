@@ -9,6 +9,7 @@
 
 #define float4x4 math::XMMATRIX
 
+#define float2 math::XMFLOAT2
 #define float3 math::XMFLOAT3
 #define float4 math::XMFLOAT4
 
@@ -22,12 +23,45 @@
 #endif
 
 static const uint INVALID_INDEX_U32 = -1;
+static const uint MAX_LIGHT_COUNT = 25u;
+static const uint SUN_LIGHT_INDEX = 0u;
 
 // Set the matrix packing to row major by default. Prevents needing to transpose matrices on the C++ side.
 
 ConstantBufferStruct TransformBuffer
 {
     float4x4 model_matrix;
+};
+
+
+// Light related data.
+enum class LightType
+{
+    Point,
+    Directional
+};
+
+// size is only applicable for point light visualization. 
+struct Light
+{
+    LightType light_type;
+    float3 view_space_position_or_direction;
+    float3 color;
+    float intensity;
+    float size;
+};
+
+// NOTE : The light at index 0 will ALWAYS be a directional light, whose direction will be controlled
+// by the sun_angle field in light buffer.
+// This is just for convinence, and plus there probably wont be more than one directional light in a scene ever.
+// The sun_angle will be in degrees and not in radians.
+ConstantBufferStruct LightBuffer
+{
+    uint light_count;
+    float sun_angle;
+    float2 padding;
+
+    Light lights[MAX_LIGHT_COUNT];
 };
 
 ConstantBufferStruct SceneBuffer
@@ -40,9 +74,6 @@ ConstantBufferStruct SceneBuffer
     
     float3 camera_position;
     float padding;
-
-    float3 sun_direction;
-    float sun_angle;
 };
 
 ConstantBufferStruct MaterialBuffer

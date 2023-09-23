@@ -30,10 +30,10 @@ VsOutput vs_main(uint vertex_id : SV_VertexID)
 
 float4 ps_main(VsOutput input) : SV_Target0
 {
-    ConstantBuffer<SceneBuffer> scene_buffer = ResourceDescriptorHeap[render_resources.scene_buffer_cbv_index];
+    ConstantBuffer<LightBuffer> light_buffer = ResourceDescriptorHeap[render_resources.light_buffer_cbv_index];
     ConstantBuffer<AtmosphereRenderPassBuffer> atmosphere_buffer = ResourceDescriptorHeap[render_resources.atmosphere_buffer_cbv_index];
    
-    float4 color = float4(atmosphere_buffer.magnitude_multiplier * preetham_sky_luminance_and_chromaticity(atmosphere_buffer,  normalize(input.direction), normalize(scene_buffer.sun_direction)), 1.0f);
+    float4 color = float4(atmosphere_buffer.magnitude_multiplier * preetham_sky_luminance_and_chromaticity(atmosphere_buffer,  normalize(input.direction), normalize(light_buffer.lights[SUN_LIGHT_INDEX].view_space_position_or_direction)), 1.0f);
     
     return color;
 }

@@ -12,8 +12,6 @@ namespace serenity::scene
             renderer::rhi::BufferCreationDesc{.usage = renderer::rhi::BufferUsage::ConstantBuffer,
                                               .name = string_to_wstring(scene_name) + L" Scene Buffer"});
 
-        m_scene_buffer.sun_angle = -90.0f;
-
         core::Log::instance().info(std::format("Created scene {}", scene_name));
     }
 
@@ -115,6 +113,8 @@ namespace serenity::scene
     {
         m_camera.update(delta_time, input);
 
+        m_lights.update();
+
         // Update scene buffer.
         m_scene_buffer.view_projection_matrix = m_camera.get_view_matrix() * projection_matrix;
         m_scene_buffer.inverse_projection_matrix = math::XMMatrixInverse(nullptr, projection_matrix);
@@ -125,19 +125,6 @@ namespace serenity::scene
 
         m_scene_buffer.camera_position =
             math::XMFLOAT3{m_camera.m_camera_position.x, m_camera.m_camera_position.y, m_camera.m_camera_position.z};
-
-        m_scene_buffer.sun_direction =
-            math::XMFLOAT3{0.0f, -1.0f * sinf(math::XMConvertToRadians(m_scene_buffer.sun_angle)),
-                           -1.0f * cosf(math::XMConvertToRadians(m_scene_buffer.sun_angle))};
-
-        auto &sun_direction = m_scene_buffer.sun_direction;
-
-        const auto magnitude = std::sqrtf(sun_direction.x * sun_direction.x + sun_direction.y * sun_direction.y +
-                                          sun_direction.z * sun_direction.z);
-
-        // Normalizing the sun direction.
-        m_scene_buffer.sun_direction = {sun_direction.x / magnitude, sun_direction.y / magnitude,
-                                        sun_direction.z / magnitude};
 
         renderer::Renderer::instance()
             .get_buffer_at_index(m_scene_buffer_index)

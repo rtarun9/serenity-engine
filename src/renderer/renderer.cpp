@@ -76,9 +76,12 @@ namespace serenity::renderer
             const auto &scene_buffer_index =
                 scene::SceneManager::instance().get_current_scene().get_scene_buffer_index();
 
+            const auto &light_buffer_index =
+                scene::SceneManager::instance().get_current_scene().get_light_buffer_index();
             // Render the atmosphere render pass.
             {
-                m_atmosphere_renderpass->render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index);
+                m_atmosphere_renderpass->render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
+                                                get_buffer_at_index(light_buffer_index).cbv_index);
             }
 
             command_list.set_bindless_graphics_root_signature();
@@ -154,9 +157,9 @@ namespace serenity::renderer
 
     void Renderer::update_renderpasses()
     {
-        const auto &scene_buffer = scene::SceneManager::instance().get_current_scene().get_scene_buffer();
+        const auto &light_buffer = scene::SceneManager::instance().get_current_scene().get_light_buffer();
 
-        m_atmosphere_renderpass->update(scene_buffer.sun_direction);
+        m_atmosphere_renderpass->update(light_buffer.lights[SUN_LIGHT_INDEX].view_space_position_or_direction);
     }
 
     void Renderer::create_resources()
@@ -228,7 +231,16 @@ namespace serenity::renderer
                 return;
             }
 
-            m_pipelines[index] = m_device->create_pipeline(m_pipelines[index].pipeline_creation_desc);
+            const auto pipeline = m_device->create_pipeline(m_pipelines[index].pipeline_creation_desc, true);
+            if (pipeline.pipeline_state == nullptr)
+            {
+                core::Log::instance().warn(std::format("Failed to reload pipeline {}!",
+                                                       wstring_to_string(pipeline.pipeline_creation_desc.name)));
+            }
+            else
+            {
+                m_pipelines[index] = pipeline;
+            }
             m_pipelines[index].index = index;
         }
 

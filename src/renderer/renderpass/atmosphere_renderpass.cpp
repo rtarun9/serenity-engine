@@ -79,7 +79,8 @@ namespace serenity::renderer::renderpass
             .update(reinterpret_cast<const std::byte *>(&m_atmosphere_buffer_data), sizeof(AtmosphereRenderPassBuffer));
     }
 
-    void AtmosphereRenderpass::render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index) const
+    void AtmosphereRenderpass::render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
+                                      const uint32_t light_buffer_cbv_index) const
     {
         // Set pipeline and root signature state.
         command_list.set_bindless_graphics_root_signature();
@@ -90,6 +91,7 @@ namespace serenity::renderer::renderpass
             .position_buffer_srv_index =
                 Renderer::instance().get_buffer_at_index(m_cubemap_position_buffer_index).srv_index,
             .scene_buffer_cbv_index = scene_buffer_cbv_index,
+            .light_buffer_cbv_index = light_buffer_cbv_index,
             .atmosphere_buffer_cbv_index =
                 Renderer::instance().get_buffer_at_index(m_atmosphere_buffer_index).cbv_index,
         };

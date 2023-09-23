@@ -31,6 +31,7 @@
 // Scene
 #include "scene/camera.hpp"
 #include "scene/model.hpp"
+#include "scene/lights.hpp"
 #include "scene/scene.hpp"
 #include "scene/scene_manager.hpp"
 

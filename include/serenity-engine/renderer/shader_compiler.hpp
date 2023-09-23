@@ -14,7 +14,11 @@ namespace serenity::renderer
         explicit ShaderCompiler();
         ~ShaderCompiler();
 
-        [[nodiscard]] Shader compile(const ShaderCreationDesc &shader_creation_desc);
+        // There is an option to NOT throw errors / warnings and just return a empty shader in case of errors.
+        // This is because of shader reloading. In the case of re-creating shader for hot reloading, the ignore_error flag can be set
+        // so that the function responsible of hot-reloading can use the old pipeline and give warnings to the user.
+        // This is to ensure re-loading the app is not required when the new-shader has errors.
+        [[nodiscard]] Shader compile(const ShaderCreationDesc &shader_creation_desc, const bool ignore_error = false);
 
       private:
         ShaderCompiler(const ShaderCompiler &other) = delete;

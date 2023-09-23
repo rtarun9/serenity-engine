@@ -142,9 +142,9 @@ namespace serenity::editor
                 ImGui::TreePop();
             }
 
-            if (ImGui::TreeNode("Sun Angle"))
+            if (auto& light_buffer = current_scene.get_light_buffer(); ImGui::TreeNode("Light Settings"))
             {
-                ImGui::SliderFloat("Sun angle", &current_scene.get_scene_buffer().sun_angle, -180.0f, 0.0f);
+                ImGui::SliderFloat("Sun angle", &current_scene.get_light_buffer().sun_angle, -180.0f, 0.0f);
 
                 ImGui::TreePop();
             }

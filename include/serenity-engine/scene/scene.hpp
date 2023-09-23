@@ -2,6 +2,7 @@
 
 #include "camera.hpp"
 #include "model.hpp"
+#include "lights.hpp"
 
 #include "shaders/interop/constant_buffers.hlsli"
 
@@ -43,6 +44,16 @@ namespace serenity::scene
             return m_models;
         }
 
+        LightBuffer& get_light_buffer()
+        {
+            return m_lights.get_light_buffer();
+        }
+
+        uint32_t get_light_buffer_index() const
+        {
+            return m_lights.get_light_buffer_index();
+        }
+
         void add_model(const std::string_view model_path, const std::string_view model_name,
                        const math::XMFLOAT3 scale = math::XMFLOAT3{1.0f, 1.0f, 1.0f});
 
@@ -54,6 +65,8 @@ namespace serenity::scene
         SceneBuffer m_scene_buffer{};
 
         Camera m_camera{};
+
+        Lights m_lights{};
 
         std::vector<Model> m_models{};
 

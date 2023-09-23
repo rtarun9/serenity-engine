@@ -9,4 +9,7 @@ target_sources(serenity-engine PUBLIC
 
 	"${SERENITY_ENGINE_INCLUDE_PATH}/scene/camera.hpp"
 	"camera.cpp"
+
+	"${SERENITY_ENGINE_INCLUDE_PATH}/scene/lights.hpp"
+	"lights.cpp"
 )

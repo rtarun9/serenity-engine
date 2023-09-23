@@ -35,7 +35,7 @@ namespace serenity::core
 
         // To be implemented by applications inheriting from this class.
         virtual void update(const float delta_time) = 0;
-        virtual void render() = 0;
+        virtual void render() final;
 
       private:
         Application(const Application &other) = delete;

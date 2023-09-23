@@ -22,8 +22,23 @@ namespace serenity::renderer
         core::Log::instance().info("Destroyed shader compiler");
     }
 
-    Shader ShaderCompiler::compile(const ShaderCreationDesc &shader_creation_desc)
+    Shader ShaderCompiler::compile(const ShaderCreationDesc &shader_creation_desc, const bool ignore_error)
     {
+        const auto error_handler = [&](const HRESULT hr) {
+            if (FAILED(hr))
+            {
+                if (ignore_error)
+                {
+                    rhi::throw_if_failed(hr);
+                }
+                else
+                {
+                    core::Log::instance().critical(std::format("Failed to compile shader with path : {}",
+                                                               wstring_to_string(shader_creation_desc.shader_path)));
+                }
+            }
+        };
+
         auto shader = Shader{};
 
         // Setup compilation arguments.
@@ -83,7 +98,7 @@ namespace serenity::renderer
         const auto full_shader_path = string_to_wstring(
             core::FileSystem::instance().get_absolute_path(wstring_to_string(shader_creation_desc.shader_path)));
 
-        rhi::throw_if_failed(m_utils->LoadFile(full_shader_path.data(), nullptr, &source_blob));
+        error_handler(m_utils->LoadFile(full_shader_path.data(), nullptr, &source_blob));
 
         const auto source_buffer = DxcBuffer{
             .Ptr = source_blob->GetBufferPointer(),
@@ -93,28 +108,32 @@ namespace serenity::renderer
 
         // Compile the shader.
         auto compiled_shader_buffer = comptr<IDxcResult>{};
-        const auto hr =
-            m_compiler->Compile(&source_buffer, compilation_args.data(), static_cast<uint32_t>(compilation_args.size()),
-                                m_include_handler.Get(), IID_PPV_ARGS(&compiled_shader_buffer));
-        if (FAILED(hr))
-        {
-            core::Log::instance().critical(std::format("Failed to compile shader with path : {}",
-                                                       wstring_to_string(shader_creation_desc.shader_path)));
-        }
+        error_handler(m_compiler->Compile(&source_buffer, compilation_args.data(),
+                                          static_cast<uint32_t>(compilation_args.size()), m_include_handler.Get(),
+                                          IID_PPV_ARGS(&compiled_shader_buffer)));
 
         // Get compilation errors (if any).
         auto errors = comptr<IDxcBlobUtf8>{};
-        rhi::throw_if_failed(compiled_shader_buffer->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr));
+        error_handler(compiled_shader_buffer->GetOutput(DXC_OUT_ERRORS, IID_PPV_ARGS(&errors), nullptr));
         if (errors && errors->GetStringLength() > 0)
         {
             const auto error_message = errors->GetStringPointer();
-            core::Log::instance().critical(std::format(
-                "Shader path : {}, Error : {}", wstring_to_string(shader_creation_desc.shader_path), error_message));
+            if (!ignore_error)
+            {
+                core::Log::instance().critical(std::format("Shader path : {}, Error : {}",
+                                                           wstring_to_string(shader_creation_desc.shader_path),
+                                                           error_message));
+            }
+            else
+            {
+                core::Log::instance().warn(std::format("Shader path : {}, Error : {}",
+                                                       wstring_to_string(shader_creation_desc.shader_path),
+                                                       error_message));
+            }
         }
 
         auto compiled_shader_blob = comptr<IDxcBlob>{};
-        rhi::throw_if_failed(
-            compiled_shader_buffer->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiled_shader_blob), nullptr));
+        error_handler(compiled_shader_buffer->GetOutput(DXC_OUT_OBJECT, IID_PPV_ARGS(&compiled_shader_blob), nullptr));
 
         shader.blob = compiled_shader_blob;
 

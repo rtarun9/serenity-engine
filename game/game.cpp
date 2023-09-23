@@ -19,49 +19,40 @@ class Game final : public core::Application
     virtual void update(const float delta_time) override
     {
         // Make the sun bounce from one side of the horizon to another for visualization purposes.
-        auto &current_scene_buffer = scene::SceneManager::instance().get_current_scene().get_scene_buffer();
+        auto &current_scene_light_buffer = scene::SceneManager::instance().get_current_scene().get_light_buffer();
 
         static auto increment_direction = -1.0f;
 
-        if (current_scene_buffer.sun_angle >= 0.0f)
+        if (current_scene_light_buffer.sun_angle >= 0.0f)
         {
             increment_direction = -1.0f;
         }
-        else if (current_scene_buffer.sun_angle <= -180.0f)
+        else if (current_scene_light_buffer.sun_angle <= -180.0f)
         {
             increment_direction = 1.0f;
         }
 
-        current_scene_buffer.sun_angle += delta_time * 0.04f * increment_direction;
-        current_scene_buffer.sun_angle = std::clamp(current_scene_buffer.sun_angle, -180.0f, 0.0f);
+        current_scene_light_buffer.sun_angle += delta_time * 0.04f * increment_direction;
+        current_scene_light_buffer.sun_angle = std::clamp(current_scene_light_buffer.sun_angle, -180.0f, 0.0f);
 
-        const auto window_dimensions = m_window->get_dimensions();
-        const auto aspect_ratio = static_cast<float>(window_dimensions.x) / static_cast<float>(window_dimensions.y);
-
-        const auto projection_matrix =
-            math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f), aspect_ratio, 0.1f, 1000.0f);
+        const auto projection_matrix = math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f),
+                                                                      m_window->get_aspect_ratio(), 0.1f, 1000.0f);
 
         scene::SceneManager::instance().get_current_scene().update(projection_matrix, delta_time, m_input);
 
         renderer::Renderer::instance().update_renderpasses();
     }
-
-    virtual void render() override
-    {
-        renderer::Renderer::instance().render();
-
-        ++m_frame_count;
-    }
-
-  private:
 };
 
 std::unique_ptr<serenity::core::Application> serenity::core::create_application()
 {
-    return std::make_unique<Game>(serenity::core::ApplicationConfig{.log_to_console = true,
-                                                                    .log_to_file = true,
-                                                                    .dimensions = Float2{
-                                                                        .x = 100.0f,
-                                                                        .y = 100.0f,
-                                                                    }});
+    return std::make_unique<Game>(serenity::core::ApplicationConfig{
+        .log_to_console = true,
+        .log_to_file = true,
+        .dimensions =
+            Float2{
+                .x = 100.0f,
+                .y = 100.0f,
+            },
+    });
 }
