@@ -2,6 +2,8 @@
 
 #include "shaders/interop/constant_buffers.hlsli"
 
+#include "serenity-engine/renderer/rhi/command_list.hpp"
+
 namespace serenity::scene
 {
     // Abstraction that holds all lights in the scene.
@@ -22,10 +24,18 @@ namespace serenity::scene
             return m_light_buffer;
         }
 
-        void update();
+        void update(const math::XMMATRIX view_matrix);
+
+        void render(const renderer::rhi::CommandList& command_list, const uint32_t scene_buffer_cbv_index);
 
       private:
         uint32_t m_light_buffer_index{};
         LightBuffer m_light_buffer{};
+
+        // For visualization purposes.
+        uint32_t m_cube_position_buffer_index{};
+        uint32_t m_cube_index_buffer_index{};
+
+        uint32_t m_light_pipeline_index{};
     };
 } // namespace serenity::scene

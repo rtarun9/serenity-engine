@@ -41,20 +41,33 @@ enum class LightType
     Directional
 };
 
-// size is only applicable for point light visualization. 
+// scale is only applicable for point light visualization. 
 struct Light
 {
     LightType light_type;
+    float3 padding;
+
+    float3 world_space_position_or_direction;
+    float padding2;
+
     float3 view_space_position_or_direction;
+    float padding3;
+
     float3 color;
     float intensity;
-    float size;
+
+    float scale;
+    float3 padding4;
 };
 
 // NOTE : The light at index 0 will ALWAYS be a directional light, whose direction will be controlled
 // by the sun_angle field in light buffer.
 // This is just for convinence, and plus there probably wont be more than one directional light in a scene ever.
 // The sun_angle will be in degrees and not in radians.
+
+// model_matrix is kept seperate from the lights field because instanced rendering 
+// will be used to render non-directional lights.
+// Index 0 in the model_matrix array corresponds to index 1 in the lights array.
 ConstantBufferStruct LightBuffer
 {
     uint light_count;
@@ -62,6 +75,8 @@ ConstantBufferStruct LightBuffer
     float2 padding;
 
     Light lights[MAX_LIGHT_COUNT];
+
+    float4x4 model_matrix[MAX_LIGHT_COUNT];
 };
 
 ConstantBufferStruct SceneBuffer

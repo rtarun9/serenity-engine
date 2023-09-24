@@ -11,6 +11,23 @@ class Game final : public core::Application
         auto default_scene = scene::Scene("Default Scene");
         default_scene.add_model("data/Cube/glTF/Cube.gltf", "Cube");
         // default_scene.add_model("data/sketchfab_pbr_material_reference_chart/scene.gltf", "PBR_References");
+
+        default_scene.add_light(Light{
+            .light_type = LightType::Point,
+            .world_space_position_or_direction = math::XMFLOAT3{-10.0f, 0.0f, 0.0f},
+            .color = math::XMFLOAT3{1.0f, 1.0f, 1.0f},
+            .intensity = 1.0f,
+            .scale = 0.2f,
+        });
+
+        default_scene.add_light(Light{
+            .light_type = LightType::Point,
+            .world_space_position_or_direction = math::XMFLOAT3{10.0f, 0.0f, 0.0f},
+            .color = math::XMFLOAT3{1.0f, 1.0f, 0.0f},
+            .intensity = 1.0f,
+            .scale = 0.2f,
+        });
+
         scene::SceneManager::instance().add_scene(std::move(default_scene));
     }
 
@@ -19,7 +36,8 @@ class Game final : public core::Application
     virtual void update(const float delta_time) override
     {
         // Make the sun bounce from one side of the horizon to another for visualization purposes.
-        auto &current_scene_light_buffer = scene::SceneManager::instance().get_current_scene().get_light_buffer();
+        auto &current_scene_light_buffer =
+            scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer();
 
         static auto increment_direction = -1.0f;
 

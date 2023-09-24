@@ -113,7 +113,7 @@ namespace serenity::scene
     {
         m_camera.update(delta_time, input);
 
-        m_lights.update();
+        m_lights.update(m_scene_buffer.view_matrix);
 
         // Update scene buffer.
         m_scene_buffer.view_projection_matrix = m_camera.get_view_matrix() * projection_matrix;
@@ -134,5 +134,10 @@ namespace serenity::scene
         {
             model.transform_component.update();
         }
+    }
+
+    void Scene::add_light(const Light &light)
+    {
+        m_lights.add_light(light);
     }
 } // namespace serenity::scene

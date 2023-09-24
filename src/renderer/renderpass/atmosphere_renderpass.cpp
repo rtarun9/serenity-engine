@@ -23,12 +23,18 @@ namespace serenity::renderer::renderpass
         // Create pipeline object.
         m_preetham_sky_pipeline_index = Renderer::instance().create_pipeline(rhi::PipelineCreationDesc{
             .pipeline_variant = rhi::PipelineVariant::Graphics,
-            .vertex_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Vertex,
-                                                              .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
-                                                              .shader_entry_point = L"vs_main"},
-            .pixel_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Pixel,
-                                                             .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
-                                                             .shader_entry_point = L"ps_main"},
+            .vertex_shader_creation_desc =
+                ShaderCreationDesc{
+                    .shader_type = ShaderTypes::Vertex,
+                    .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
+                    .shader_entry_point = L"vs_main",
+                },
+            .pixel_shader_creation_desc =
+                ShaderCreationDesc{
+                    .shader_type = ShaderTypes::Pixel,
+                    .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
+                    .shader_entry_point = L"ps_main",
+                },
             .cull_mode = D3D12_CULL_MODE_FRONT,
             .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
             .dsv_format = DXGI_FORMAT_D32_FLOAT,
@@ -58,7 +64,7 @@ namespace serenity::renderer::renderpass
         m_cubemap_index_buffer_index = Renderer::instance().create_buffer<uint16_t>(
             rhi::BufferCreationDesc{
                 .usage = rhi::BufferUsage::StructuredBuffer,
-                .name = L"Cubemap position buffer",
+                .name = L"Cubemap index buffer",
             },
             indices);
     }

@@ -44,18 +44,15 @@ namespace serenity::scene
             return m_models;
         }
 
-        LightBuffer& get_light_buffer()
+        Lights& get_lights()
         {
-            return m_lights.get_light_buffer();
+            return m_lights;
         }
-
-        uint32_t get_light_buffer_index() const
-        {
-            return m_lights.get_light_buffer_index();
-        }
-
+        
         void add_model(const std::string_view model_path, const std::string_view model_name,
                        const math::XMFLOAT3 scale = math::XMFLOAT3{1.0f, 1.0f, 1.0f});
+
+        void add_light(const Light& light);
 
         // Update the transform component of all models in the scene, as well as the scene buffer and camera.
         void update(const math::XMMATRIX projection_matrix, const float delta_time, const core::Input &input);

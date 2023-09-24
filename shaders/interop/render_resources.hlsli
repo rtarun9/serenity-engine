@@ -38,4 +38,10 @@ struct AtmosphereRenderResources
     uint atmosphere_buffer_cbv_index;
 };
 
+struct LightRenderResources
+{
+    uint scene_buffer_cbv_index;
+    uint light_buffer_cbv_index;
+    uint light_cube_position_buffer_srv_index;
+};
 #endif

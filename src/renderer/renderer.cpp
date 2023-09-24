@@ -77,13 +77,14 @@ namespace serenity::renderer
                 scene::SceneManager::instance().get_current_scene().get_scene_buffer_index();
 
             const auto &light_buffer_index =
-                scene::SceneManager::instance().get_current_scene().get_light_buffer_index();
+                scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer_index();
             // Render the atmosphere render pass.
             {
                 m_atmosphere_renderpass->render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
                                                 get_buffer_at_index(light_buffer_index).cbv_index);
             }
 
+            // Render scene objects.
             command_list.set_bindless_graphics_root_signature();
             command_list.set_pipeline_state(m_pipelines[m_pipeline_index]);
 
@@ -110,6 +111,10 @@ namespace serenity::renderer
                     command_list.draw_indexed_instanced(mesh.indices, 1u);
                 };
             }
+
+            // Render lights.
+            auto &lights = scene::SceneManager::instance().get_current_scene().get_lights();
+            lights.render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index);
         }
 
         // Transition render texture to shader resource and perform the post process combine operations.
@@ -157,9 +162,9 @@ namespace serenity::renderer
 
     void Renderer::update_renderpasses()
     {
-        const auto &light_buffer = scene::SceneManager::instance().get_current_scene().get_light_buffer();
+        const auto &light_buffer = scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer();
 
-        m_atmosphere_renderpass->update(light_buffer.lights[SUN_LIGHT_INDEX].view_space_position_or_direction);
+        m_atmosphere_renderpass->update(light_buffer.lights[SUN_LIGHT_INDEX].world_space_position_or_direction);
     }
 
     void Renderer::create_resources()

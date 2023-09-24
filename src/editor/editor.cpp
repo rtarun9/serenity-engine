@@ -142,9 +142,28 @@ namespace serenity::editor
                 ImGui::TreePop();
             }
 
-            if (auto& light_buffer = current_scene.get_light_buffer(); ImGui::TreeNode("Light Settings"))
+            if (auto& light_buffer = current_scene.get_lights().get_light_buffer(); ImGui::TreeNode("Light Settings"))
             {
-                ImGui::SliderFloat("Sun angle", &current_scene.get_light_buffer().sun_angle, -180.0f, 0.0f);
+                if (ImGui::TreeNode("Directional Light"))
+                {
+                    ImGui::SliderFloat("Sun angle", &current_scene.get_lights().get_light_buffer().sun_angle, -180.0f, 0.0f);
+
+                    ImGui::TreePop();
+                }
+
+                for (size_t i = 1; i < light_buffer.light_count; i++)
+                {
+                    if (ImGui::TreeNode(std::string("Light " + std::to_string(i)).c_str()))
+                    {
+                        ImGui::SliderFloat3("Position", &light_buffer.lights[i].world_space_position_or_direction.x, -50.0f, 50.0f);
+                        ImGui::ColorPicker3("Color", &light_buffer.lights[i].color.x);
+                        ImGui::SliderFloat("Intensity", &light_buffer.lights[i].intensity, 0.01f, 5.0f);
+                        ImGui::SliderFloat("Scale", &light_buffer.lights[i].scale, 0.01f, 10.0f);
+
+                        ImGui::TreePop();
+                    }
+                }
+
 
                 ImGui::TreePop();
             }
