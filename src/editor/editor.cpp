@@ -30,6 +30,30 @@ namespace serenity::editor
         // Setup Dear ImGui style
         ImGui::StyleColorsDark();
 
+        ImVec4 *colors = ImGui::GetStyle().Colors;
+        colors[ImGuiCol_FrameBg] = ImVec4(0.48f, 0.16f, 0.16f, 0.54f);
+        colors[ImGuiCol_FrameBgActive] = ImVec4(0.98f, 0.26f, 0.26f, 0.67f);
+        colors[ImGuiCol_TitleBgActive] = ImVec4(0.48f, 0.16f, 0.16f, 1.00f);
+        colors[ImGuiCol_CheckMark] = ImVec4(0.98f, 0.26f, 0.26f, 1.00f);
+        colors[ImGuiCol_SliderGrab] = ImVec4(0.88f, 0.24f, 0.24f, 1.00f);
+        colors[ImGuiCol_SliderGrabActive] = ImVec4(0.98f, 0.26f, 0.26f, 1.00f);
+        colors[ImGuiCol_Button] = ImVec4(0.98f, 0.26f, 0.26f, 0.40f);
+        colors[ImGuiCol_ButtonHovered] = ImVec4(0.98f, 0.26f, 0.26f, 1.00f);
+        colors[ImGuiCol_ButtonActive] = ImVec4(0.98f, 0.06f, 0.06f, 1.00f);
+        colors[ImGuiCol_Header] = ImVec4(0.98f, 0.26f, 0.26f, 0.31f);
+        colors[ImGuiCol_HeaderHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
+        colors[ImGuiCol_HeaderActive] = ImVec4(0.98f, 0.26f, 0.26f, 1.00f);
+        colors[ImGuiCol_SeparatorHovered] = ImVec4(0.75f, 0.10f, 0.10f, 0.78f);
+        colors[ImGuiCol_SeparatorActive] = ImVec4(0.75f, 0.10f, 0.10f, 1.00f);
+        colors[ImGuiCol_ResizeGrip] = ImVec4(0.98f, 0.26f, 0.26f, 0.20f);
+        colors[ImGuiCol_ResizeGripHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.67f);
+        colors[ImGuiCol_ResizeGripActive] = ImVec4(0.98f, 0.26f, 0.26f, 0.95f);
+        colors[ImGuiCol_Tab] = ImVec4(0.58f, 0.18f, 0.18f, 0.86f);
+        colors[ImGuiCol_TabHovered] = ImVec4(0.98f, 0.26f, 0.26f, 0.80f);
+        colors[ImGuiCol_TabActive] = ImVec4(0.68f, 0.20f, 0.20f, 1.00f);
+        colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.42f, 0.14f, 0.14f, 1.00f);
+        colors[ImGuiCol_DockingPreview] = ImVec4(0.98f, 0.26f, 0.26f, 0.70f);
+
         const auto current_srv_descriptor =
             renderer::Renderer::instance().get_device().get_cbv_srv_uav_descriptor_heap().get_current_handle();
 
@@ -142,11 +166,12 @@ namespace serenity::editor
                 ImGui::TreePop();
             }
 
-            if (auto& light_buffer = current_scene.get_lights().get_light_buffer(); ImGui::TreeNode("Light Settings"))
+            if (auto &light_buffer = current_scene.get_lights().get_light_buffer(); ImGui::TreeNode("Light Settings"))
             {
                 if (ImGui::TreeNode("Directional Light"))
                 {
-                    ImGui::SliderFloat("Sun angle", &current_scene.get_lights().get_light_buffer().sun_angle, -180.0f, 0.0f);
+                    ImGui::SliderFloat("Sun angle", &current_scene.get_lights().get_light_buffer().sun_angle, -180.0f,
+                                       0.0f);
 
                     ImGui::TreePop();
                 }
@@ -155,15 +180,15 @@ namespace serenity::editor
                 {
                     if (ImGui::TreeNode(std::string("Light " + std::to_string(i)).c_str()))
                     {
-                        ImGui::SliderFloat3("Position", &light_buffer.lights[i].world_space_position_or_direction.x, -50.0f, 50.0f);
-                        ImGui::ColorPicker3("Color", &light_buffer.lights[i].color.x);
+                        ImGui::SliderFloat3("Position", &light_buffer.lights[i].world_space_position_or_direction.x,
+                                            -50.0f, 50.0f);
+                        ImGui::ColorEdit3("Color", &light_buffer.lights[i].color.x);
                         ImGui::SliderFloat("Intensity", &light_buffer.lights[i].intensity, 0.01f, 5.0f);
                         ImGui::SliderFloat("Scale", &light_buffer.lights[i].scale, 0.01f, 10.0f);
 
                         ImGui::TreePop();
                     }
                 }
-
 
                 ImGui::TreePop();
             }

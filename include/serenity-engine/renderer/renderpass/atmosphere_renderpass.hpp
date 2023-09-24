@@ -3,6 +3,8 @@
 #include "serenity-engine/renderer/rhi/command_list.hpp"
 #include "serenity-engine/renderer/rhi/pipeline.hpp"
 
+#include "serenity-engine/renderer/rhi/descriptor_heap.hpp"
+
 #include "shaders/interop/constant_buffers.hlsli"
 
 namespace serenity::renderer::renderpass
@@ -25,8 +27,14 @@ namespace serenity::renderer::renderpass
             return m_atmosphere_buffer_index;
         }
 
+        uint32_t get_atmosphere_texture_index() const
+        {
+            return m_atmosphere_texture_index;
+        }
+
         void update(const math::XMFLOAT3 sun_direction);
-        void render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index, const uint32_t light_buffer_cbv_index) const;
+        void compute(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
+                     const uint32_t light_buffer_cbv_index) const;
 
       private:
         AtmosphereRenderpass(const AtmosphereRenderpass &other) = delete;
@@ -43,6 +51,9 @@ namespace serenity::renderer::renderpass
         // Formula mentioned in A.2 in Preetham's paper.
         void compute_zenith_luminance(const math::XMFLOAT3 sun_direction);
 
+      public:
+        static constexpr uint32_t ATMOSPHERE_TEXTURE_DIMENSION = 128u;
+
       private:
         // The float3's A, B, C, D, E (within AtmosphereRenderpassBuffer) are part of the parameters required by the
         // Perez et.al model to compute sky luminance distribution. The other parameters are theta and gamma. A
@@ -54,9 +65,8 @@ namespace serenity::renderer::renderpass
         AtmosphereRenderPassBuffer m_atmosphere_buffer_data{};
         uint32_t m_atmosphere_buffer_index{};
 
-        uint32_t m_cubemap_position_buffer_index{};
-        uint32_t m_cubemap_index_buffer_index{};
+        uint32_t m_atmosphere_texture_index{};
 
-        uint32_t m_preetham_sky_pipeline_index{};
+        uint32_t m_preetham_sky_generation_pipeline_index{};
     };
 } // namespace serenity::renderer::renderpass

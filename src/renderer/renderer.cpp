@@ -78,10 +78,10 @@ namespace serenity::renderer
 
             const auto &light_buffer_index =
                 scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer_index();
-            // Render the atmosphere render pass.
+            // Process the atmosphere render pass.
             {
-                m_atmosphere_renderpass->render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
-                                                get_buffer_at_index(light_buffer_index).cbv_index);
+                m_atmosphere_renderpass->compute(command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
+                                                 get_buffer_at_index(light_buffer_index).cbv_index);
             }
 
             // Render scene objects.
@@ -115,6 +115,12 @@ namespace serenity::renderer
             // Render lights.
             auto &lights = scene::SceneManager::instance().get_current_scene().get_lights();
             lights.render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index);
+
+            // Render cube map.
+            m_cube_map_renderpass->render(
+                graphics_device.get_cbv_srv_uav_descriptor_heap(), command_list,
+                get_buffer_at_index(scene_buffer_index).cbv_index,
+                get_texture_at_index(m_atmosphere_renderpass->get_atmosphere_texture_index()).srv_index);
         }
 
         // Transition render texture to shader resource and perform the post process combine operations.
@@ -197,14 +203,14 @@ namespace serenity::renderer
         // Create pipeline.
         m_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{
             .vertex_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Vertex,
-                                                              .shader_path = L"shaders/mesh_viewer.hlsl",
+                                                              .shader_path = L"shaders/shading/blinn_phong.hlsl",
                                                               .shader_entry_point = L"vs_main"},
             .pixel_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Pixel,
-                                                             .shader_path = L"shaders/mesh_viewer.hlsl",
+                                                             .shader_path = L"shaders/shading/blinn_phong.hlsl",
                                                              .shader_entry_point = L"ps_main"},
             .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
             .dsv_format = DXGI_FORMAT_D32_FLOAT,
-            .name = L"Mesh Viewer pipeline",
+            .name = L"Blinn Phong pipeline",
         });
 
         m_post_process_combine_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{
@@ -223,6 +229,7 @@ namespace serenity::renderer
     void Renderer::create_renderpasses()
     {
         m_atmosphere_renderpass = std::make_unique<renderpass::AtmosphereRenderpass>();
+        m_cube_map_renderpass = std::make_unique<renderpass::CubeMapRenderpass>();
     }
 
     void Renderer::reload_pipelines()

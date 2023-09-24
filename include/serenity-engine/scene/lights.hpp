@@ -26,7 +26,7 @@ namespace serenity::scene
 
         void update(const math::XMMATRIX view_matrix);
 
-        void render(const renderer::rhi::CommandList& command_list, const uint32_t scene_buffer_cbv_index);
+        void render(const renderer::rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index);
 
       private:
         uint32_t m_light_buffer_index{};

@@ -27,6 +27,7 @@
 
 // Renderer renderpass
 #include "renderer/renderpass/atmosphere_renderpass.hpp"
+#include "renderer/renderpass/cube_map_renderpass.hpp"
 
 // Scene
 #include "scene/camera.hpp"

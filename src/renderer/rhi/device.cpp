@@ -352,30 +352,26 @@ namespace serenity::renderer::rhi
 
             else if (texture_creation_desc.array_size == 6u)
             {
-                for (const auto i : std::views::iota(0u, 6u))
-                {
-                    const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{
-                        .Format = texture_creation_desc.format,
-                        .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY,
-                        .Texture2DArray{
-                            .MipSlice = 0u,
-                            .ArraySize = texture_creation_desc.array_size,
-                            .PlaneSlice = 0u,
-                        },
-                    };
-                    m_device->CreateUnorderedAccessView(texture.resource.Get(), nullptr, &uav_desc,
-                                                        current_uav_descriptor.cpu_descriptor_handle);
+                const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{
+                    .Format = texture_creation_desc.format,
+                    .ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2DARRAY,
+                    .Texture2DArray{
+                        .MipSlice = 0u,
+                        .FirstArraySlice = 0u,
+                        .ArraySize = 6u,
+                    },
+                };
+                m_device->CreateUnorderedAccessView(texture.resource.Get(), nullptr, &uav_desc,
+                                                    current_uav_descriptor.cpu_descriptor_handle);
 
-                    const auto uav_index = current_uav_descriptor.index;
-                    if (i == 0)
-                    {
-                        texture.uav_index = uav_index;
-                    }
+                texture.uav_index = current_uav_descriptor.index;
 
-                    m_cbv_srv_uav_descriptor_heap->offset_current_handle();
-                }
+                m_cbv_srv_uav_descriptor_heap->offset_current_handle();
             }
         }
+
+        set_name(texture.resource.Get(), texture_creation_desc.name);
+
         return texture;
     }
 
@@ -466,7 +462,7 @@ namespace serenity::renderer::rhi
             const auto compute_shader = ShaderCompiler::instance().compile(
                 pipeline_creation_desc.compute_shader_creation_desc.value(), ignore_shader_errors);
 
-            if (compute_shader.blob->GetBufferPointer()  == nullptr)
+            if (compute_shader.blob->GetBufferPointer() == nullptr)
             {
                 return pipeline;
             }

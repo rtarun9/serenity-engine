@@ -3,6 +3,7 @@
 #include "serenity-engine/core/singleton_instance.hpp"
 
 #include "renderpass/atmosphere_renderpass.hpp"
+#include "renderpass/cube_map_renderpass.hpp"
 
 #include "serenity-engine/renderer/rhi/device.hpp"
 #include "serenity-engine/renderer/shader_compiler.hpp"
@@ -138,6 +139,7 @@ namespace serenity::renderer
 
         // Renderpasses.
         std::unique_ptr<renderpass::AtmosphereRenderpass> m_atmosphere_renderpass{};
+        std::unique_ptr<renderpass::CubeMapRenderpass> m_cube_map_renderpass{};
 
         // Resources for rendering.
         uint32_t m_pipeline_index{};

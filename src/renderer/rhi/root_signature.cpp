@@ -9,9 +9,12 @@ namespace serenity::renderer::rhi
         root_signature_parameters.InitAsConstants(RootSignature::NUM_32_BIT_ROOT_CONSTANTS, 0u, 0u);
 
         const auto anisotropic_sampler_desc = CD3DX12_STATIC_SAMPLER_DESC(0u);
+        const auto linear_wrap_sampler_desc = CD3DX12_STATIC_SAMPLER_DESC(1u, D3D12_FILTER_MIN_MAG_MIP_LINEAR);
+
+        const auto sampler_descs = std::array{anisotropic_sampler_desc, linear_wrap_sampler_desc};
 
         const auto versioned_root_signature_desc =
-            CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC(1u, &root_signature_parameters, 1u, &anisotropic_sampler_desc,
+            CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC(1u, &root_signature_parameters, 2u, sampler_descs.data(),
                                                   D3D12_ROOT_SIGNATURE_FLAG_CBV_SRV_UAV_HEAP_DIRECTLY_INDEXED |
                                                       D3D12_ROOT_SIGNATURE_FLAG_SAMPLER_HEAP_DIRECTLY_INDEXED);
 

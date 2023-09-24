@@ -131,13 +131,16 @@ ConstantBufferStruct AtmosphereRenderPassBuffer
     float turbidity;
     float3 padding;
 
+    float2 output_texture_dimension;
+    float2 padding2;
+
     // Zenith luminance : Luminance at the Zenith (the imaginary point directly above the viewer).
     // float3 is of the form Yxy, where Y is the luminance, x and y are the chromaticities.
     float3 zenith_luminance_chromaticity;
-    float padding2;
+    float padding3;
 
     float magnitude_multiplier;
-    float3 padding3;
+    float3 padding4;
 
     PerezParameters perez_parameters;
 };

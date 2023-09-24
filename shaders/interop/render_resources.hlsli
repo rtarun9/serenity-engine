@@ -32,10 +32,16 @@ struct PostProcessCombineRenderResources
 
 struct AtmosphereRenderResources
 {
-    uint position_buffer_srv_index;
-    uint scene_buffer_cbv_index;
     uint light_buffer_cbv_index;
     uint atmosphere_buffer_cbv_index;
+    uint output_texture_uav_index;
+};
+
+struct CubeMapRenderResources
+{
+    uint texture_srv_index;
+    uint position_buffer_srv_index;
+    uint scene_buffer_cbv_index;
 };
 
 struct LightRenderResources

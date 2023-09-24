@@ -6,6 +6,7 @@
 struct VsOutput
 {
     float4 position : SV_Position;
+    float3 world_space_position : WORLD_SPACE_POSITION;
     float2 texture_coord : TEXTURE_COORD;
 };
 
@@ -22,6 +23,7 @@ VsOutput vs_main(uint vertex_id : SV_VertexID)
     VsOutput output;
     output.position = mul(float4(position_buffer[vertex_id], 1.0f), mul(transform_buffer.model_matrix, scene_buffer.view_projection_matrix));
     output.texture_coord = texture_coord_buffer[vertex_id];
+    output.world_space_position = position_buffer[vertex_id];
 
     return output;
 }

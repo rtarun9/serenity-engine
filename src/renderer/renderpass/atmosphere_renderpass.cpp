@@ -19,54 +19,30 @@ namespace serenity::renderer::renderpass
 
         m_atmosphere_buffer_data.turbidity = 4.0f;
         m_atmosphere_buffer_data.magnitude_multiplier = 0.019f;
+        m_atmosphere_buffer_data.output_texture_dimension = {static_cast<float>(ATMOSPHERE_TEXTURE_DIMENSION),
+                                                             static_cast<float>(ATMOSPHERE_TEXTURE_DIMENSION)};
 
-        // Create pipeline object.
-        m_preetham_sky_pipeline_index = Renderer::instance().create_pipeline(rhi::PipelineCreationDesc{
-            .pipeline_variant = rhi::PipelineVariant::Graphics,
-            .vertex_shader_creation_desc =
-                ShaderCreationDesc{
-                    .shader_type = ShaderTypes::Vertex,
-                    .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
-                    .shader_entry_point = L"vs_main",
-                },
-            .pixel_shader_creation_desc =
-                ShaderCreationDesc{
-                    .shader_type = ShaderTypes::Pixel,
-                    .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
-                    .shader_entry_point = L"ps_main",
-                },
-            .cull_mode = D3D12_CULL_MODE_FRONT,
-            .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
-            .dsv_format = DXGI_FORMAT_D32_FLOAT,
-            .name = L"Preetham Sky Atmosphere Pipeline",
+        // Create texture.
+        m_atmosphere_texture_index = Renderer::instance().create_texture(rhi::TextureCreationDesc{
+            .usage = rhi::TextureUsage::UAVTexture,
+            .format = DXGI_FORMAT_R16G16B16A16_FLOAT,
+            .bytes_per_pixel = 8u,
+            .array_size = 6u,
+            .dimension = {ATMOSPHERE_TEXTURE_DIMENSION, ATMOSPHERE_TEXTURE_DIMENSION},
+            .name = L"Atmosphere Texture",
         });
 
-        // Load cubemap data (positions and indices).
-        constexpr auto positions = std::array{
-            math::XMFLOAT3(-1.0f, -1.0f, -1.0f), math::XMFLOAT3(-1.0f, +1.0f, -1.0f),
-            math::XMFLOAT3(+1.0f, +1.0f, -1.0f), math::XMFLOAT3(+1.0f, -1.0f, -1.0f),
-            math::XMFLOAT3(-1.0f, -1.0f, +1.0f), math::XMFLOAT3(-1.0f, +1.0f, +1.0f),
-            math::XMFLOAT3(+1.0f, +1.0f, +1.0f), math::XMFLOAT3(+1.0f, -1.0f, +1.0f),
-        };
-
-        m_cubemap_position_buffer_index = Renderer::instance().create_buffer<math::XMFLOAT3>(
-            rhi::BufferCreationDesc{
-                .usage = rhi::BufferUsage::StructuredBuffer,
-                .name = L"Cubemap position buffer",
-            },
-            positions);
-
-        // Create index array
-        constexpr auto indices = std::array<uint16_t, 36>{
-            0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 4, 5, 1, 4, 1, 0, 3, 2, 6, 3, 6, 7, 1, 5, 6, 1, 6, 2, 4, 0, 3, 4, 3, 7,
-        };
-
-        m_cubemap_index_buffer_index = Renderer::instance().create_buffer<uint16_t>(
-            rhi::BufferCreationDesc{
-                .usage = rhi::BufferUsage::StructuredBuffer,
-                .name = L"Cubemap index buffer",
-            },
-            indices);
+        // Create pipeline objects.
+        m_preetham_sky_generation_pipeline_index = Renderer::instance().create_pipeline(rhi::PipelineCreationDesc{
+            .pipeline_variant = rhi::PipelineVariant::Compute,
+            .compute_shader_creation_desc =
+                ShaderCreationDesc{
+                    .shader_type = ShaderTypes::Compute,
+                    .shader_path = L"shaders/atmosphere/atmosphere.hlsl",
+                    .shader_entry_point = L"cs_main",
+                },
+            .name = L"Atmosphere Pipeline",
+        });
     }
 
     AtmosphereRenderpass::~AtmosphereRenderpass()
@@ -85,28 +61,41 @@ namespace serenity::renderer::renderpass
             .update(reinterpret_cast<const std::byte *>(&m_atmosphere_buffer_data), sizeof(AtmosphereRenderPassBuffer));
     }
 
-    void AtmosphereRenderpass::render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
-                                      const uint32_t light_buffer_cbv_index) const
+    void AtmosphereRenderpass::compute(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
+                                       const uint32_t light_buffer_cbv_index) const
     {
-        // Set pipeline and root signature state.
-        command_list.set_bindless_graphics_root_signature();
+        // Generate atmosphere texture cube.
+        command_list.add_resource_barrier(
+            Renderer::instance().get_texture_at_index(m_atmosphere_texture_index).resource.Get(),
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+
+        command_list.execute_barriers();
+
+        command_list.set_bindless_compute_root_signature();
         command_list.set_pipeline_state(
-            renderer::Renderer::instance().get_pipeline_at_index(m_preetham_sky_pipeline_index));
+            renderer::Renderer::instance().get_pipeline_at_index(m_preetham_sky_generation_pipeline_index));
 
         const auto atmosphere_render_resources = AtmosphereRenderResources{
-            .position_buffer_srv_index =
-                Renderer::instance().get_buffer_at_index(m_cubemap_position_buffer_index).srv_index,
-            .scene_buffer_cbv_index = scene_buffer_cbv_index,
             .light_buffer_cbv_index = light_buffer_cbv_index,
             .atmosphere_buffer_cbv_index =
                 Renderer::instance().get_buffer_at_index(m_atmosphere_buffer_index).cbv_index,
+            .output_texture_uav_index = Renderer::instance().get_texture_at_index(m_atmosphere_texture_index).uav_index,
         };
 
-        command_list.set_graphics_32_bit_root_constants(
+        command_list.set_compute_32_bit_root_constants(
             reinterpret_cast<const std::byte *>(&atmosphere_render_resources));
 
-        command_list.set_index_buffer(Renderer::instance().get_buffer_at_index(m_cubemap_index_buffer_index));
-        command_list.draw_indexed_instanced(36, 1u);
+        command_list.dispatch(Uint3{
+            .x = std::max(static_cast<uint32_t>(std::ceilf(ATMOSPHERE_TEXTURE_DIMENSION / 8u)), 0u),
+            .y = std::max(static_cast<uint32_t>(std::ceilf(ATMOSPHERE_TEXTURE_DIMENSION / 8u)), 0u),
+            .z = 6u,
+        });
+
+        command_list.add_resource_barrier(
+            Renderer::instance().get_texture_at_index(m_atmosphere_texture_index).resource.Get(),
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+        command_list.execute_barriers();
     }
 
     void AtmosphereRenderpass::compute_perez_parameters()
@@ -133,7 +122,8 @@ namespace serenity::renderer::renderpass
 
     void AtmosphereRenderpass::compute_zenith_luminance(const math::XMFLOAT3 sun_direction)
     {
-        // Theta_s is angle between sun and zenith, but while computed sun_direction, angle is between horizontal axis.
+        // Theta_s is angle between sun and zenith, but while computed sun_direction, angle is between horizontal
+        // axis.
         const auto theta_s = acosf(std::clamp(sun_direction.y, 0.0f, 1.0f));
 
         const auto turbidity = m_atmosphere_buffer_data.turbidity;
