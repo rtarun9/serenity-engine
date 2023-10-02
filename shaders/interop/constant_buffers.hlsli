@@ -31,6 +31,7 @@ static const uint SUN_LIGHT_INDEX = 0u;
 ConstantBufferStruct TransformBuffer
 {
     float4x4 model_matrix;
+    float4x4 transposed_inverse_model_matrix;
 };
 
 

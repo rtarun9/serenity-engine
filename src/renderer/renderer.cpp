@@ -78,6 +78,7 @@ namespace serenity::renderer
 
             const auto &light_buffer_index =
                 scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer_index();
+
             // Process the atmosphere render pass.
             {
                 m_atmosphere_renderpass->compute(command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
@@ -86,7 +87,7 @@ namespace serenity::renderer
 
             // Render scene objects.
             command_list.set_bindless_graphics_root_signature();
-            command_list.set_pipeline_state(m_pipelines[m_pipeline_index]);
+            command_list.set_pipeline_state(m_pipelines[m_phong_shading_pipeline_index]);
 
             for (auto models = scene::SceneManager::instance().get_current_scene().get_models(); auto &model : models)
             {
@@ -94,16 +95,20 @@ namespace serenity::renderer
                 {
                     command_list.set_index_buffer(get_buffer_at_index(mesh.index_buffer_index));
 
-                    const auto render_resources = MeshViewerRenderResources{
+                    const auto render_resources = PhongShadingRenderResources{
                         .position_buffer_srv_index = get_buffer_at_index(mesh.position_buffer_index).srv_index,
                         .texture_coord_buffer_srv_index =
                             get_buffer_at_index(mesh.texture_coords_buffer_index).srv_index,
+                        .normal_buffer_srv_index = get_buffer_at_index(mesh.normal_buffer_index).srv_index,
                         .transform_buffer_cbv_index =
                             get_buffer_at_index(model.transform_component.transform_buffer_index).cbv_index,
                         .scene_buffer_cbv_index = get_buffer_at_index(scene_buffer_index).cbv_index,
+                        .light_buffer_cbv_index = get_buffer_at_index(light_buffer_index).cbv_index,
                         .material_buffer_cbv_index =
                             get_buffer_at_index(model.materials.at(mesh.material_index).material_buffer_index)
                                 .cbv_index,
+                        .atmosphere_texture_srv_index =
+                            get_texture_at_index(m_atmosphere_renderpass->get_atmosphere_texture_index()).srv_index,
                     };
 
                     command_list.set_graphics_32_bit_root_constants(
@@ -201,16 +206,16 @@ namespace serenity::renderer
             std::array{0u, 1u, 2u});
 
         // Create pipeline.
-        m_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{
+        m_phong_shading_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{
             .vertex_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Vertex,
-                                                              .shader_path = L"shaders/shading/blinn_phong.hlsl",
+                                                              .shader_path = L"shaders/shading/phong.hlsl",
                                                               .shader_entry_point = L"vs_main"},
             .pixel_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Pixel,
-                                                             .shader_path = L"shaders/shading/blinn_phong.hlsl",
+                                                             .shader_path = L"shaders/shading/phong.hlsl",
                                                              .shader_entry_point = L"ps_main"},
             .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
             .dsv_format = DXGI_FORMAT_D32_FLOAT,
-            .name = L"Blinn Phong pipeline",
+            .name = L"Phong pipeline",
         });
 
         m_post_process_combine_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{

@@ -49,7 +49,11 @@ namespace serenity::scene
                                       math::XMMatrixRotationZ(math::XMConvertToRadians(rotation.z)) *
                                       math::XMMatrixTranslation(translation.x, translation.y, translation.z);
 
-            const auto transform_buffer_data = TransformBuffer{.model_matrix = model_matrix};
+            const auto transform_buffer_data = TransformBuffer{
+                .model_matrix = model_matrix,
+                .transposed_inverse_model_matrix =
+                    math::XMMatrixTranspose(math::XMMatrixInverse(nullptr, model_matrix)),
+            };
 
             renderer::Renderer::instance()
                 .get_buffer_at_index(transform_buffer_index)

@@ -142,7 +142,7 @@ namespace serenity::renderer
         std::unique_ptr<renderpass::CubeMapRenderpass> m_cube_map_renderpass{};
 
         // Resources for rendering.
-        uint32_t m_pipeline_index{};
+        uint32_t m_phong_shading_pipeline_index{};
         uint32_t m_post_process_combine_pipeline_index{};
 
         rhi::Buffer m_full_screen_triangle_index_buffer{};

@@ -25,6 +25,18 @@ struct MeshViewerRenderResources
     uint material_buffer_cbv_index;
 };
 
+struct PhongShadingRenderResources
+{
+    uint position_buffer_srv_index;
+    uint texture_coord_buffer_srv_index;
+    uint normal_buffer_srv_index;
+    uint transform_buffer_cbv_index;
+    uint scene_buffer_cbv_index;
+    uint light_buffer_cbv_index;
+    uint material_buffer_cbv_index;
+    uint atmosphere_texture_srv_index;
+};
+
 struct PostProcessCombineRenderResources
 {
     uint render_texture_srv_index;
