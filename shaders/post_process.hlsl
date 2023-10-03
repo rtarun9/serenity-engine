@@ -9,7 +9,7 @@ struct VsOutput
     float2 texture_coord : Texture_Coord;
 };
 
-ConstantBuffer<PostProcessCombineRenderResources> render_resources: register(b0);
+ConstantBuffer<interop::PostProcessCombineRenderResources> render_resources: register(b0);
 
 VsOutput vs_main(uint vertex_id : SV_VertexID)
 {

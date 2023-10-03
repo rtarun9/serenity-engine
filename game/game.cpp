@@ -10,18 +10,20 @@ class Game final : public core::Application
     {
         auto default_scene = scene::Scene("Default Scene");
         default_scene.add_model("data/Cube/glTF/Cube.gltf", "Cube");
+
+        /// default_scene.add_model("data/sponza-gltf-pbr/sponza.glb", "Sponza", math::XMFLOAT3{0.1f, 0.1f, 0.1f});
         // default_scene.add_model("data/sketchfab_pbr_material_reference_chart/scene.gltf", "PBR_References");
 
-        default_scene.add_light(Light{
-            .light_type = LightType::Point,
+        default_scene.add_light(interop::Light{
+            .light_type = interop::LightType::Point,
             .world_space_position_or_direction = math::XMFLOAT3{-10.0f, 0.0f, 0.0f},
             .color = math::XMFLOAT3{1.0f, 1.0f, 1.0f},
             .intensity = 1.0f,
             .scale = 0.2f,
         });
 
-        default_scene.add_light(Light{
-            .light_type = LightType::Point,
+        default_scene.add_light(interop::Light{
+            .light_type = interop::LightType::Point,
             .world_space_position_or_direction = math::XMFLOAT3{10.0f, 0.0f, 0.0f},
             .color = math::XMFLOAT3{1.0f, 1.0f, 0.0f},
             .intensity = 1.0f,

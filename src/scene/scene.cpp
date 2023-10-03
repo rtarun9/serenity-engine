@@ -8,7 +8,7 @@ namespace serenity::scene
     Scene::Scene(const std::string_view scene_name) : m_scene_name(scene_name)
     {
         // Create the scene buffer.
-        m_scene_buffer_index = renderer::Renderer::instance().create_buffer<SceneBuffer>(
+        m_scene_buffer_index = renderer::Renderer::instance().create_buffer<interop::SceneBuffer>(
             renderer::rhi::BufferCreationDesc{.usage = renderer::rhi::BufferUsage::ConstantBuffer,
                                               .name = string_to_wstring(scene_name) + L" Scene Buffer"});
 
@@ -22,7 +22,7 @@ namespace serenity::scene
 
         // Create the transform component for the model.
         model.transform_component.transform_buffer_index =
-            renderer::Renderer::instance().create_buffer<TransformBuffer>(renderer::rhi::BufferCreationDesc{
+            renderer::Renderer::instance().create_buffer<interop::TransformBuffer>(renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::ConstantBuffer,
                 .name = string_to_wstring(model_path) + L" Transform Buffer",
             });
@@ -96,7 +96,7 @@ namespace serenity::scene
             material.material_data.base_color = material_data.base_color;
 
             // Create the material buffer.
-            material.material_buffer_index = renderer::Renderer::instance().create_buffer<MaterialBuffer>(
+            material.material_buffer_index = renderer::Renderer::instance().create_buffer<interop::MaterialBuffer>(
                 renderer::rhi::BufferCreationDesc{
                     .usage = renderer::rhi::BufferUsage::ConstantBuffer,
                     .name = string_to_wstring(model_name) + L" material buffer",
@@ -128,7 +128,7 @@ namespace serenity::scene
 
         renderer::Renderer::instance()
             .get_buffer_at_index(m_scene_buffer_index)
-            .update(reinterpret_cast<const std::byte *>(&m_scene_buffer), sizeof(SceneBuffer));
+            .update(reinterpret_cast<const std::byte *>(&m_scene_buffer), sizeof(interop::SceneBuffer));
 
         for (auto &model : m_models)
         {
@@ -136,7 +136,7 @@ namespace serenity::scene
         }
     }
 
-    void Scene::add_light(const Light &light)
+    void Scene::add_light(const interop::Light &light)
     {
         m_lights.add_light(light);
     }

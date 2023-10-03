@@ -14,8 +14,8 @@ namespace serenity::renderer::renderpass
         explicit CubeMapRenderpass();
         ~CubeMapRenderpass();
 
-        void render(rhi::DescriptorHeap &cbv_srv_uav_descriptor_heap, rhi::CommandList &command_list,
-                    const uint32_t scene_buffer_cbv_index, const uint32_t texture_srv_index) const;
+        void render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
+                    const uint32_t texture_srv_index) const;
 
       private:
         CubeMapRenderpass(const CubeMapRenderpass &other) = delete;

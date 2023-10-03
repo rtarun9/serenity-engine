@@ -64,8 +64,8 @@ namespace serenity::renderer::renderpass
         core::Log::instance().info("Destroyed cube map render pass");
     }
 
-    void CubeMapRenderpass::render(rhi::DescriptorHeap &cbv_srv_uav_descriptor_heap, rhi::CommandList &command_list,
-                                   const uint32_t scene_buffer_cbv_index, const uint32_t texture_srv_index) const
+    void CubeMapRenderpass::render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
+                                   const uint32_t texture_srv_index) const
     {
         // Render cube map.
 
@@ -73,9 +73,7 @@ namespace serenity::renderer::renderpass
         command_list.set_bindless_graphics_root_signature();
         command_list.set_pipeline_state(renderer::Renderer::instance().get_pipeline_at_index(m_cubemap_pipeline_index));
 
-        command_list.set_descriptor_heaps(std::array{&cbv_srv_uav_descriptor_heap});
-
-        const auto cubemap_render_resources = CubeMapRenderResources{
+        const auto cubemap_render_resources = interop::CubeMapRenderResources{
             .texture_srv_index = texture_srv_index,
             .position_buffer_srv_index =
                 Renderer::instance().get_buffer_at_index(m_cubemap_position_buffer_index).srv_index,

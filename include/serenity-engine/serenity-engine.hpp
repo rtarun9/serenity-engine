@@ -28,6 +28,8 @@
 // Renderer renderpass
 #include "renderer/renderpass/atmosphere_renderpass.hpp"
 #include "renderer/renderpass/cube_map_renderpass.hpp"
+#include "renderer/renderpass/shading_renderpass.hpp"
+#include "renderer/renderpass/post_processing_renderpass.hpp"
 
 // Scene
 #include "scene/camera.hpp"

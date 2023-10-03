@@ -9,13 +9,13 @@ struct VsOutput
     float3 color : COLOR;
 };
 
-ConstantBuffer<LightRenderResources> render_resources : register(b0);
+ConstantBuffer<interop::LightRenderResources> render_resources : register(b0);
 
 VsOutput vs_main(uint vertex_id : SV_VertexID, uint instance_id: SV_InstanceID)
 {
     StructuredBuffer<float3> position_buffer = ResourceDescriptorHeap[render_resources.light_cube_position_buffer_srv_index];
-    ConstantBuffer<SceneBuffer> scene_buffer= ResourceDescriptorHeap[render_resources.scene_buffer_cbv_index];
-    ConstantBuffer<LightBuffer> light_buffer= ResourceDescriptorHeap[render_resources.light_buffer_cbv_index];
+    ConstantBuffer<interop::SceneBuffer> scene_buffer= ResourceDescriptorHeap[render_resources.scene_buffer_cbv_index];
+    ConstantBuffer<interop::LightBuffer> light_buffer= ResourceDescriptorHeap[render_resources.light_buffer_cbv_index];
 
     VsOutput output;
     output.position = mul(float4(position_buffer[vertex_id], 1.0f), mul(light_buffer.model_matrix[instance_id], scene_buffer.view_projection_matrix));

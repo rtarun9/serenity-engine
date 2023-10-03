@@ -34,7 +34,7 @@ namespace serenity::scene
             return m_camera;
         }
 
-        SceneBuffer &get_scene_buffer()
+        interop::SceneBuffer &get_scene_buffer()
         {
             return m_scene_buffer;
         }
@@ -52,14 +52,14 @@ namespace serenity::scene
         void add_model(const std::string_view model_path, const std::string_view model_name,
                        const math::XMFLOAT3 scale = math::XMFLOAT3{1.0f, 1.0f, 1.0f});
 
-        void add_light(const Light &light);
+        void add_light(const interop::Light &light);
 
         // Update the transform component of all models in the scene, as well as the scene buffer and camera.
         void update(const math::XMMATRIX projection_matrix, const float delta_time, const core::Input &input);
 
       private:
         uint32_t m_scene_buffer_index{};
-        SceneBuffer m_scene_buffer{};
+        interop::SceneBuffer m_scene_buffer{};
 
         Camera m_camera{};
 

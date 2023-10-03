@@ -11,12 +11,12 @@
 // gamma - angle between sun and view direction.
 
 // Formula (3) as mentioned in Preetham sky model paper.
-float3 perez(const PerezParameters perez_params, const float theta, const float gamma)
+float3 perez(const interop::PerezParameters perez_params, const float theta, const float gamma)
 {
     return (1.0f + perez_params.A * exp(perez_params.B / max(cos(theta), 0.01f))) * (1.0f + perez_params.C * exp(perez_params.D * gamma) + perez_params.E * cos(gamma) * cos(gamma));
 }
 
-float3 preetham_sky_luminance_and_chromaticity(const AtmosphereRenderPassBuffer atmosphere_buffer, const float3 view_direction, const float3 sun_direction)
+float3 preetham_sky_luminance_and_chromaticity(const interop::AtmosphereRenderPassBuffer atmosphere_buffer, const float3 view_direction, const float3 sun_direction, const float magnitude_multiplier)
 {
     const float cos_gamma = dot(view_direction, sun_direction);
     const float gamma = acos(cos_gamma);
@@ -46,7 +46,7 @@ float3 preetham_sky_luminance_and_chromaticity(const AtmosphereRenderPassBuffer 
     const float g = dot(float3(-0.9689f, 1.8758f,  0.0415f), result_xyz);
     const float b = dot(float3(0.0557f, -0.2040f, 1.0570f), result_xyz);
 
-    return float3(r, g, b);
+    return float3(r, g, b) * magnitude_multiplier;
 }   
 
-#endif
+#endif 

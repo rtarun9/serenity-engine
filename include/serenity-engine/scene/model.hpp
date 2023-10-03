@@ -28,7 +28,7 @@ namespace serenity::scene
     // on the other hand is the index of material buffer in the renderer's buffer array.
     struct Material
     {
-        MaterialBuffer material_data{};
+        interop::MaterialBuffer material_data{};
 
         uint32_t material_buffer_index{};
     };
@@ -49,7 +49,7 @@ namespace serenity::scene
                                       math::XMMatrixRotationZ(math::XMConvertToRadians(rotation.z)) *
                                       math::XMMatrixTranslation(translation.x, translation.y, translation.z);
 
-            const auto transform_buffer_data = TransformBuffer{
+            const auto transform_buffer_data = interop::TransformBuffer{
                 .model_matrix = model_matrix,
                 .transposed_inverse_model_matrix =
                     math::XMMatrixTranspose(math::XMMatrixInverse(nullptr, model_matrix)),
@@ -57,7 +57,7 @@ namespace serenity::scene
 
             renderer::Renderer::instance()
                 .get_buffer_at_index(transform_buffer_index)
-                .update(reinterpret_cast<const std::byte *>(&transform_buffer_data), sizeof(TransformBuffer));
+                .update(reinterpret_cast<const std::byte *>(&transform_buffer_data), sizeof(interop::TransformBuffer));
         }
     };
 

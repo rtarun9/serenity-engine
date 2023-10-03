@@ -86,46 +86,24 @@ namespace serenity::renderer
             }
 
             // Render scene objects.
-            command_list.set_bindless_graphics_root_signature();
-            command_list.set_pipeline_state(m_pipelines[m_phong_shading_pipeline_index]);
-
-            for (auto models = scene::SceneManager::instance().get_current_scene().get_models(); auto &model : models)
             {
-                for (const auto &mesh : model.meshes)
-                {
-                    command_list.set_index_buffer(get_buffer_at_index(mesh.index_buffer_index));
-
-                    const auto render_resources = PhongShadingRenderResources{
-                        .position_buffer_srv_index = get_buffer_at_index(mesh.position_buffer_index).srv_index,
-                        .texture_coord_buffer_srv_index =
-                            get_buffer_at_index(mesh.texture_coords_buffer_index).srv_index,
-                        .normal_buffer_srv_index = get_buffer_at_index(mesh.normal_buffer_index).srv_index,
-                        .transform_buffer_cbv_index =
-                            get_buffer_at_index(model.transform_component.transform_buffer_index).cbv_index,
-                        .scene_buffer_cbv_index = get_buffer_at_index(scene_buffer_index).cbv_index,
-                        .light_buffer_cbv_index = get_buffer_at_index(light_buffer_index).cbv_index,
-                        .material_buffer_cbv_index =
-                            get_buffer_at_index(model.materials.at(mesh.material_index).material_buffer_index)
-                                .cbv_index,
-                        .atmosphere_texture_srv_index =
-                            get_texture_at_index(m_atmosphere_renderpass->get_atmosphere_texture_index()).srv_index,
-                    };
-
-                    command_list.set_graphics_32_bit_root_constants(
-                        reinterpret_cast<const std::byte *>(&render_resources));
-                    command_list.draw_indexed_instanced(mesh.indices, 1u);
-                };
+                m_shading_renderpass->render(
+                    command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
+                    get_texture_at_index(m_atmosphere_renderpass->get_atmosphere_texture_index()).srv_index);
             }
 
             // Render lights.
-            auto &lights = scene::SceneManager::instance().get_current_scene().get_lights();
-            lights.render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index);
+            {
+                auto &lights = scene::SceneManager::instance().get_current_scene().get_lights();
+                lights.render(command_list, get_buffer_at_index(scene_buffer_index).cbv_index);
+            }
 
             // Render cube map.
-            m_cube_map_renderpass->render(
-                graphics_device.get_cbv_srv_uav_descriptor_heap(), command_list,
-                get_buffer_at_index(scene_buffer_index).cbv_index,
-                get_texture_at_index(m_atmosphere_renderpass->get_atmosphere_texture_index()).srv_index);
+            {
+                m_cube_map_renderpass->render(
+                    command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
+                    get_texture_at_index(m_atmosphere_renderpass->get_atmosphere_texture_index()).srv_index);
+            }
         }
 
         // Transition render texture to shader resource and perform the post process combine operations.
@@ -133,23 +111,11 @@ namespace serenity::renderer
                                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         command_list.execute_barriers();
 
+        command_list.set_render_targets(std::array{back_buffer.descriptor_handle});
+
         {
-            command_list.set_render_targets(std::array{back_buffer.descriptor_handle});
-
-            command_list.set_descriptor_heaps(std::array{&graphics_device.get_cbv_srv_uav_descriptor_heap()});
-            command_list.set_bindless_graphics_root_signature();
-
-            command_list.set_pipeline_state(m_pipelines[m_post_process_combine_pipeline_index]);
-            command_list.set_index_buffer(m_full_screen_triangle_index_buffer);
-
-            auto post_process_combine_render_resources = PostProcessCombineRenderResources{
-                .render_texture_srv_index = m_render_texture.srv_index,
-            };
-
-            command_list.set_graphics_32_bit_root_constants(
-                reinterpret_cast<const std::byte *>(&post_process_combine_render_resources));
-
-            command_list.draw_instanced(3u, 1u);
+            // Render post processing phase.
+            m_post_processing_renderpass->render(command_list, m_render_texture.srv_index);
         }
 
         {
@@ -175,7 +141,8 @@ namespace serenity::renderer
     {
         const auto &light_buffer = scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer();
 
-        m_atmosphere_renderpass->update(light_buffer.lights[SUN_LIGHT_INDEX].world_space_position_or_direction);
+        m_atmosphere_renderpass->update(
+            light_buffer.lights[interop::SUN_LIGHT_INDEX].world_space_position_or_direction);
     }
 
     void Renderer::create_resources()
@@ -196,45 +163,14 @@ namespace serenity::renderer
             .dimension = window_ref.get_dimensions(),
             .name = L"Render Texture",
         });
-
-        // Create buffers.
-        m_full_screen_triangle_index_buffer = m_device->create_buffer<uint32_t>(
-            rhi::BufferCreationDesc{
-                .usage = rhi::BufferUsage::IndexBuffer,
-                .name = L"Full screen triangle index buffer",
-            },
-            std::array{0u, 1u, 2u});
-
-        // Create pipeline.
-        m_phong_shading_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{
-            .vertex_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Vertex,
-                                                              .shader_path = L"shaders/shading/phong.hlsl",
-                                                              .shader_entry_point = L"vs_main"},
-            .pixel_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Pixel,
-                                                             .shader_path = L"shaders/shading/phong.hlsl",
-                                                             .shader_entry_point = L"ps_main"},
-            .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
-            .dsv_format = DXGI_FORMAT_D32_FLOAT,
-            .name = L"Phong pipeline",
-        });
-
-        m_post_process_combine_pipeline_index = create_pipeline(rhi::PipelineCreationDesc{
-            .vertex_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Vertex,
-                                                              .shader_path = L"shaders/post_process_combine.hlsl",
-                                                              .shader_entry_point = L"vs_main"},
-            .pixel_shader_creation_desc = ShaderCreationDesc{.shader_type = ShaderTypes::Pixel,
-                                                             .shader_path = L"shaders/post_process_combine.hlsl",
-                                                             .shader_entry_point = L"ps_main"},
-            .rtv_formats = {rhi::Swapchain::SWAPCHAIN_BACK_BUFFER_FORMAT},
-            .dsv_format = DXGI_FORMAT_UNKNOWN,
-            .name = L"Post process combine pipeline",
-        });
     }
 
     void Renderer::create_renderpasses()
     {
         m_atmosphere_renderpass = std::make_unique<renderpass::AtmosphereRenderpass>();
         m_cube_map_renderpass = std::make_unique<renderpass::CubeMapRenderpass>();
+        m_shading_renderpass = std::make_unique<renderpass::ShadingRenderpass>();
+        m_post_processing_renderpass = std::make_unique<renderpass::PostProcessingRenderpass>();
     }
 
     void Renderer::reload_pipelines()

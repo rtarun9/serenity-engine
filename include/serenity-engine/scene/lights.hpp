@@ -12,14 +12,14 @@ namespace serenity::scene
       public:
         explicit Lights();
 
-        void add_light(const Light &light);
+        void add_light(const interop::Light &light);
 
         uint32_t get_light_buffer_index() const
         {
             return m_light_buffer_index;
         }
 
-        LightBuffer &get_light_buffer()
+        interop::LightBuffer &get_light_buffer()
         {
             return m_light_buffer;
         }
@@ -30,7 +30,7 @@ namespace serenity::scene
 
       private:
         uint32_t m_light_buffer_index{};
-        LightBuffer m_light_buffer{};
+        interop::LightBuffer m_light_buffer{};
 
         // For visualization purposes.
         uint32_t m_cube_position_buffer_index{};

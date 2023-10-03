@@ -9,13 +9,13 @@ struct VsOutput
     float3 direction : Direction;
 };
 
-ConstantBuffer<CubeMapRenderResources> render_resources : register(b0);
+ConstantBuffer<interop::CubeMapRenderResources> render_resources : register(b0);
 
 VsOutput vs_main(uint vertex_id : SV_VertexID)      
 {
     StructuredBuffer<float3> position_buffer = ResourceDescriptorHeap[render_resources.position_buffer_srv_index];
 
-    ConstantBuffer<SceneBuffer> scene_buffer= ResourceDescriptorHeap[render_resources.scene_buffer_cbv_index];
+    ConstantBuffer<interop::SceneBuffer> scene_buffer= ResourceDescriptorHeap[render_resources.scene_buffer_cbv_index];
 
     VsOutput output;
     output.position = mul(float4(position_buffer[vertex_id], 0.0f), scene_buffer.view_projection_matrix);

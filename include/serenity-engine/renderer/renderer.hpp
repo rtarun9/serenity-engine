@@ -4,6 +4,8 @@
 
 #include "renderpass/atmosphere_renderpass.hpp"
 #include "renderpass/cube_map_renderpass.hpp"
+#include "renderpass/post_processing_renderpass.hpp"
+#include "renderpass/shading_renderpass.hpp"
 
 #include "serenity-engine/renderer/rhi/device.hpp"
 #include "serenity-engine/renderer/shader_compiler.hpp"
@@ -47,7 +49,7 @@ namespace serenity::renderer
             return m_pipelines.at(index);
         }
 
-        AtmosphereRenderPassBuffer &get_atmosphere_renderpass_buffer()
+        interop::AtmosphereRenderPassBuffer &get_atmosphere_renderpass_buffer()
         {
             return m_atmosphere_renderpass->get_atmosphere_renderpass_buffer_data();
         }
@@ -140,12 +142,8 @@ namespace serenity::renderer
         // Renderpasses.
         std::unique_ptr<renderpass::AtmosphereRenderpass> m_atmosphere_renderpass{};
         std::unique_ptr<renderpass::CubeMapRenderpass> m_cube_map_renderpass{};
-
-        // Resources for rendering.
-        uint32_t m_phong_shading_pipeline_index{};
-        uint32_t m_post_process_combine_pipeline_index{};
-
-        rhi::Buffer m_full_screen_triangle_index_buffer{};
+        std::unique_ptr<renderpass::ShadingRenderpass> m_shading_renderpass{};
+        std::unique_ptr<renderpass::PostProcessingRenderpass> m_post_processing_renderpass{};
 
         // Textures to render into.
         rhi::Texture m_depth_texture{};

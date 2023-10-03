@@ -170,9 +170,10 @@ namespace serenity::editor
             {
                 if (ImGui::TreeNode("Directional Light"))
                 {
-                    ImGui::SliderFloat("Sun angle", &current_scene.get_lights().get_light_buffer().sun_angle, -180.0f,
+                    ImGui::SliderFloat("Sun angle", &light_buffer.sun_angle, -180.0f,
                                        0.0f);
-
+                    ImGui::SliderFloat("Intensity", &light_buffer.lights[interop::SUN_LIGHT_INDEX].intensity, 0.0f,
+                                       1.0f);
                     ImGui::TreePop();
                 }
 
@@ -206,7 +207,6 @@ namespace serenity::editor
             if (ImGui::TreeNode("Atmosphere Renderpass"))
             {
                 ImGui::SliderFloat("Turbidity", &atmosphere_buffer.turbidity, 2.0f, 10.0f);
-                ImGui::SliderFloat("Magnitude Multiplier", &atmosphere_buffer.magnitude_multiplier, 0.0f, 1.0f);
 
                 ImGui::TreePop();
             }

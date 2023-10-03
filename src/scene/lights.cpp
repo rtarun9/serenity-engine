@@ -10,7 +10,7 @@ namespace serenity::scene
     {
         // Create light buffer.
         m_light_buffer_index =
-            renderer::Renderer::instance().create_buffer<LightBuffer>(renderer::rhi::BufferCreationDesc{
+            renderer::Renderer::instance().create_buffer<interop::LightBuffer>(renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::ConstantBuffer,
                 .name = L"Light Buffer Index",
             });
@@ -18,12 +18,12 @@ namespace serenity::scene
         m_light_buffer.sun_angle = -90.0f;
 
         // Add a directional light at the start.
-        add_light(Light{
-            .light_type = LightType::Directional,
+        add_light(interop::Light{
+            .light_type = interop::LightType::Directional,
             .world_space_position_or_direction = {0.0f, sinf(math::XMConvertToRadians(m_light_buffer.sun_angle)),
                                                   cosf(math::XMConvertToRadians(m_light_buffer.sun_angle))},
             .color = math::XMFLOAT3{1.0f, 1.0f, 1.0f},
-            .intensity = 1.0f,
+            .intensity = 0.017f,
             .scale = 0.0f,
         });
 
@@ -75,15 +75,16 @@ namespace serenity::scene
         });
     }
 
-    void Lights::add_light(const Light &light)
+    void Lights::add_light(const interop::Light &light)
     {
-        if (m_light_buffer.light_count >= MAX_LIGHT_COUNT)
+        if (m_light_buffer.light_count >= interop::MAX_LIGHT_COUNT)
         {
             core::Log::instance().warn("Not adding light the MAX_LIGHT_COUNT is already reached.");
             return;
         }
 
-        if (light.light_type == LightType::Directional && m_light_buffer.light_count > SUN_LIGHT_INDEX)
+        if (light.light_type == interop::LightType::Directional &&
+            m_light_buffer.light_count > interop::SUN_LIGHT_INDEX)
         {
             core::Log::instance().warn("Not adding light since directional light already exists (only 1 such light is "
                                        "allowed in the engine currently).");
@@ -96,7 +97,7 @@ namespace serenity::scene
 
     void Lights::update(const math::XMMATRIX view_matrix)
     {
-        auto &sun_direction = m_light_buffer.lights[SUN_LIGHT_INDEX].view_space_position_or_direction;
+        auto &sun_direction = m_light_buffer.lights[interop::SUN_LIGHT_INDEX].world_space_position_or_direction;
 
         sun_direction = {0.0f, -1.0f * sinf(math::XMConvertToRadians(m_light_buffer.sun_angle)),
                          -1.0f * cosf(math::XMConvertToRadians(m_light_buffer.sun_angle))};
@@ -105,15 +106,8 @@ namespace serenity::scene
                                           sun_direction.z * sun_direction.z);
 
         // Normalizing the sun direction.
-        m_light_buffer.lights[SUN_LIGHT_INDEX].world_space_position_or_direction = {
+        m_light_buffer.lights[interop::SUN_LIGHT_INDEX].world_space_position_or_direction = {
             sun_direction.x / magnitude, sun_direction.y / magnitude, sun_direction.z / magnitude};
-
-        // Set view space direction for sun light.
-        const auto sun_view_space_sun_direction = math::XMVector3TransformCoord(
-            math::XMVectorSet(sun_direction.x, sun_direction.y, sun_direction.z, 0.0f), view_matrix);
-
-        math::XMStoreFloat3(&m_light_buffer.lights[SUN_LIGHT_INDEX].view_space_position_or_direction,
-                            sun_view_space_sun_direction);
 
         // For the model matrix, since we use instanced rendering, index 0 in the model matrix array actually
         // corresponds to light at index 1. This is because directional lights do not have a visualization cube to be
@@ -122,14 +116,6 @@ namespace serenity::scene
         {
             const auto &light_world_space_position_or_direction =
                 m_light_buffer.lights[i].world_space_position_or_direction;
-
-            const auto view_space_position_or_direction = math::XMVector3TransformCoord(
-                math::XMVectorSet(light_world_space_position_or_direction.x, light_world_space_position_or_direction.y,
-                                  light_world_space_position_or_direction.z, 1.0f),
-                view_matrix);
-
-            math::XMStoreFloat3(&m_light_buffer.lights[i].view_space_position_or_direction,
-                                view_space_position_or_direction);
 
             const auto &light_scale = m_light_buffer.lights[i].scale;
 
@@ -141,7 +127,7 @@ namespace serenity::scene
 
         renderer::Renderer::instance()
             .get_buffer_at_index(m_light_buffer_index)
-            .update(reinterpret_cast<const std::byte *>(&m_light_buffer), sizeof(LightBuffer));
+            .update(reinterpret_cast<const std::byte *>(&m_light_buffer), sizeof(interop::LightBuffer));
     }
 
     void Lights::render(const renderer::rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index)
@@ -150,7 +136,7 @@ namespace serenity::scene
         command_list.set_bindless_graphics_root_signature();
         command_list.set_pipeline_state(renderer::Renderer::instance().get_pipeline_at_index(m_light_pipeline_index));
 
-        const auto light_render_resources = LightRenderResources{
+        const auto light_render_resources = interop::LightRenderResources{
             .scene_buffer_cbv_index = scene_buffer_cbv_index,
             .light_buffer_cbv_index =
                 renderer::Renderer::instance().get_buffer_at_index(m_light_buffer_index).cbv_index,

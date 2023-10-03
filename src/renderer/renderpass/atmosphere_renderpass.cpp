@@ -12,13 +12,12 @@ namespace serenity::renderer::renderpass
 
         // Create buffers.
         m_atmosphere_buffer_index =
-            Renderer::instance().create_buffer<AtmosphereRenderPassBuffer>(rhi::BufferCreationDesc{
+            Renderer::instance().create_buffer<interop::AtmosphereRenderPassBuffer>(rhi::BufferCreationDesc{
                 .usage = rhi::BufferUsage::ConstantBuffer,
                 .name = L"Atmosphere Render Pass buffer",
             });
 
         m_atmosphere_buffer_data.turbidity = 4.0f;
-        m_atmosphere_buffer_data.magnitude_multiplier = 0.019f;
         m_atmosphere_buffer_data.output_texture_dimension = {static_cast<float>(ATMOSPHERE_TEXTURE_DIMENSION),
                                                              static_cast<float>(ATMOSPHERE_TEXTURE_DIMENSION)};
 
@@ -58,7 +57,7 @@ namespace serenity::renderer::renderpass
 
         Renderer::instance()
             .get_buffer_at_index(m_atmosphere_buffer_index)
-            .update(reinterpret_cast<const std::byte *>(&m_atmosphere_buffer_data), sizeof(AtmosphereRenderPassBuffer));
+            .update(reinterpret_cast<const std::byte *>(&m_atmosphere_buffer_data), sizeof(interop::AtmosphereRenderPassBuffer));
     }
 
     void AtmosphereRenderpass::compute(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
@@ -75,7 +74,7 @@ namespace serenity::renderer::renderpass
         command_list.set_pipeline_state(
             renderer::Renderer::instance().get_pipeline_at_index(m_preetham_sky_generation_pipeline_index));
 
-        const auto atmosphere_render_resources = AtmosphereRenderResources{
+        const auto atmosphere_render_resources = interop::AtmosphereRenderResources{
             .light_buffer_cbv_index = light_buffer_cbv_index,
             .atmosphere_buffer_cbv_index =
                 Renderer::instance().get_buffer_at_index(m_atmosphere_buffer_index).cbv_index,

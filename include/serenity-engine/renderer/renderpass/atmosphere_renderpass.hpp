@@ -17,7 +17,7 @@ namespace serenity::renderer::renderpass
         explicit AtmosphereRenderpass();
         ~AtmosphereRenderpass();
 
-        AtmosphereRenderPassBuffer &get_atmosphere_renderpass_buffer_data()
+        interop::AtmosphereRenderPassBuffer &get_atmosphere_renderpass_buffer_data()
         {
             return m_atmosphere_buffer_data;
         }
@@ -62,7 +62,7 @@ namespace serenity::renderer::renderpass
         // corresponds to relative backscattered light. These terms can be computed with the help of turbidity value (as
         // mentioned in the A.J Preetham paper section A.2) the X, Y, Z component of the float3 is for the Y luminance,
         // x chromaticity, and y chromaticity.
-        AtmosphereRenderPassBuffer m_atmosphere_buffer_data{};
+        interop::AtmosphereRenderPassBuffer m_atmosphere_buffer_data{};
         uint32_t m_atmosphere_buffer_index{};
 
         uint32_t m_atmosphere_texture_index{};
