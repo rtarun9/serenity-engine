@@ -33,7 +33,7 @@
 
 // Scene
 #include "scene/camera.hpp"
-#include "scene/model.hpp"
+#include "scene/game_object.hpp"
 #include "scene/lights.hpp"
 #include "scene/scene.hpp"
 #include "scene/scene_manager.hpp"
@@ -46,3 +46,6 @@
 
 // Window
 #include "window/window.hpp"
+
+// Scripting
+#include "scripting/script_manager.hpp"

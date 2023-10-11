@@ -128,24 +128,26 @@ namespace serenity::editor
     {
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
 
+        ImGui::SetNextItemOpen(true);
         if (ImGui::Begin(current_scene.get_scene_name().c_str()))
         {
+            ImGui::SetNextItemOpen(true);
             if (ImGui::TreeNode("Scene Hierarchy"))
             {
-                for (auto &model : current_scene.get_models())
+                for (auto &game_object : current_scene.get_game_objects())
                 {
-                    if (ImGui::TreeNode(model.model_name.c_str()))
+                    if (ImGui::TreeNode(game_object.m_game_object_name.c_str()))
                     {
                         if (ImGui::TreeNode("Transform"))
                         {
-                            auto &transform_component = model.transform_component;
+                            auto &transform_component = game_object.m_transform_component;
 
                             ImGui::SliderFloat("S", &transform_component.scale.x, 0.1f, 10.0f);
                             ImGui::SliderFloat3("R", &transform_component.rotation.x, -180.0f, 180.0f);
                             ImGui::SliderFloat3("T", &transform_component.translation.x, -100.0f, 100.0f);
 
-                            model.transform_component.scale.y = model.transform_component.scale.x;
-                            model.transform_component.scale.z = model.transform_component.scale.x;
+                            transform_component.scale.y = transform_component.scale.x;
+                            transform_component.scale.z = transform_component.scale.x;
 
                             ImGui::TreePop();
                         }
@@ -157,6 +159,7 @@ namespace serenity::editor
                 ImGui::TreePop();
             }
 
+            ImGui::SetNextItemOpen(true);
             if (auto &camera = current_scene.get_camera(); ImGui::TreeNode("Camera Settings"))
             {
                 ImGui::SliderFloat("Movement speed", &camera.m_movement_speed, 0.0001f, 1.0f);
@@ -166,6 +169,7 @@ namespace serenity::editor
                 ImGui::TreePop();
             }
 
+            ImGui::SetNextItemOpen(true);
             if (auto &light_buffer = current_scene.get_lights().get_light_buffer(); ImGui::TreeNode("Light Settings"))
             {
                 if (ImGui::TreeNode("Directional Light"))
@@ -200,6 +204,7 @@ namespace serenity::editor
 
     void Editor::renderer_panel()
     {
+        ImGui::SetNextItemOpen(true);
         if (ImGui::Begin("Renderer Panel"))
         {
             auto &atmosphere_buffer = renderer::Renderer::instance().get_atmosphere_renderpass_buffer();
@@ -211,6 +216,7 @@ namespace serenity::editor
                 ImGui::TreePop();
             }
 
+            ImGui::SetNextItemOpen(true);
             if (const auto &pipelines = renderer::Renderer::instance().get_pipelines(); ImGui::TreeNode("Pipelines"))
             {
                 for (const auto &pipeline : pipelines)

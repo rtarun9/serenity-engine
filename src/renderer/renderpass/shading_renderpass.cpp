@@ -57,9 +57,9 @@ namespace serenity::renderer::renderpass
             return renderer::Renderer::instance().get_texture_at_index(index);
         };
 
-        for (auto models = current_scene.get_models(); auto &model : models)
+        for (auto game_objects = current_scene.get_game_objects(); auto &game_object : game_objects)
         {
-            for (const auto &mesh : model.meshes)
+            for (const auto &mesh : game_object.m_meshes)
             {
                 command_list.set_index_buffer(get_buffer_at_index(mesh.index_buffer_index));
 
@@ -68,12 +68,13 @@ namespace serenity::renderer::renderpass
                     .texture_coord_buffer_srv_index = get_buffer_at_index(mesh.texture_coords_buffer_index).srv_index,
                     .normal_buffer_srv_index = get_buffer_at_index(mesh.normal_buffer_index).srv_index,
                     .transform_buffer_cbv_index =
-                        get_buffer_at_index(model.transform_component.transform_buffer_index).cbv_index,
+                        get_buffer_at_index(game_object.m_transform_component.transform_buffer_index).cbv_index,
                     .scene_buffer_cbv_index = get_buffer_at_index(current_scene.get_scene_buffer_index()).cbv_index,
                     .light_buffer_cbv_index =
                         get_buffer_at_index(current_scene.get_lights().get_light_buffer_index()).cbv_index,
                     .material_buffer_cbv_index =
-                        get_buffer_at_index(model.materials.at(mesh.material_index).material_buffer_index).cbv_index,
+                        get_buffer_at_index(game_object.m_materials.at(mesh.material_index).material_buffer_index)
+                            .cbv_index,
                     .atmosphere_texture_srv_index = atmosphere_texture_srv_index,
                 };
 

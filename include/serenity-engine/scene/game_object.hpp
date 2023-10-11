@@ -3,10 +3,12 @@
 #include "serenity-engine/renderer/renderer.hpp"
 #include "shaders/interop/constant_buffers.hlsli"
 
+#include "serenity-engine/scripting/script_manager.hpp"
+
 namespace serenity::scene
 {
-    // A serenity::model is basically a GLTF scene, which consist of nodes having meshes (which may or maynot have
-    // material id's), materials, transform component, etc.
+    // A serenity::GameObject is essentially a abstraction of mesh + materials, transform components, scripts, etc.
+
     // Main reference for GLTF : https://github.com/KhronosGroup/glTF-Tutorials/blob/master/gltfTutorial/
     // Main reference for using Fast GLTF :
     // https://github.com/JuanDiegoMontoya/Fwog/blob/ac1b3d867cb56b8e4640bdc03def96eb3ce924e2/example/common/SceneLoader.h
@@ -33,6 +35,8 @@ namespace serenity::scene
         uint32_t material_buffer_index{};
     };
 
+    // If script_path is not nullopt, then the scale / rotation / translation variables will be potentially modified in
+    // the script.
     struct Transform
     {
         math::XMFLOAT3 scale{1.0f, 1.0f, 1.0f};
@@ -41,8 +45,18 @@ namespace serenity::scene
 
         uint32_t transform_buffer_index{};
 
-        void update()
+        std::optional<std::string> script_path{};
+
+        void update(const float delta_time)
         {
+            if (script_path.has_value())
+            {
+                scripting::ScriptManager::instance().execute_script(*script_path);
+
+                std::tie(scale, rotation, translation) =
+                    scripting::ScriptManager::instance().call_function()["update_transform"](scale, rotation, translation, delta_time);
+            }
+
             const auto model_matrix = math::XMMatrixScaling(scale.x, scale.y, scale.z) *
                                       math::XMMatrixRotationX(math::XMConvertToRadians(rotation.x)) *
                                       math::XMMatrixRotationY(math::XMConvertToRadians(rotation.y)) *
@@ -61,12 +75,20 @@ namespace serenity::scene
         }
     };
 
-    struct Model
+    struct GameObject
     {
-        std::vector<Mesh> meshes{};
-        std::vector<Material> materials{};
+        // Constructor takes in a gltf scene path which will be used to obtain mesh / material data.
+        GameObject(const std::string_view object_name, const std::string_view gltf_scene_path);
 
-        Transform transform_component{};
-        std::string model_name{};
+        std::vector<Mesh> m_meshes{};
+        std::vector<Material> m_materials{};
+
+        Transform m_transform_component{};
+        std::string m_game_object_name{};
+
+        Transform &get_transform_component()
+        {
+            return m_transform_component;
+        }
     };
 } // namespace serenity::scene

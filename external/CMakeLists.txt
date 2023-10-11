@@ -1,4 +1,5 @@
 include(FetchContent)
+include(ExternalProject)
 
 # SDL3 for input / window creation and handling.
 FetchContent_Declare(
@@ -32,7 +33,24 @@ FetchContent_Declare(
     GIT_PROGRESS TRUE
 )
 
-FetchContent_MakeAvailable(SDL3 spdlog fastgltf stb)
+# sol2 for lua scripting (lua is not downloaded and setup by sol2, so that is done manually).
+set(SOL2_BUILD_LUA TRUE)
+FetchContent_Declare(
+    sol2
+    GIT_REPOSITORY https://github.com/ThePhD/sol2
+    GIT_TAG 9c882a28fdb6f4ad79a53a4191b43ce48a661175
+    GIT_PROGRESS TRUE
+)
+
+# Lua for ... lua (sol2 does not setup lua, hence why it is required to be setup manually)
+FetchContent_Declare(
+    lua
+    GIT_REPOSITORY https://github.com/walterschell/Lua
+    GIT_TAG 88246d621abf7b6fba9332f49229d507f020e450
+    GIT_PROGRESS TRUE
+)
+
+FetchContent_MakeAvailable(SDL3 spdlog fastgltf stb sol2 lua)
 
 # imgui for the editor ui.
 FetchContent_Declare(
@@ -63,5 +81,5 @@ target_include_directories(libimgui PUBLIC
 target_link_libraries(libimgui PUBLIC SDL3::SDL3)
 
 add_library(external INTERFACE)
-target_link_libraries(external INTERFACE SDL3::SDL3 libimgui fastgltf)	
-target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${spdlog_SOURCE_DIR}/include ${stb_SOURCE_DIR}) 
+target_link_libraries(external INTERFACE SDL3::SDL3 libimgui fastgltf sol2::sol2 lua_static)	
+target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${spdlog_SOURCE_DIR}/include ${stb_SOURCE_DIR} ${sol2_SOURCE_DIR}/include)  

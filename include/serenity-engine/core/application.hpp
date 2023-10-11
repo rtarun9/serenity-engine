@@ -11,6 +11,8 @@
 
 #include "serenity-engine/editor/editor.hpp"
 
+#include "serenity-engine/scripting/script_manager.hpp"
+
 namespace serenity::core
 {
     struct ApplicationConfig
@@ -55,6 +57,8 @@ namespace serenity::core
         std::unique_ptr<scene::SceneManager> m_scene_manager{};
 
         std::unique_ptr<editor::Editor> m_editor{};
+
+        std::unique_ptr<scripting::ScriptManager> m_script_manager{};
 
       protected:
         Input m_input{};

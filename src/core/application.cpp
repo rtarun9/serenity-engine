@@ -26,6 +26,8 @@ namespace serenity::core
         m_scene_manager = std::make_unique<scene::SceneManager>();
 
         m_editor = std::make_unique<editor::Editor>(*(m_window.get()));
+
+        m_script_manager = std::make_unique<scripting::ScriptManager>();
     }
 
     void Application::run()

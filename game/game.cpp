@@ -9,10 +9,12 @@ class Game final : public core::Application
     explicit Game(const core::ApplicationConfig &application_config) : core::Application(application_config)
     {
         auto default_scene = scene::Scene("Default Scene");
-        default_scene.add_model("data/Cube/glTF/Cube.gltf", "Cube");
 
-        /// default_scene.add_model("data/sponza-gltf-pbr/sponza.glb", "Sponza", math::XMFLOAT3{0.1f, 0.1f, 0.1f});
-        // default_scene.add_model("data/sketchfab_pbr_material_reference_chart/scene.gltf", "PBR_References");
+        auto cube_object = scene::GameObject("Cube", "data/Cube/glTF/Cube.gltf");
+        cube_object.get_transform_component().script_path =
+            wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/test.lua"));
+
+        default_scene.add_game_object(std::move(cube_object));
 
         default_scene.add_light(interop::Light{
             .light_type = interop::LightType::Point,

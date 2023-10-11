@@ -10,6 +10,7 @@ add_subdirectory(scene)
 add_subdirectory(asset)
 add_subdirectory(editor)
 add_subdirectory(main)
+add_subdirectory(scripting)
 
 target_precompile_headers(serenity-engine PUBLIC "${SERENITY_ENGINE_INCLUDE_PATH}/pch.hpp")
 target_compile_definitions(serenity-engine PUBLIC "$<$<CONFIG:DEBUG>:DEF_SERENITY_DEBUG>")
