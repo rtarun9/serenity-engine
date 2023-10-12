@@ -1,15 +1,14 @@
-function update_transform(scale, rotation, translation, delta_time)
+function update_transform(scale, rotation, translation, delta_time, frame_count)
 
-	direction = 1.0
+	scale.x = 1
+	scale.y = 1
+	scale.z = 1
+	
+	radius = 10
+	frequency = 0.05 
 
-	if translation.x < 20 then
-		direction = 1.0
-	elseif translation.x >= 20 then
-		direction = -1.0
-		translation.x = -20
-	end
-
-	translation.x = translation.x + direction
+	translation.x = math.cos(frame_count * frequency) * radius
+	translation.y = math.sin(frame_count * frequency) * radius
 
 	return scale, rotation, translation
 end

@@ -46,6 +46,9 @@ namespace serenity::core
             return string_to_wstring(m_root_directory) + std::wstring(path);
         }
 
+        std::string read_file(const std::string_view path) const;
+        void write_to_file(const std::string_view path, const std::string_view buffer) const;
+
       private:
         // Returns true if the path is already a absolute path, returns false otherwise.
         bool is_path_absolute(const std::string_view path) const

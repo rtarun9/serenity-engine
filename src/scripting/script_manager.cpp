@@ -13,14 +13,27 @@ namespace serenity::scripting
         m_lua.set_function("log_error", [&](const std::string message) { core::Log::instance().error(message); });
 
         // Set usertypes.
+
+        // DirectXMath's float3.
         m_lua.new_usertype<math::XMFLOAT3>("float3", "x", &math::XMFLOAT3::x, "y", &math::XMFLOAT3::y, "z",
                                            &math::XMFLOAT3::z);
     }
 
-    void ScriptManager::execute_script(const std::string_view script_path)
+    uint32_t ScriptManager::create_script(const Script &script)
     {
-        m_lua.script_file(std::string(script_path), [&](lua_State *, sol::protected_function_result pfr) {
-            if (!pfr.valid())
+        const auto script_index = m_scripts.size();
+
+        m_scripts.emplace_back(script);
+
+        core::Log::instance().info(std::format("Created script with path : {}", script.script_path));
+
+        return script_index;
+    }
+
+    void ScriptManager::execute_script(const uint32_t script_index)
+    {
+        m_lua.script_file(m_scripts.at(script_index).script_path, [&](lua_State *, sol::protected_function_result pfr) {
+            if (const auto script_path = m_scripts.at(script_index).script_path; !pfr.valid())
             {
                 core::Log::instance().warn(std::format("Error in script : {}", script_path));
             }

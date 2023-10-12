@@ -31,4 +31,35 @@ namespace serenity::core
             Log::instance().critical(std::format("Could not locate root directory"));
         }
     }
+
+    std::string FileSystem::read_file(const std::string_view path) const
+    {
+        auto file = std::ifstream(std::string(path));
+        if (!file.is_open())
+        {
+            core::Log::instance().warn(std::format("Failed to open file with path : {}", path));
+            return {};
+        }
+
+        auto file_contents = std::vector<std::string>();
+
+        auto stream_buffer = std::stringstream{};
+        stream_buffer << file.rdbuf();
+
+        return stream_buffer.str();
+    }
+
+    void FileSystem::write_to_file(const std::string_view path, const std::string_view buffer) const
+    {
+        auto file = std::ofstream(std::string(path));
+        if (!file.is_open())
+        {
+            core::Log::instance().warn(std::format("Failed to open file with path : {}", path));
+            return;
+        }
+
+        file << buffer.data();
+
+        file.close();
+    }
 } // namespace serenity::core

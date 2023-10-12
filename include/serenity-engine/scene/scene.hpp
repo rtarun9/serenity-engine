@@ -1,8 +1,8 @@
 #pragma once
 
 #include "camera.hpp"
-#include "lights.hpp"
 #include "game_object.hpp"
+#include "lights.hpp"
 
 #include "shaders/interop/constant_buffers.hlsli"
 
@@ -16,7 +16,7 @@ namespace serenity::scene
         explicit Scene(const std::string_view scene_name);
         ~Scene() = default;
 
-        void add_game_object(const GameObject&& game_object)
+        void add_game_object(const GameObject &&game_object)
         {
             m_game_objects.emplace_back(game_object);
         }
@@ -54,7 +54,8 @@ namespace serenity::scene
         void add_light(const interop::Light &light);
 
         // Update the transform component of all game objects in the scene, as well as the scene buffer and camera.
-        void update(const math::XMMATRIX projection_matrix, const float delta_time, const core::Input &input);
+        void update(const math::XMMATRIX projection_matrix, const float delta_time, const uint32_t frame_count,
+                    const core::Input &input);
 
       private:
         uint32_t m_scene_buffer_index{};

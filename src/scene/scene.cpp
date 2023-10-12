@@ -15,7 +15,8 @@ namespace serenity::scene
         core::Log::instance().info(std::format("Created scene {}", scene_name));
     }
 
-    void Scene::update(const math::XMMATRIX projection_matrix, const float delta_time, const core::Input &input)
+    void Scene::update(const math::XMMATRIX projection_matrix, const float delta_time, const uint32_t frame_count,
+                       const core::Input &input)
     {
         m_camera.update(delta_time, input);
 
@@ -38,7 +39,7 @@ namespace serenity::scene
 
         for (auto &game_object : m_game_objects)
         {
-            game_object.m_transform_component.update(delta_time);
+            game_object.m_transform_component.update(delta_time, frame_count);
         }
     }
 

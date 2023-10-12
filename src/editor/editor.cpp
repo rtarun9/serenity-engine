@@ -3,6 +3,7 @@
 #include "serenity-engine/core/file_system.hpp"
 #include "serenity-engine/renderer/renderer.hpp"
 #include "serenity-engine/scene/scene_manager.hpp"
+#include "serenity-engine/scripting/script_manager.hpp"
 
 #include "imgui.h"
 #include "imgui_impl_dx12.h"
@@ -115,6 +116,7 @@ namespace serenity::editor
         {
             scene_panel();
             renderer_panel();
+            scripts_panel();
         }
 
         ImGui::Render();
@@ -136,8 +138,10 @@ namespace serenity::editor
             {
                 for (auto &game_object : current_scene.get_game_objects())
                 {
+                    ImGui::SetNextItemOpen(true);
                     if (ImGui::TreeNode(game_object.m_game_object_name.c_str()))
                     {
+                        ImGui::SetNextItemOpen(true);
                         if (ImGui::TreeNode("Transform"))
                         {
                             auto &transform_component = game_object.m_transform_component;
@@ -174,8 +178,7 @@ namespace serenity::editor
             {
                 if (ImGui::TreeNode("Directional Light"))
                 {
-                    ImGui::SliderFloat("Sun angle", &light_buffer.sun_angle, -180.0f,
-                                       0.0f);
+                    ImGui::SliderFloat("Sun angle", &light_buffer.sun_angle, -180.0f, 0.0f);
                     ImGui::SliderFloat("Intensity", &light_buffer.lights[interop::SUN_LIGHT_INDEX].intensity, 0.0f,
                                        1.0f);
                     ImGui::TreePop();
@@ -231,6 +234,65 @@ namespace serenity::editor
             }
 
             ImGui::End();
+        }
+    }
+
+    void Editor::scripts_panel()
+    {
+        static auto selected_script_path = ""s;
+
+        ImGui::SetNextItemOpen(true);
+        if (ImGui::Begin("Scripts Panel"))
+        {
+            for (auto &script : scripting::ScriptManager::instance().get_scripts())
+            {
+                if (ImGui::Button(script.script_path.c_str()))
+                {
+                    selected_script_path = script.script_path;
+                }
+            }
+
+            ImGui::End();
+        }
+
+        if (selected_script_path != "")
+        {
+            constexpr auto MAX_TEXT_BUFFER_SIZE = 1024 * 32u;
+            static std::string text = core::FileSystem::instance().read_file(selected_script_path);
+
+            ImGui::SetNextItemOpen(true);
+            if (ImGui::Begin("Script Editor"))
+            {
+                if (ImGui::Button("Close"))
+                {
+                    selected_script_path = "";
+                    text = "";
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Save"))
+                {
+                    core::FileSystem::instance().write_to_file(selected_script_path, text);
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Reload"))
+                {
+                    text.clear();
+                    text = core::FileSystem::instance().read_file(selected_script_path);
+                }
+
+                if (!selected_script_path.empty())
+                {
+                    ImGui::InputTextMultiline(selected_script_path.c_str(), text.data(), MAX_TEXT_BUFFER_SIZE,
+                                              ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16),
+                                              ImGuiInputTextFlags_AllowTabInput);
+                }
+
+                ImGui::End();
+            }
         }
     }
 } // namespace serenity::editor

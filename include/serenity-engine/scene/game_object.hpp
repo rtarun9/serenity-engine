@@ -45,16 +45,17 @@ namespace serenity::scene
 
         uint32_t transform_buffer_index{};
 
-        std::optional<std::string> script_path{};
+        uint32_t script_index{INVALID_INDEX_U32};
 
-        void update(const float delta_time)
+        void update(const float delta_time, const uint32_t frame_count)
         {
-            if (script_path.has_value())
+            if (script_index != INVALID_INDEX_U32)
             {
-                scripting::ScriptManager::instance().execute_script(*script_path);
+                scripting::ScriptManager::instance().execute_script(script_index);
 
                 std::tie(scale, rotation, translation) =
-                    scripting::ScriptManager::instance().call_function()["update_transform"](scale, rotation, translation, delta_time);
+                    scripting::ScriptManager::instance().call_function()["update_transform"](
+                        scale, rotation, translation, delta_time, frame_count);
             }
 
             const auto model_matrix = math::XMMatrixScaling(scale.x, scale.y, scale.z) *

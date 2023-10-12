@@ -11,8 +11,11 @@ class Game final : public core::Application
         auto default_scene = scene::Scene("Default Scene");
 
         auto cube_object = scene::GameObject("Cube", "data/Cube/glTF/Cube.gltf");
-        cube_object.get_transform_component().script_path =
-            wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/test.lua"));
+        cube_object.get_transform_component().script_index =
+            scripting::ScriptManager::instance().create_script(scripting::Script{
+                .script_path =
+                    wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/test.lua")),
+            });
 
         default_scene.add_game_object(std::move(cube_object));
 
@@ -60,7 +63,8 @@ class Game final : public core::Application
         const auto projection_matrix = math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f),
                                                                       m_window->get_aspect_ratio(), 0.1f, 1000.0f);
 
-        scene::SceneManager::instance().get_current_scene().update(projection_matrix, delta_time, m_input);
+        scene::SceneManager::instance().get_current_scene().update(projection_matrix, delta_time, m_frame_count,
+                                                                   m_input);
 
         renderer::Renderer::instance().update_renderpasses();
     }
