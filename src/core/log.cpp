@@ -65,6 +65,18 @@ namespace serenity::core
         throw std::runtime_error(critical_message);
     }
 
+    void Log::add_sink(const std::shared_ptr<spdlog::sinks::sink> &sink, const std::string_view sink_name)
+    {
+        m_logger->sinks().push_back(sink);
+        m_external_sinks[std::string(sink_name)] = sink;
+    }
+
+    void Log::delete_sink(const std::string_view sink_name)
+    {
+        std::remove(m_logger->sinks().begin(), m_logger->sinks().end(), m_external_sinks[std::string(sink_name)]);
+        m_external_sinks[std::string(sink_name)].reset();
+    }
+
     std::string Log::format_source_location(const std::source_location &source_location) const
     {
         return std::format("\n[file : {}.\nfunction : {}.\nline : {}.]", source_location.file_name(),

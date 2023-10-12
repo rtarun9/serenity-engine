@@ -23,6 +23,9 @@ namespace serenity::core
         void critical(const std::string_view message,
                       const std::source_location source_location = std::source_location::current());
 
+        void add_sink(const std::shared_ptr<spdlog::sinks::sink>& sink, const std::string_view sink_name);
+        void delete_sink(const std::string_view sink_name);
+
       private:
         std::string format_source_location(const std::source_location &source_location) const;
 
@@ -35,5 +38,9 @@ namespace serenity::core
 
       private:
         std::shared_ptr<spdlog::logger> m_logger{};
+
+        // A hashmap of sinks and the corresponding name.
+        // Sinks added via the add_sink function will be stored here to allow for easy deletion of sinks (based on usage).
+        std::unordered_map<std::string, std::shared_ptr<spdlog::sinks::sink>> m_external_sinks{};
     };
 } // namespace serenity::core

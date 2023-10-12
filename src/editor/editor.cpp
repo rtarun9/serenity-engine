@@ -1,5 +1,7 @@
 #include "serenity-engine/editor/editor.hpp"
 
+#include "serenity-engine/editor/imgui_sink.hpp"
+
 #include "serenity-engine/core/file_system.hpp"
 #include "serenity-engine/renderer/renderer.hpp"
 #include "serenity-engine/scene/scene_manager.hpp"
@@ -70,6 +72,9 @@ namespace serenity::editor
         window.add_event_callback([&](window::Event event) { ImGui_ImplSDL3_ProcessEvent(&event.internal_event); });
 
         core::Log::instance().info("Created the editor");
+
+        // Create imgui sink and add it to the loggers sink vector.
+        core::Log::instance().add_sink(std::make_shared<ImGuiSink<std::mutex>>(), "editor_sink");
     }
 
     Editor::~Editor()
@@ -79,6 +84,8 @@ namespace serenity::editor
         ImGui::DestroyContext();
 
         core::Log::instance().info("Destroyed the editor");
+
+        core::Log::instance().delete_sink("editor_sink");
     }
 
     void Editor::render()
@@ -117,6 +124,7 @@ namespace serenity::editor
             scene_panel();
             renderer_panel();
             scripts_panel();
+            log_panel();
         }
 
         ImGui::Render();
@@ -207,6 +215,10 @@ namespace serenity::editor
 
     void Editor::renderer_panel()
     {
+        // For the text editor.
+        static auto selected_shader_path = std::wstring{};
+        static auto selected_pipeline_index = INVALID_INDEX_U32;
+
         ImGui::SetNextItemOpen(true);
         if (ImGui::Begin("Renderer Panel"))
         {
@@ -224,16 +236,72 @@ namespace serenity::editor
             {
                 for (const auto &pipeline : pipelines)
                 {
-                    if (const auto pipeline_name = pipeline.pipeline_creation_desc.name;
-                        ImGui::Button(std::string("Reload "s + wstring_to_string(pipeline_name)).c_str()))
+                    if (const auto pipeline_name = wstring_to_string(pipeline.pipeline_creation_desc.name);
+                        ImGui::TreeNode(pipeline_name.c_str()))
                     {
-                        renderer::Renderer::instance().schedule_pipeline_for_reload(pipeline.index);
+                        if (ImGui::Button("Reload"))
+                        {
+                            renderer::Renderer::instance().schedule_pipeline_for_reload(pipeline.index);
+                        }
+
+                        if (pipeline.pipeline_creation_desc.vertex_shader_creation_desc.has_value())
+                        {
+                            if (ImGui::Button("Vertex Shader Edit"))
+                            {
+                                selected_shader_path =
+                                    pipeline.pipeline_creation_desc.vertex_shader_creation_desc->shader_path;
+
+                                selected_pipeline_index = pipeline.index;
+                            }
+                        }
+
+                        if (pipeline.pipeline_creation_desc.pixel_shader_creation_desc.has_value())
+                        {
+                            if (ImGui::Button("Pixel Shader Edit"))
+                            {
+                                selected_shader_path =
+                                    pipeline.pipeline_creation_desc.pixel_shader_creation_desc->shader_path;
+
+                                selected_pipeline_index = pipeline.index;
+                            }
+                        }
+
+                        if (pipeline.pipeline_creation_desc.compute_shader_creation_desc.has_value())
+                        {
+                            if (ImGui::Button("Compute Shader Edit"))
+                            {
+                                selected_shader_path =
+                                    pipeline.pipeline_creation_desc.compute_shader_creation_desc->shader_path;
+
+                                selected_pipeline_index = pipeline.index;
+                            }
+                        }
+
+                        ImGui::TreePop();
                     }
                 }
                 ImGui::TreePop();
             }
 
             ImGui::End();
+        }
+
+        if (!selected_shader_path.empty())
+        {
+            const auto action = text_editor_window(
+                wstring_to_string(core::FileSystem::instance().get_absolute_path(selected_shader_path)));
+            if (action == TextEditorAction::Close)
+            {
+                selected_shader_path.clear();
+            }
+
+            if (action == TextEditorAction::Save)
+            {
+                if (selected_pipeline_index != INVALID_INDEX_U32)
+                {
+                    renderer::Renderer::instance().schedule_pipeline_for_reload(selected_pipeline_index);
+                }
+            }
         }
     }
 
@@ -255,44 +323,104 @@ namespace serenity::editor
             ImGui::End();
         }
 
-        if (selected_script_path != "")
+        if (!selected_script_path.empty())
         {
-            constexpr auto MAX_TEXT_BUFFER_SIZE = 1024 * 32u;
-            static std::string text = core::FileSystem::instance().read_file(selected_script_path);
-
-            ImGui::SetNextItemOpen(true);
-            if (ImGui::Begin("Script Editor"))
+            const auto action = text_editor_window(selected_script_path);
+            if (action == TextEditorAction::Close)
             {
-                if (ImGui::Button("Close"))
-                {
-                    selected_script_path = "";
-                    text = "";
-                }
-
-                ImGui::SameLine();
-
-                if (ImGui::Button("Save"))
-                {
-                    core::FileSystem::instance().write_to_file(selected_script_path, text);
-                }
-
-                ImGui::SameLine();
-
-                if (ImGui::Button("Reload"))
-                {
-                    text.clear();
-                    text = core::FileSystem::instance().read_file(selected_script_path);
-                }
-
-                if (!selected_script_path.empty())
-                {
-                    ImGui::InputTextMultiline(selected_script_path.c_str(), text.data(), MAX_TEXT_BUFFER_SIZE,
-                                              ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 16),
-                                              ImGuiInputTextFlags_AllowTabInput);
-                }
-
-                ImGui::End();
+                selected_script_path.clear();
             }
         }
+    }
+
+    void Editor::log_panel()
+    {
+        ImGui::SetNextItemOpen(true);
+        if (ImGui::Begin("Log"))
+        {
+            for (const auto &message : m_editor_log_messages)
+            {
+                switch (message.log_level)
+                {
+                case EditorLogLevel::Info: {
+                    // color used : https://www.colorhexa.com/d4ebf2.
+                    ImGui::TextColored(ImVec4(212.0f / 255.0f, 235.0f / 255.0f, 242.0f / 255.0f, 1.0f),
+                                       message.message.c_str());
+                }
+                break;
+
+                case EditorLogLevel::Warn: {
+                    // color used : https://www.colorhexa.com/f2ead4.
+                    ImGui::TextColored(ImVec4(242.0f / 255.0f, 235.0f / 255.0f, 212.0f / 255.0f, 1.0f),
+                                       message.message.c_str());
+                }
+                break;
+
+                case EditorLogLevel::Error: {
+                    // color used : https://www.colorhexa.com/ff3333.
+                    ImGui::TextColored(ImVec4(255.0f / 255.0f, 51.0f / 255.0f, 51.0f / 255.0f, 1.0f),
+                                       message.message.c_str());
+                }
+                break;
+
+                case EditorLogLevel::Critical: {
+                    // color used : https://www.colorhexa.com/cc0000.
+                    ImGui::TextColored(ImVec4(204.0f / 255.0f, 0.0f, 0.0f, 1.0f), message.message.c_str());
+                }
+                break;
+                }
+            }
+
+            ImGui::End();
+        }
+    }
+
+    TextEditorAction Editor::text_editor_window(const std::string_view file_path)
+    {
+        constexpr auto MAX_TEXT_BUFFER_SIZE = 2048 * 32u;
+        static auto text = core::FileSystem::instance().read_file(file_path);
+
+        auto action = TextEditorAction::Open;
+
+        ImGui::SetNextItemOpen(true);
+        if (ImGui::Begin("Text Editor"))
+        {
+            if (ImGui::Button("Close"))
+            {
+                text = "";
+
+                action = TextEditorAction::Close;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Save"))
+            {
+                core::FileSystem::instance().write_to_file(file_path, text);
+
+                action = TextEditorAction::Save;
+            }
+
+            ImGui::SameLine();
+
+            if (ImGui::Button("Reload"))
+            {
+                text.clear();
+                text = core::FileSystem::instance().read_file(file_path);
+
+                action = TextEditorAction::Reload;
+            }
+
+            if (!text.empty())
+            {
+                ImGui::InputTextMultiline(std::string(file_path).c_str(), text.data(), MAX_TEXT_BUFFER_SIZE,
+                                          ImVec2(-FLT_MIN, ImGui::GetTextLineHeight() * 64),
+                                          ImGuiInputTextFlags_AllowTabInput);
+            }
+
+            ImGui::End();
+        }
+
+        return action;
     }
 } // namespace serenity::editor

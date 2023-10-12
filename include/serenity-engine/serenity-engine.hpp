@@ -16,6 +16,7 @@
 
 // Editor
 #include "editor/editor.hpp"
+#include "editor/imgui_sink.hpp"
 
 // Renderer
 #include "renderer/renderer.hpp"

@@ -77,7 +77,7 @@ float4 ps_main(VsOutput input) : SV_Target0
     if (material_buffer.albedo_texture_srv_index != interop::INVALID_INDEX_U32)
     {
         Texture2D<float4> albedo_texture = ResourceDescriptorHeap[material_buffer.albedo_texture_srv_index];
-        //color = albedo_texture.Sample(anisotropic_sampler, input.texture_coord);
+        // color = albedo_texture.Sample(anisotropic_sampler, input.texture_coord);
     }
 
     const float3 normal = normalize(input.normal);
