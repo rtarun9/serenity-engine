@@ -25,7 +25,7 @@ namespace serenity::renderer::renderpass
                     .shader_path = L"shaders/post_process.hlsl",
                     .shader_entry_point = L"ps_main",
                 },
-            .rtv_formats = {rhi::Swapchain::SWAPCHAIN_BACK_BUFFER_FORMAT},
+            .rtv_formats = {rhi::Swapchain::SWAPCHAIN_RTV_FORMAT},
             .dsv_format = DXGI_FORMAT_UNKNOWN,
             .name = L"Post process combine pipeline",
         });
@@ -36,6 +36,15 @@ namespace serenity::renderer::renderpass
                 .name = L"Full screen triangle index buffer",
             },
             std::array{0u, 1u, 2u});
+
+        // Create post process buffer data.
+        m_post_process_buffer_index =
+            renderer::Renderer::instance().create_buffer<interop::PostProcessBuffer>(rhi::BufferCreationDesc{
+                .usage = rhi::BufferUsage::ConstantBuffer,
+                .name = L"Post Process Buffer",
+            });
+
+        m_post_process_buffer_data.noise_scale = 1.0f / 1024.0f;
     }
 
     PostProcessingRenderpass::~PostProcessingRenderpass()
@@ -50,8 +59,10 @@ namespace serenity::renderer::renderpass
         command_list.set_pipeline_state(
             renderer::Renderer::instance().get_pipeline_at_index(m_post_process_pipeline_index));
 
-        auto post_process_combine_render_resources = interop::PostProcessCombineRenderResources{
+        auto post_process_combine_render_resources = interop::PostProcessRenderResources{
             .render_texture_srv_index = render_texture_srv_index,
+            .post_process_buffer_cbv_index =
+                renderer::Renderer::instance().get_buffer_at_index(m_post_process_buffer_index).cbv_index,
         };
 
         command_list.set_index_buffer(

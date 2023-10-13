@@ -46,27 +46,27 @@ class Game final : public core::Application
         auto &current_scene_light_buffer =
             scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer();
 
-        static auto increment_direction = -1.0f;
-
-        if (current_scene_light_buffer.sun_angle >= 0.0f)
-        {
-            increment_direction = -1.0f;
-        }
-        else if (current_scene_light_buffer.sun_angle <= -180.0f)
-        {
-            increment_direction = 1.0f;
-        }
-
-        current_scene_light_buffer.sun_angle += delta_time * 0.04f * increment_direction;
-        current_scene_light_buffer.sun_angle = std::clamp(current_scene_light_buffer.sun_angle, -180.0f, 0.0f);
-
+        //static auto increment_direction = -1.0f;
+        //
+        //if (current_scene_light_buffer.sun_angle >= 0.0f)
+        //{
+        //    increment_direction = -1.0f;
+        //}
+        //else if (current_scene_light_buffer.sun_angle <= -180.0f)
+        //{
+        //    increment_direction = 1.0f;
+        //}
+        //
+        //current_scene_light_buffer.sun_angle += delta_time * 0.04f * increment_direction;
+        //current_scene_light_buffer.sun_angle = std::clamp(current_scene_light_buffer.sun_angle, -180.0f, 0.0f);
+        //
         const auto projection_matrix = math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f),
                                                                       m_window->get_aspect_ratio(), 0.1f, 1000.0f);
 
         scene::SceneManager::instance().get_current_scene().update(projection_matrix, delta_time, m_frame_count,
                                                                    m_input);
 
-        renderer::Renderer::instance().update_renderpasses();
+        renderer::Renderer::instance().update_renderpasses(m_frame_count);
     }
 };
 

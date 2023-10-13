@@ -17,7 +17,7 @@ namespace serenity::renderer::renderpass
                 .name = L"Atmosphere Render Pass buffer",
             });
 
-        m_atmosphere_buffer_data.turbidity = 4.0f;
+        m_atmosphere_buffer_data.turbidity = 2.0f;
         m_atmosphere_buffer_data.output_texture_dimension = {static_cast<float>(ATMOSPHERE_TEXTURE_DIMENSION),
                                                              static_cast<float>(ATMOSPHERE_TEXTURE_DIMENSION)};
 

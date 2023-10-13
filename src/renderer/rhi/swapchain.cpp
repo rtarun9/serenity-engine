@@ -98,8 +98,18 @@ namespace serenity::renderer::rhi
         auto back_buffer_index = 0u;
         for (auto &back_buffer : m_backbuffers)
         {
+            constexpr auto rtv_format = D3D12_RENDER_TARGET_VIEW_DESC{
+                .Format = SWAPCHAIN_RTV_FORMAT,
+                .ViewDimension = D3D12_RTV_DIMENSION_TEXTURE2D,
+                .Texture2D =
+                    {
+                        .MipSlice = 0u,
+                        .PlaneSlice = 0u,
+                    },
+            };
+
             throw_if_failed(m_swapchain->GetBuffer(back_buffer_index, IID_PPV_ARGS(&back_buffer.resource)));
-            device->CreateRenderTargetView(back_buffer.resource.Get(), nullptr, rtv_handle.cpu_descriptor_handle);
+            device->CreateRenderTargetView(back_buffer.resource.Get(), &rtv_format, rtv_handle.cpu_descriptor_handle);
             back_buffer.descriptor_handle = rtv_handle;
 
             rtv_handle.offset();

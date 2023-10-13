@@ -64,6 +64,7 @@ namespace serenity::renderer::rhi
       public:
         static constexpr auto NUM_BACK_BUFFERS = 3u;
         static constexpr auto SWAPCHAIN_BACK_BUFFER_FORMAT = DXGI_FORMAT_R10G10B10A2_UNORM;
+        static constexpr auto SWAPCHAIN_RTV_FORMAT = DXGI_FORMAT_R10G10B10A2_UNORM;
 
       private:
         comptr<IDXGISwapChain4> m_swapchain{};

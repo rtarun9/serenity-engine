@@ -17,13 +17,13 @@ namespace serenity::renderer::renderpass
             .vertex_shader_creation_desc =
                 ShaderCreationDesc{
                     .shader_type = ShaderTypes::Vertex,
-                    .shader_path = L"shaders/shading/phong.hlsl",
+                    .shader_path = L"shaders/shading/blinn_phong.hlsl",
                     .shader_entry_point = L"vs_main",
                 },
             .pixel_shader_creation_desc =
                 ShaderCreationDesc{
                     .shader_type = ShaderTypes::Pixel,
-                    .shader_path = L"shaders/shading/phong.hlsl",
+                    .shader_path = L"shaders/shading/blinn_phong.hlsl",
                     .shader_entry_point = L"ps_main",
                 },
             .cull_mode = D3D12_CULL_MODE_BACK,

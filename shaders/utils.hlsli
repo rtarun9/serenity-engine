@@ -36,4 +36,30 @@ float3 get_sampling_vector_cubemap(float2 uv, uint3 dispatch_thread_id)
     return float3(0.0f, 0.0f, 0.0f);
 }
 
+// Source : https://www.reedbeta.com/blog/quick-and-easy-gpu-random-numbers-in-d3d11/
+// and : https://github.com/acmarrs/ColorBanding/blob/master/shaders/Common.hlsl
+uint wang_hash(uint seed)
+{
+    seed = (seed ^ 61) ^ (seed >> 16);
+    seed *= 9;
+    seed = seed ^ (seed >> 4);
+    seed *= 0x27d4eb2d;
+    seed = seed ^ (seed >> 15);
+    return seed;
+}
+
+uint rand_xor_shift(uint seed)
+{
+    // Xorshift algorithm from George Marsaglia's paper
+    seed ^= (seed << 13);
+    seed ^= (seed >> 17);
+    seed ^= (seed << 5);
+    return seed;
+}
+
+float random_float_in_range_0_1(inout uint seed)
+{
+    seed = wang_hash(seed);
+    return float(rand_xor_shift(seed)) * (1.f / 4294967296.f);
+}
 #endif

@@ -3,6 +3,8 @@
 #include "serenity-engine/editor/editor.hpp"
 #include "serenity-engine/scene/scene_manager.hpp"
 
+#include "serenity-engine/core/application.hpp"
+
 #include "shaders/interop/render_resources.hlsli"
 
 namespace serenity::renderer
@@ -137,12 +139,22 @@ namespace serenity::renderer
         reload_pipelines();
     }
 
-    void Renderer::update_renderpasses()
+    void Renderer::update_renderpasses(const uint32_t frame_count)
     {
         const auto &light_buffer = scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer();
 
         m_atmosphere_renderpass->update(
             light_buffer.lights[interop::SUN_LIGHT_INDEX].world_space_position_or_direction);
+
+        m_post_processing_renderpass->get_post_process_buffer().frame_count = frame_count;
+        m_post_processing_renderpass->get_post_process_buffer().screen_dimensions = {
+            static_cast<float>(window_ref.get_dimensions().x),
+            static_cast<float>(window_ref.get_dimensions().y),
+        };
+
+        get_buffer_at_index(m_post_processing_renderpass->get_post_process_buffer_index())
+            .update(reinterpret_cast<const std::byte *>(&m_post_processing_renderpass->get_post_process_buffer()),
+                    sizeof(interop::PostProcessBuffer));
     }
 
     void Renderer::create_resources()

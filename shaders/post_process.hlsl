@@ -3,13 +3,16 @@
 #include "interop/render_resources.hlsli"
 #include "interop/constant_buffers.hlsli"
 
+#include "tone_mappers.hlsli"
+#include "utils.hlsli"
+
 struct VsOutput
 {
     float4 position : SV_Position;
     float2 texture_coord : Texture_Coord;
 };
 
-ConstantBuffer<interop::PostProcessCombineRenderResources> render_resources: register(b0);
+ConstantBuffer<interop::PostProcessRenderResources> render_resources: register(b0);
 
 VsOutput vs_main(uint vertex_id : SV_VertexID)
 {
@@ -23,19 +26,26 @@ VsOutput vs_main(uint vertex_id : SV_VertexID)
     return output;
 }
 
-// Aces Narkowicz approximation (to convert HDR to LDR).
-// Formula from : https://64.github.io/tonemapping/
-float3 aces_approximation(float3 hdr_color)
+// Compute random white noise for dithering purposes (i.e intentionally adding some noise to prevent color banding
+// by changing the organization of quantization.
+// Source : https://github.com/acmarrs/ColorBanding/blob/0b1c37aa9dfcb0fd18f4577eb30db51f41adb239/shaders/ColorBanding.hlsl#L79
+float3 generate_white_noise(interop::PostProcessBuffer post_process_buffer, const uint2 position)
 {
-    hdr_color *= 0.6f;
+    // Scaled texture coord (to range (screen_dimension.x, screen_dimension.y)).
+    const float2 dimensions = post_process_buffer.screen_dimensions;
 
-    const float a = 2.51f;
-    const float b = 0.03f;
-    const float c = 2.43f;
-    const float d = 0.59f;
-    const float e = 0.14f;
+    uint seed = post_process_buffer.frame_count * (position.x + (position.y * (uint)dimensions.x));
 
-    return clamp((hdr_color * (a * hdr_color + b)) / (hdr_color * (c * hdr_color + d) + e), 0.0f, 1.0f);
+    float3 rng = float3(0.0f, 0.0f, 0.0f);
+    rng.x = random_float_in_range_0_1(seed);
+    rng.y = random_float_in_range_0_1(seed);
+    rng.z = random_float_in_range_0_1(seed);
+
+    // Shift random values from [0.0, 1.0] to [-0.5, 0.5]
+    rng -= 0.5f;
+
+    // Scale noise based on input.
+    return rng * post_process_buffer.noise_scale;
 }
 
 SamplerState anisotropic_sampler : register(s0);
@@ -44,10 +54,19 @@ float4 ps_main(VsOutput input) : SV_Target
 {
     Texture2D<float4> render_texture = ResourceDescriptorHeap[render_resources.render_texture_srv_index];
     float4 color = render_texture.Sample(anisotropic_sampler, input.texture_coord);  
-    
+
+    ConstantBuffer<interop::PostProcessBuffer> post_process_buffer = ResourceDescriptorHeap[render_resources.post_process_buffer_cbv_index];
+
+    const float3 noise = generate_white_noise(post_process_buffer, uint2(input.position.xy));
+
     // Tone mapping.
-    color.xyz = aces_approximation(color.xyz);
-    
-    // Apply gamma correction.
-    return float4(pow(color.xyz, 1.0f / 2.2f), 1.0f);
+    color.xyz = aces(color.xyz);
+
+    // Dithering.
+    color.xyz += noise;
+ 
+    // Gamma correction.
+    color.xyz = pow(color.xyz, 1.0f/2.2f);
+
+    return float4(color.xyz, 1.0f);
 }

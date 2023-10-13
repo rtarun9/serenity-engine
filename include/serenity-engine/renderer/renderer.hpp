@@ -54,6 +54,11 @@ namespace serenity::renderer
             return m_atmosphere_renderpass->get_atmosphere_renderpass_buffer_data();
         }
 
+        interop::PostProcessBuffer &get_post_process_renderpass_buffer()
+        {
+            return m_post_processing_renderpass->get_post_process_buffer();
+        }
+
         // Create GPU buffer and return index to the created buffer.
         template <typename T>
         uint32_t create_buffer(const rhi::BufferCreationDesc &buffer_creation_desc, const std::span<const T> data = {})
@@ -101,7 +106,7 @@ namespace serenity::renderer
         // Render the current scene (uses the SceneManager to fetch this information).
         void render();
 
-        void update_renderpasses();
+        void update_renderpasses(const uint32_t frame_count);
 
       private:
         // Create resources for rendering.

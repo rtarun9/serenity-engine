@@ -38,9 +38,10 @@ namespace interop
         uint atmosphere_texture_srv_index;
     };
     
-    struct PostProcessCombineRenderResources
+    struct PostProcessRenderResources
     {
         uint render_texture_srv_index;
+        uint post_process_buffer_cbv_index;
     };
     
     struct AtmosphereRenderResources

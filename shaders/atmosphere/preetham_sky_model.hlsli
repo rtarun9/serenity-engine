@@ -41,10 +41,10 @@ float3 preetham_sky_luminance_and_chromaticity(const interop::AtmosphereRenderPa
 
     const float3 result_xyz = float3(x * (Y / y), Y, (1.0f - x - y) * (Y / y));
     
-    // Conversion from XYZ to RGB (https://en.wikipedia.org/wiki/SRGB#The_sRGB_transfer_function_.28.22gamma.22.29).
-    const float r = dot(float3(3.2406f,  -1.5372f, -0.4986f), result_xyz);
-    const float g = dot(float3(-0.9689f, 1.8758f,  0.0415f), result_xyz);
-    const float b = dot(float3(0.0557f, -0.2040f, 1.0570f), result_xyz);
+    // Conversion from XYZ to RGB (https://colorcalculations.wordpress.com/rgb-color-spaces/#RGBspaces).
+    const float r = dot(float3(2.370674, -0.900041, -0.470634), result_xyz);
+    const float g = dot(float3(-0.513885, 1.425304, 0.088581), result_xyz);
+    const float b = dot(float3(0.005298, -0.014695, 1.009397), result_xyz);
 
     return float3(r, g, b) * magnitude_multiplier;
 }   

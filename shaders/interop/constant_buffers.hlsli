@@ -141,6 +141,18 @@ namespace interop
 
         PerezParameters perez_parameters;
     };
+    
+    ConstantBufferStruct PostProcessBuffer
+    {
+        float2 screen_dimensions;
+        float2 padding;
+    
+        uint frame_count;
+        float3 padding2;
+        
+        float noise_scale;
+        float3 padding3;
+    };
 }
 
 #endif
