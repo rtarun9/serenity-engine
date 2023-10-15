@@ -8,30 +8,12 @@ class Game final : public core::Application
   public:
     explicit Game(const core::ApplicationConfig &application_config) : core::Application(application_config)
     {
-        auto default_scene = scene::Scene("Default Scene");
-
-        auto pbr_spheres = scene::GameObject("PBR Sphere", "data/sketchfab_pbr_material_reference_chart/scene.gltf");
-        pbr_spheres.get_transform_component().translation.y += 10.0f;
-        pbr_spheres.get_transform_component().rotation.y = 180.0f;
-        pbr_spheres.get_transform_component().rotation.z = 180.0f;
-
-        default_scene.add_game_object(std::move(pbr_spheres));
-
-        auto cube_object = scene::GameObject("Cube", "data/Cube/glTF/Cube.gltf");
-        cube_object.m_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
-            .script_name = "test.lua",
-            .script_path = wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/test.lua")),
+        const auto pbr_scene_init_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
+            .script_name = "init_pbr_script",
+            .script_path = wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/init_pbr_scene.lua")),
         });
 
-        default_scene.add_game_object(std::move(cube_object));
-
-        auto cube_object2 = scene::GameObject("Cube2", "data/Cube/glTF/Cube.gltf");
-        cube_object2.m_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
-            .script_name = "test2.lua",
-            .script_path = wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/test2.lua")),
-        });
-
-        default_scene.add_game_object(std::move(cube_object2));
+        auto default_scene = scene::Scene("Default Scene", pbr_scene_init_script_index);
 
         default_scene.add_light(interop::Light{
             .light_type = interop::LightType::Point,

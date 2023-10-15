@@ -14,6 +14,10 @@ namespace serenity::scene
     {
       public:
         explicit Scene(const std::string_view scene_name);
+        
+        // Specify the scene parameters (game objects, etc) in a script and construct the scene from it.
+        explicit Scene(const std::string_view scene_name, const uint32_t scene_init_script_index);
+
         ~Scene() = default;
 
         void add_game_object(const GameObject &&game_object)

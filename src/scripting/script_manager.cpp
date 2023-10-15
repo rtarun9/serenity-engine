@@ -6,6 +6,7 @@ namespace serenity::scripting
     {
         m_lua.open_libraries(sol::lib::base);
         m_lua.open_libraries(sol::lib::math);
+        m_lua.open_libraries(sol::lib::package);
 
         // Set simple log function in lua scripts.
         m_lua.set_function("log_info", [&](const std::string message) { core::Log::instance().info(message); });
@@ -15,7 +16,8 @@ namespace serenity::scripting
         // Set usertypes.
 
         // DirectXMath's float3.
-        m_lua.new_usertype<math::XMFLOAT3>("float3", "x", &math::XMFLOAT3::x, "y", &math::XMFLOAT3::y, "z",
+        m_lua.new_usertype<math::XMFLOAT3>("float3", sol::constructors<math::XMFLOAT3(float, float, float)>(), "x",
+                                           &math::XMFLOAT3::x, "y", &math::XMFLOAT3::y, "z",
                                            &math::XMFLOAT3::z);
     }
 

@@ -23,6 +23,11 @@ namespace serenity::scripting
             return m_scripts;
         }
 
+        sol::state& get_state()
+        {
+            return m_lua;
+        }
+
         sol::state &call_function()
         {
             return m_lua;
