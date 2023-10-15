@@ -3,6 +3,9 @@
 #include "interop/render_resources.hlsli"
 #include "interop/constant_buffers.hlsli"
 
+#include "shading/brdf.hlsli"
+#include "utils.hlsli"
+
 // All calculations are done in world space.
 struct VsOutput
 {
@@ -13,7 +16,7 @@ struct VsOutput
     float3 camera_position: CAMERA_POSITION;
 };
 
-ConstantBuffer<interop::PhongShadingRenderResources> render_resources : register(b0);
+ConstantBuffer<interop::PBRShadingRenderResources> render_resources : register(b0);
 
 VsOutput vs_main(uint vertex_id : SV_VertexID)  
 {
@@ -40,38 +43,32 @@ VsOutput vs_main(uint vertex_id : SV_VertexID)
 SamplerState anisotropic_sampler : register(s0);
 SamplerState linear_wrap_sampler : register(s1);
 
-struct PhongShadingParams
+struct PBRShadingParams
 {
     float3 normal;
     float3 pixel_to_light_direction;
     float3 pixel_to_camera_direction;
-    float ambient_multipler;
-    float diffuse_multiplier;
-    float specular_multiplier;
+    float3 albedo;
+    float roughness_factor;
+    float metallic_factor;
 };
 
-float3 compute_blinn_phong_lighting(PhongShadingParams params, const float3 light_color)
+float3 compute_pbr_lighting(PBRShadingParams params, const float3 light_color)
 {
-    // Ambient light: Lights bounces all over the scene, so no part of the object is truly pitch black.
-    const float3 ambient_light = params.ambient_multipler * float3(1.0f, 1.0f, 1.0f);
+    const float3 brdf = 
+        cook_torrence_specular_BRDF(params.normal, params.pixel_to_camera_direction, params.pixel_to_light_direction, params.albedo, params.roughness_factor, params.metallic_factor) +
+        lambertian_diffuse_BRDF(params.normal, params.pixel_to_camera_direction, params.pixel_to_light_direction, params.albedo, params.roughness_factor, params.metallic_factor);
 
-    // Diffuse component of the phong shading model represents the directional impact of the light.
-    const float3 diffuse_light = max(dot(params.pixel_to_light_direction, params.normal), 0.0f) * light_color * params.diffuse_multiplier;    
 
-    // Calculate specular light.
-    const float3 halfway_vec = normalize(params.pixel_to_camera_direction + params.pixel_to_light_direction);
-    const float specular_strength = pow(max(dot(params.normal, halfway_vec), 0.0f), 8) * params.specular_multiplier;
+    return brdf * light_color * saturate(dot(params.pixel_to_light_direction, params.normal));
 
-    const float3 specular_light = light_color * specular_strength;
-
-    return (ambient_light + diffuse_light + specular_light);
 }
 
 float4 ps_main(VsOutput input) : SV_Target0
 {
     ConstantBuffer<interop::MaterialBuffer> material_buffer = ResourceDescriptorHeap[render_resources.material_buffer_cbv_index];
     float4 color = material_buffer.base_color;
-
+    
     if (material_buffer.albedo_texture_srv_index != interop::INVALID_INDEX_U32)
     {
         Texture2D<float4> albedo_texture = ResourceDescriptorHeap[material_buffer.albedo_texture_srv_index];
@@ -93,29 +90,29 @@ float4 ps_main(VsOutput input) : SV_Target0
 
         if (light.light_type == interop::LightType::Point)
         {
-            PhongShadingParams params;
+            PBRShadingParams params;
             params.normal = normal;
             params.pixel_to_light_direction = normalize(light.world_space_position_or_direction - input.pixel_position);
             params.pixel_to_camera_direction = normalize(input.camera_position - input.pixel_position);
-            params.ambient_multipler = 0.1f;
-            params.diffuse_multiplier = 1.0f;
-            params.specular_multiplier = 0.5f;
+            params.albedo = color.xyz;
+            params.metallic_factor = material_buffer.metallic_roughness_factor.x;
+            params.roughness_factor = material_buffer.metallic_roughness_factor.y;
 
             const float attenuation_factor = 1.0f / length(light.world_space_position_or_direction - input.pixel_position);
             
-            shading_result += compute_blinn_phong_lighting(params, light.color * light.intensity) * attenuation_factor * color.xyz;
+            shading_result += compute_pbr_lighting(params, light.color * light.intensity) * attenuation_factor;
         }
         else if (light.light_type == interop::LightType::Directional)
         {
-            PhongShadingParams params;
+            PBRShadingParams params;
             params.normal = normal;
             params.pixel_to_light_direction = normalize(light.world_space_position_or_direction);
             params.pixel_to_camera_direction = normalize(input.camera_position - input.pixel_position);
-            params.ambient_multipler = 0.025f;
-            params.diffuse_multiplier = 0.10f;
-            params.specular_multiplier = 0.025f;
+            params.albedo = color.xyz;
+            params.metallic_factor = material_buffer.metallic_roughness_factor.x;
+            params.roughness_factor = material_buffer.metallic_roughness_factor.y;
 
-            shading_result += compute_blinn_phong_lighting(params, atmosphere_texture.Sample(linear_wrap_sampler, input.pixel_position).xyz * light.intensity) * color.xyz;   
+            shading_result += compute_pbr_lighting(params, atmosphere_texture.Sample(linear_wrap_sampler, input.pixel_position).xyz * light.intensity);   
         }
     }
 

@@ -10,14 +10,28 @@ class Game final : public core::Application
     {
         auto default_scene = scene::Scene("Default Scene");
 
+        auto pbr_spheres = scene::GameObject("PBR Sphere", "data/sketchfab_pbr_material_reference_chart/scene.gltf");
+        pbr_spheres.get_transform_component().translation.y += 10.0f;
+        pbr_spheres.get_transform_component().rotation.y = 180.0f;
+        pbr_spheres.get_transform_component().rotation.z = 180.0f;
+
+        default_scene.add_game_object(std::move(pbr_spheres));
+
         auto cube_object = scene::GameObject("Cube", "data/Cube/glTF/Cube.gltf");
-        cube_object.get_transform_component().script_index =
-            scripting::ScriptManager::instance().create_script(scripting::Script{
-                .script_path =
-                    wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/test.lua")),
-            });
+        cube_object.m_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
+            .script_name = "test.lua",
+            .script_path = wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/test.lua")),
+        });
 
         default_scene.add_game_object(std::move(cube_object));
+
+        auto cube_object2 = scene::GameObject("Cube2", "data/Cube/glTF/Cube.gltf");
+        cube_object2.m_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
+            .script_name = "test2.lua",
+            .script_path = wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/test2.lua")),
+        });
+
+        default_scene.add_game_object(std::move(cube_object2));
 
         default_scene.add_light(interop::Light{
             .light_type = interop::LightType::Point,
@@ -46,19 +60,19 @@ class Game final : public core::Application
         auto &current_scene_light_buffer =
             scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer();
 
-        //static auto increment_direction = -1.0f;
+        // static auto increment_direction = -1.0f;
         //
-        //if (current_scene_light_buffer.sun_angle >= 0.0f)
+        // if (current_scene_light_buffer.sun_angle >= 0.0f)
         //{
-        //    increment_direction = -1.0f;
-        //}
-        //else if (current_scene_light_buffer.sun_angle <= -180.0f)
+        //     increment_direction = -1.0f;
+        // }
+        // else if (current_scene_light_buffer.sun_angle <= -180.0f)
         //{
-        //    increment_direction = 1.0f;
-        //}
+        //     increment_direction = 1.0f;
+        // }
         //
-        //current_scene_light_buffer.sun_angle += delta_time * 0.04f * increment_direction;
-        //current_scene_light_buffer.sun_angle = std::clamp(current_scene_light_buffer.sun_angle, -180.0f, 0.0f);
+        // current_scene_light_buffer.sun_angle += delta_time * 0.04f * increment_direction;
+        // current_scene_light_buffer.sun_angle = std::clamp(current_scene_light_buffer.sun_angle, -180.0f, 0.0f);
         //
         const auto projection_matrix = math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f),
                                                                       m_window->get_aspect_ratio(), 0.1f, 1000.0f);

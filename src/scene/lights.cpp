@@ -23,7 +23,7 @@ namespace serenity::scene
             .world_space_position_or_direction = {0.0f, sinf(math::XMConvertToRadians(m_light_buffer.sun_angle)),
                                                   cosf(math::XMConvertToRadians(m_light_buffer.sun_angle))},
             .color = math::XMFLOAT3{1.0f, 1.0f, 1.0f},
-            .intensity = 0.017f,
+            .intensity = 5.8f,
             .scale = 0.0f,
         });
 

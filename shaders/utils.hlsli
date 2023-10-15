@@ -3,6 +3,15 @@
 #ifndef __UTILS_HLSLI__
 #define __UTILS_HLSLI__
 
+static const float MIN_FLOAT_VALUE = 0.00001f;
+static const float EPSILON = 1.0e-4;
+
+static const float PI = 3.14159265359;
+static const float TWO_PI = 2.0f * PI;
+static const float INV_PI = 1.0f / PI;
+static const float INV_TWO_PI = 1.0f / TWO_PI;
+static const float INVALID_INDEX = 4294967295; // UINT32_MAX;
+
 float3 get_sampling_vector_cubemap(float2 uv, uint3 dispatch_thread_id)
 {
     uv = uv = 2.0f * float2(uv.x, 1.0f - uv.y) - float2(1.0f, 1.0f);

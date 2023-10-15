@@ -16,7 +16,7 @@ float3 perez(const interop::PerezParameters perez_params, const float theta, con
     return (1.0f + perez_params.A * exp(perez_params.B / max(cos(theta), 0.01f))) * (1.0f + perez_params.C * exp(perez_params.D * gamma) + perez_params.E * cos(gamma) * cos(gamma));
 }
 
-float3 preetham_sky_luminance_and_chromaticity(const interop::AtmosphereRenderPassBuffer atmosphere_buffer, const float3 view_direction, const float3 sun_direction, const float magnitude_multiplier)
+float3 preetham_sky_luminance_and_chromaticity(const interop::AtmosphereRenderPassBuffer atmosphere_buffer, const float3 view_direction, const float3 sun_direction)
 {
     const float cos_gamma = dot(view_direction, sun_direction);
     const float gamma = acos(cos_gamma);
@@ -46,7 +46,7 @@ float3 preetham_sky_luminance_and_chromaticity(const interop::AtmosphereRenderPa
     const float g = dot(float3(-0.513885, 1.425304, 0.088581), result_xyz);
     const float b = dot(float3(0.005298, -0.014695, 1.009397), result_xyz);
 
-    return float3(r, g, b) * magnitude_multiplier;
+    return float3(r, g, b) * atmosphere_buffer.magnitude_multiplier;
 }   
 
 #endif 

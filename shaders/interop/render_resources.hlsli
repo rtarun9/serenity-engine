@@ -38,6 +38,18 @@ namespace interop
         uint atmosphere_texture_srv_index;
     };
     
+    struct PBRShadingRenderResources
+    {
+        uint position_buffer_srv_index;
+        uint texture_coord_buffer_srv_index;
+        uint normal_buffer_srv_index;
+        uint transform_buffer_cbv_index;
+        uint scene_buffer_cbv_index;
+        uint light_buffer_cbv_index;
+        uint material_buffer_cbv_index;
+        uint atmosphere_texture_srv_index;
+    };
+    
     struct PostProcessRenderResources
     {
         uint render_texture_srv_index;

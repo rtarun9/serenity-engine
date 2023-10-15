@@ -17,19 +17,19 @@ namespace serenity::renderer::renderpass
             .vertex_shader_creation_desc =
                 ShaderCreationDesc{
                     .shader_type = ShaderTypes::Vertex,
-                    .shader_path = L"shaders/shading/blinn_phong.hlsl",
+                    .shader_path = L"shaders/shading/pbr.hlsl",
                     .shader_entry_point = L"vs_main",
                 },
             .pixel_shader_creation_desc =
                 ShaderCreationDesc{
                     .shader_type = ShaderTypes::Pixel,
-                    .shader_path = L"shaders/shading/blinn_phong.hlsl",
+                    .shader_path = L"shaders/shading/pbr.hlsl",
                     .shader_entry_point = L"ps_main",
                 },
             .cull_mode = D3D12_CULL_MODE_BACK,
             .rtv_formats = {DXGI_FORMAT_R16G16B16A16_FLOAT},
             .dsv_format = DXGI_FORMAT_D32_FLOAT,
-            .name = L"Shading Pipeline",
+            .name = L"PBR Shading Pipeline",
         });
     }
 
@@ -63,7 +63,7 @@ namespace serenity::renderer::renderpass
             {
                 command_list.set_index_buffer(get_buffer_at_index(mesh.index_buffer_index));
 
-                const auto render_resources = interop::PhongShadingRenderResources{
+                const auto render_resources = interop::PBRShadingRenderResources{
                     .position_buffer_srv_index = get_buffer_at_index(mesh.position_buffer_index).srv_index,
                     .texture_coord_buffer_srv_index = get_buffer_at_index(mesh.texture_coords_buffer_index).srv_index,
                     .normal_buffer_srv_index = get_buffer_at_index(mesh.normal_buffer_index).srv_index,

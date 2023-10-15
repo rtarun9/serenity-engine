@@ -134,6 +134,11 @@ namespace serenity::asset::ModelLoader
                 material.pbrData.baseColorFactor[3],
             };
 
+            material_data.metallic_roughness_factor = math::XMFLOAT2{
+                material.pbrData.metallicFactor,
+                material.pbrData.roughnessFactor,
+            };
+
             if (material.pbrData.baseColorTexture.has_value())
             {
                 const auto &base_color_texture_info = material.pbrData.baseColorTexture.value();

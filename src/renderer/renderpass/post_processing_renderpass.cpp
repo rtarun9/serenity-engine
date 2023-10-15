@@ -27,7 +27,7 @@ namespace serenity::renderer::renderpass
                 },
             .rtv_formats = {rhi::Swapchain::SWAPCHAIN_RTV_FORMAT},
             .dsv_format = DXGI_FORMAT_UNKNOWN,
-            .name = L"Post process combine pipeline",
+            .name = L"Post process pipeline",
         });
 
         m_fullscreen_triangle_index_buffer_index = renderer::Renderer::instance().create_buffer<uint32_t>(

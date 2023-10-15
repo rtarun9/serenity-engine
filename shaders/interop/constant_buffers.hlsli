@@ -94,6 +94,10 @@ namespace interop
     ConstantBufferStruct MaterialBuffer
     {
         float4 base_color;
+        
+        float2 metallic_roughness_factor;
+        float2 padding;
+        
         uint albedo_texture_srv_index;
     };
 
@@ -138,6 +142,9 @@ namespace interop
         // float3 is of the form Yxy, where Y is the luminance, x and y are the chromaticities.
         float3 zenith_luminance_chromaticity;
         float padding3;
+        
+        float magnitude_multiplier;
+        float3 padding4;
 
         PerezParameters perez_parameters;
     };

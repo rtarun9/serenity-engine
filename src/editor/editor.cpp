@@ -82,6 +82,7 @@ namespace serenity::editor
                 ImGui::BulletText("Use WASD to move camera, and arror to change camera orientation");
                 ImGui::BulletText("Left click and drag editor components to move them");
                 ImGui::BulletText("Left click + Space to move the actual window");
+                ImGui::BulletText("Hold R to disable UI");
 
                 ImGui::EndMenu();
             }
@@ -95,7 +96,7 @@ namespace serenity::editor
             ImGui::EndMainMenuBar();
         }
 
-        if (render_ui)
+        if (render_ui && !ImGui::IsKeyDown(ImGuiKey_R))
         {
             scene_panel();
             renderer_panel();
@@ -140,6 +141,58 @@ namespace serenity::editor
                             ImGui::TreePop();
                         }
 
+                        auto &selected_script_index = game_object.m_script_index;
+                        if (const auto &scripts = scripting::ScriptManager::instance().get_scripts(); ImGui::BeginCombo(
+                                "Selected Script", selected_script_index == INVALID_INDEX_U32
+                                                       ? "None"
+                                                       : scripts.at(selected_script_index).script_name.c_str()))
+                        {
+                            for (const auto i : std::views::iota(0u, static_cast<uint32_t>(scripts.size() + 1u)))
+                            {
+                                const bool is_selected = (selected_script_index == i);
+
+                                if (i == scripts.size())
+                                {
+                                    if (ImGui::Selectable("None", is_selected))
+                                    {
+                                        selected_script_index = INVALID_INDEX_U32;
+                                    }
+                                }
+                                else if (ImGui::Selectable(scripts[i].script_name.c_str(), is_selected))
+                                {
+                                    selected_script_index = i;
+                                }
+
+                                if (is_selected)
+                                {
+                                    ImGui::SetItemDefaultFocus();
+                                }
+                            }
+
+                            ImGui::EndCombo();
+                        }
+
+                        if (ImGui::TreeNode("Material"))
+                        {
+                            int i = 0;
+                            for (auto &material : game_object.m_materials)
+                            {
+                                if (auto &material_buffer_data = material.material_data;
+                                    ImGui::TreeNode(std::string("Material "s + std::to_string(i++)).c_str()))
+                                {
+                                    ImGui::ColorPicker3("Base Color", &material_buffer_data.base_color.x);
+                                    ImGui::SliderFloat("Metallic Factor",
+                                                       &material_buffer_data.metallic_roughness_factor.x, 0.0f, 1.0f);
+                                    ImGui::SliderFloat("Roughness Factor",
+                                                       &material_buffer_data.metallic_roughness_factor.y, 0.0f, 1.0f);
+
+                                    ImGui::TreePop();
+                                }
+                            }
+
+                            ImGui::TreePop();
+                        }
+
                         ImGui::TreePop();
                     }
                 }
@@ -164,7 +217,7 @@ namespace serenity::editor
                 {
                     ImGui::SliderFloat("Sun angle", &light_buffer.sun_angle, -180.0f, 0.0f);
                     ImGui::SliderFloat("Intensity", &light_buffer.lights[interop::SUN_LIGHT_INDEX].intensity, 0.0f,
-                                       1.0f);
+                                       10.0f);
                     ImGui::TreePop();
                 }
 
@@ -203,6 +256,7 @@ namespace serenity::editor
             if (ImGui::TreeNode("Atmosphere Renderpass"))
             {
                 ImGui::SliderFloat("Turbidity", &atmosphere_buffer.turbidity, 2.0f, 10.0f);
+                ImGui::SliderFloat("Magnitude Multiplier", &atmosphere_buffer.magnitude_multiplier, 0.0f, 1.0f);
 
                 ImGui::TreePop();
             }
@@ -319,6 +373,8 @@ namespace serenity::editor
 
     void Editor::log_panel()
     {
+        static auto first_frame = true;
+
         ImGui::SetNextItemOpen(true);
         if (ImGui::Begin("Log"))
         {
@@ -355,8 +411,15 @@ namespace serenity::editor
                 }
             }
 
+            if (first_frame)
+            {
+                ImGui::SetScrollHereY();
+            }
+
             ImGui::End();
         }
+
+        first_frame = false;
     }
 
     TextEditorAction Editor::text_editor_window(const std::string_view file_path)
@@ -407,4 +470,4 @@ namespace serenity::editor
 
         return action;
     }
-} // namespace serenity::editor\
+} // namespace serenity::editor

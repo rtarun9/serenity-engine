@@ -20,6 +20,7 @@ namespace serenity::asset
     struct MaterialData
     {
         math::XMFLOAT4 base_color{};
+        math::XMFLOAT2 metallic_roughness_factor{};
         TextureData base_color_texture{};
     };
 

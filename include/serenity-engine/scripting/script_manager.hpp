@@ -7,6 +7,7 @@ namespace serenity::scripting
 {
     struct Script
     {
+        std::string script_name{};
         std::string script_path{};
     };
 

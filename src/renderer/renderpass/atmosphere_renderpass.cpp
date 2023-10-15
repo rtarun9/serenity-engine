@@ -20,6 +20,7 @@ namespace serenity::renderer::renderpass
         m_atmosphere_buffer_data.turbidity = 2.0f;
         m_atmosphere_buffer_data.output_texture_dimension = {static_cast<float>(ATMOSPHERE_TEXTURE_DIMENSION),
                                                              static_cast<float>(ATMOSPHERE_TEXTURE_DIMENSION)};
+        m_atmosphere_buffer_data.magnitude_multiplier = 0.034f;
 
         // Create texture.
         m_atmosphere_texture_index = Renderer::instance().create_texture(rhi::TextureCreationDesc{

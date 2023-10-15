@@ -39,7 +39,7 @@ namespace serenity::scene
 
         for (auto &game_object : m_game_objects)
         {
-            game_object.m_transform_component.update(delta_time, frame_count);
+            game_object.update(delta_time, frame_count);
         }
     }
 

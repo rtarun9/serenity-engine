@@ -21,6 +21,5 @@ void cs_main(uint3 dispatch_thread_id : SV_DispatchThreadID)
     const float3 direction = get_sampling_vector_cubemap(uv, dispatch_thread_id.z);
 
     output_texture[dispatch_thread_id] = float4(preetham_sky_luminance_and_chromaticity(atmosphere_buffer,  
-                                                normalize(direction), normalize(light_buffer.lights[interop::SUN_LIGHT_INDEX].world_space_position_or_direction), 
-                                                light_buffer.lights[interop::SUN_LIGHT_INDEX].intensity), 1.0f);
+                                                normalize(direction), normalize(light_buffer.lights[interop::SUN_LIGHT_INDEX].world_space_position_or_direction)), 1.0f);
 }

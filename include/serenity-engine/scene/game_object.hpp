@@ -45,19 +45,8 @@ namespace serenity::scene
 
         uint32_t transform_buffer_index{};
 
-        uint32_t script_index{INVALID_INDEX_U32};
-
         void update(const float delta_time, const uint32_t frame_count)
         {
-            if (script_index != INVALID_INDEX_U32)
-            {
-                scripting::ScriptManager::instance().execute_script(script_index);
-
-                std::tie(scale, rotation, translation) =
-                    scripting::ScriptManager::instance().call_function()["update_transform"](
-                        scale, rotation, translation, delta_time, frame_count);
-            }
-
             const auto model_matrix = math::XMMatrixScaling(scale.x, scale.y, scale.z) *
                                       math::XMMatrixRotationX(math::XMConvertToRadians(rotation.x)) *
                                       math::XMMatrixRotationY(math::XMConvertToRadians(rotation.y)) *
@@ -80,6 +69,10 @@ namespace serenity::scene
     {
         // Constructor takes in a gltf scene path which will be used to obtain mesh / material data.
         GameObject(const std::string_view object_name, const std::string_view gltf_scene_path);
+
+        void update(const float delta_time, const uint32_t frame_count);
+
+        uint32_t m_script_index{INVALID_INDEX_U32};
 
         std::vector<Mesh> m_meshes{};
         std::vector<Material> m_materials{};
