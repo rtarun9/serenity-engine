@@ -17,6 +17,7 @@
 // Editor
 #include "editor/editor.hpp"
 #include "editor/imgui_sink.hpp"
+#include "editor/game_object_panel.hpp"
 
 // Renderer
 #include "renderer/renderer.hpp"

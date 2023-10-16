@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game_object_panel.hpp"
+
 #include "serenity-engine/core/singleton_instance.hpp"
 
 #include "serenity-engine/window/window.hpp"
@@ -57,6 +59,7 @@ namespace serenity::editor
 
       private:
         std::string m_ini_path{};
+        GameObjectPanel m_game_object_panel{};
 
       public:
         std::vector<EditorLogMessage> m_editor_log_messages{};

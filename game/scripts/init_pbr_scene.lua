@@ -1,7 +1,7 @@
 -- Setup the scene game objects and params that will be parsed and used to setup the scene on the C++ side.
 
 -- The key in table (i.e lua's map) is the name of gameobject, and the value is of the form:
--- File Path, Scale, Rotation, Translation
+-- File Path, Scale, Rotation, Translation, Script (a table that can optionally have name and path (either both or none)).
 game_objects = {
 	cube = {
 		model_path= "data/Cube/glTF/Cube.gltf",
