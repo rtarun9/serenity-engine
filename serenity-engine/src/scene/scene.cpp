@@ -18,6 +18,7 @@ namespace serenity::scene
     Scene::Scene(const std::string_view scene_name, const uint32_t scene_init_script_index) : Scene(scene_name)
     {
         scripting::ScriptManager::instance().execute_script(scene_init_script_index);
+        
         sol::table game_objects = scripting::ScriptManager::instance().get_state()["game_objects"];
 
         for (auto &key_value_pair : game_objects)

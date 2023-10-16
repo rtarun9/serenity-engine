@@ -17,12 +17,24 @@ namespace serenity::scripting
 
         // DirectXMath's float3.
         m_lua.new_usertype<math::XMFLOAT3>("float3", sol::constructors<math::XMFLOAT3(float, float, float)>(), "x",
-                                           &math::XMFLOAT3::x, "y", &math::XMFLOAT3::y, "z",
-                                           &math::XMFLOAT3::z);
+                                           &math::XMFLOAT3::x, "y", &math::XMFLOAT3::y, "z", &math::XMFLOAT3::z);
     }
 
     uint32_t ScriptManager::create_script(const Script &script)
     {
+        if (const auto itr = std::find_if(m_scripts.begin(), m_scripts.end(),
+                                          [&](const auto a) { return a.script_path == script.script_path; });
+            itr != m_scripts.end())
+        {
+            for (int i = 0; i < m_scripts.size(); i++)
+            {
+                if (m_scripts[i].script_path == script.script_path)
+                {
+                    return i;
+                }
+            }
+        }
+
         const auto script_index = m_scripts.size();
 
         m_scripts.emplace_back(script);

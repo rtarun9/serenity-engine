@@ -19,5 +19,5 @@ if (MSVC AND WIN32 AND NOT MSVC_VERSION VERSION_LESS 142)
 endif()
 
 add_subdirectory(external)
-add_subdirectory(src)
+add_subdirectory(serenity-engine)
 add_subdirectory(game)

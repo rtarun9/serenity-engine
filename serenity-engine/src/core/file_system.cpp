@@ -7,16 +7,16 @@ namespace serenity::core
     FileSystem::FileSystem()
     {
         // Logic : Start from the current directory, and keep moving up until you can find the directory
-        // called "serenity-engine". Then, that path + "serenity-engine" will be the root directory.
+        // called "data" or "game". Then, that path + "data" will be the root directory.
 
         auto current_path = std::filesystem::current_path();
         Log::instance().info(std::format("Executable path : {}", current_path.string()));
 
         while (current_path.has_parent_path())
         {
-            if (std::filesystem::is_directory(current_path / "serenity-engine"))
+            if (std::filesystem::is_directory(current_path / "data"))
             {
-                m_root_directory = current_path.string() + "/serenity-engine/"s;
+                m_root_directory = current_path.string() + "/"s;
 
                 Log::instance().info(std::format("Located root directory {}", m_root_directory));
 
