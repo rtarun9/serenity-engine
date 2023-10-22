@@ -17,8 +17,10 @@ namespace serenity::scene
 
     Scene::Scene(const std::string_view scene_name, const uint32_t scene_init_script_index) : Scene(scene_name)
     {
+        m_scene_init_script_index = scene_init_script_index;
+
         scripting::ScriptManager::instance().execute_script(scene_init_script_index);
-        
+
         sol::table game_objects = scripting::ScriptManager::instance().get_state()["game_objects"];
 
         for (auto &key_value_pair : game_objects)
@@ -46,6 +48,11 @@ namespace serenity::scene
                     .script_name = script["name"],
                     .script_path = core::FileSystem::instance().get_absolute_path(path),
                 });
+            }
+
+            if (key == "player")
+            {
+                m_player = &new_game_object;
             }
 
             add_game_object(std::move(new_game_object));
@@ -79,6 +86,59 @@ namespace serenity::scene
         {
             game_object.update(delta_time, frame_count);
         }
+    }
+
+    void Scene::reload()
+    {
+        if (!m_scene_init_script_index.has_value())
+        {
+            core::Log::instance().warn(
+                std::format("Cannot reload scene with name {} that does not have a scene init script", m_scene_name));
+            return;
+        }
+
+        m_game_objects.clear();
+
+        scripting::ScriptManager::instance().execute_script(m_scene_init_script_index.value());
+
+        sol::table game_objects = scripting::ScriptManager::instance().get_state()["game_objects"];
+
+        for (auto &key_value_pair : game_objects)
+        {
+            const auto key = key_value_pair.first.as<std::string>();
+            const auto value = key_value_pair.second.as<sol::table>();
+
+            const std::string model_path = value["model_path"];
+
+            const math::XMFLOAT3 scale = {value["scale"]["x"], value["scale"]["y"], value["scale"]["z"]};
+            const math::XMFLOAT3 rotation = {value["rotation"]["x"], value["rotation"]["y"], value["rotation"]["z"]};
+            const math::XMFLOAT3 translation = {value["translation"]["x"], value["translation"]["y"],
+                                                value["translation"]["z"]};
+
+            auto new_game_object = GameObject(key, model_path);
+            new_game_object.get_transform_component().scale = scale;
+            new_game_object.get_transform_component().rotation = rotation;
+            new_game_object.get_transform_component().translation = translation;
+
+            const sol::table script = value["script"];
+            if (!script.empty())
+            {
+                const std::string path = script["path"];
+                new_game_object.m_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
+                    .script_name = script["name"],
+                    .script_path = core::FileSystem::instance().get_absolute_path(path),
+                });
+            }
+
+            if (key == "player")
+            {
+                m_player = &new_game_object;
+            }
+
+            add_game_object(std::move(new_game_object));
+        }
+
+        core::Log::instance().info(std::format("Created scene {}", m_scene_name));
     }
 
     void Scene::add_light(const interop::Light &light)

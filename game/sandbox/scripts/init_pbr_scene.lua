@@ -10,7 +10,7 @@ game_objects = {
 		translation = {x = 1.0, y = 1.0, z = 1.0},
 		script = {
 			name = "circle",
-			path = "game/scripts/test.lua"
+			path = "game/sandbox/scripts/test.lua"
 		}
 	},
 	
@@ -21,9 +21,10 @@ game_objects = {
 		translation = {x = 1.0, y = 1.0, z = 1.0},
 		script = {
 			name = "scale_and_circle",
-			path = "game/scripts/test2.lua"
+			path = "game/sandbox/scripts/test2.lua"
 		}
 	},
+
 
 	pbr_spheres= {
 		model_path= "data/sketchfab_pbr_material_reference_chart/scene.gltf",

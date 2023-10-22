@@ -2,15 +2,15 @@
 
 using namespace serenity;
 
-class Game final : public core::Application
+class SandBox final : public core::Application
 {
 
   public:
-    explicit Game(const core::ApplicationConfig &application_config) : core::Application(application_config)
+    explicit SandBox(const core::ApplicationConfig &application_config) : core::Application(application_config)
     {
         const auto pbr_scene_init_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
             .script_name = "init_pbr_script",
-            .script_path = wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/scripts/init_pbr_scene.lua")),
+            .script_path = wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/sandbox/scripts/init_pbr_scene.lua")),
         });
 
         auto default_scene = scene::Scene("Default Scene", pbr_scene_init_script_index);
@@ -33,8 +33,6 @@ class Game final : public core::Application
 
         scene::SceneManager::instance().add_scene(std::move(default_scene));
     }
-
-    ~Game() = default;
 
     virtual void update(const float delta_time) override
     {
@@ -68,7 +66,7 @@ class Game final : public core::Application
 
 std::unique_ptr<serenity::core::Application> serenity::core::create_application()
 {
-    return std::make_unique<Game>(serenity::core::ApplicationConfig{
+    return std::make_unique<SandBox>(serenity::core::ApplicationConfig{
         .log_to_console = true,
         .log_to_file = true,
         .dimensions =

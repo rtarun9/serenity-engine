@@ -120,6 +120,14 @@ namespace serenity::editor
         ImGui::SetNextItemOpen(true);
         if (ImGui::Begin(current_scene.get_scene_name().c_str()))
         {
+            if (current_scene.get_scene_init_script_index().has_value())
+            {
+                if (ImGui::Button("Reload Scene"))
+                {
+                    current_scene.reload();
+                }
+            }
+
             ImGui::SetNextItemOpen(true);
             if (ImGui::TreeNode("Scene Hierarchy"))
             {
@@ -150,7 +158,8 @@ namespace serenity::editor
 
             if (selected_game_object_index != INVALID_INDEX_U32)
             {
-                m_game_object_panel.render_panel_for_game_object(current_scene.get_game_objects()[selected_game_object_index]);
+                m_game_object_panel.render_panel_for_game_object(
+                    current_scene.get_game_objects()[selected_game_object_index]);
             }
 
             ImGui::SetNextItemOpen(true);

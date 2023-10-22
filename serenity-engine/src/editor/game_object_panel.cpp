@@ -17,12 +17,9 @@ namespace serenity::editor
                 {
                     auto &transform_component = game_object.m_transform_component;
 
-                    ImGui::SliderFloat("S", &transform_component.scale.x, 0.1f, 10.0f);
+                    ImGui::SliderFloat3("S", &transform_component.scale.x, 0.1f, 10.0f);
                     ImGui::SliderFloat3("R", &transform_component.rotation.x, -180.0f, 180.0f);
                     ImGui::SliderFloat3("T", &transform_component.translation.x, -100.0f, 100.0f);
-
-                    transform_component.scale.y = transform_component.scale.x;
-                    transform_component.scale.z = transform_component.scale.x;
 
                     ImGui::TreePop();
                 }

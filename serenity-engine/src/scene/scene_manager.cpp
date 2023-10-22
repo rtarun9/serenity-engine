@@ -4,7 +4,7 @@ namespace serenity::scene
 {
     void SceneManager::add_scene(Scene &&scene)
     {
-        m_scenes[scene.get_scene_name()] = std::make_unique<Scene>(scene);
+        m_scenes[scene.get_scene_name()] = std::make_unique<Scene>(std::move(scene));
 
         // If this is the first scene to be added, make it the current scene.
         if (m_scenes.size() == 1)

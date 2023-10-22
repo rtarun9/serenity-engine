@@ -72,11 +72,14 @@ float3 lambertian_diffuse_BRDF(const float3 normal, const float3 view_direction,
 
     // Metals have kD as 0.0f, so more metallic a surface is, closes kS ~ 1 and kD ~ 0.
     // Using lambertian model for diffuse light now.
+    // the lerp formula lerp(x, y, s) returns x(1 - s) + y(s)   
     float3 kD = lerp(float3(1.0f, 1.0f, 1.0f) - fresnel, float3(0.0f, 0.0f, 0.0f), metallic_factor);
 
     return (kD * albedo) / PI;
 }
 
+// The cook torrrence specular BRDF function is given by:
+// (Normal Distribution Function) * (Geometry Function) * (Fresnel Equation) / (4 (V.N) (L.N))
 float3 cook_torrence_specular_BRDF(const float3 normal, const float3 view_direction, const float3 pixel_to_light_direction, const float3 albedo, const float roughness_factor,
             const float metallic_factor)
 {
@@ -84,13 +87,14 @@ float3 cook_torrence_specular_BRDF(const float3 normal, const float3 view_direct
 
     const float3 f0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo.xyz, metallic_factor);
 
+    // The fresnel function is essentially ks.
     const float3 fresnel = fresnel_schlick_function(max(dot(view_direction, h), 0.0f), f0);
     
-    const float n = ggx_trowbridge_normal_distribution_function(normal, h, roughness_factor);
+    const float d = ggx_trowbridge_normal_distribution_function(normal, h, roughness_factor);
     const float g = smith_geometry_function(normal, view_direction, pixel_to_light_direction, roughness_factor);
 
     return 
-        (n * g * fresnel) /
+        (d * g * fresnel) /
         max(4.0f * saturate(dot(view_direction, normal)) * saturate(dot(pixel_to_light_direction, normal)),
             MIN_FLOAT_VALUE);
 }

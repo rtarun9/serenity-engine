@@ -22,4 +22,7 @@ target_sources(serenity-engine PUBLIC
 
 	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/root_signature.hpp"
 	"root_signature.cpp"
+
+	"${SERENITY_ENGINE_INCLUDE_PATH}/renderer/rhi/command_signature.hpp"
+	"command_signature.cpp"
 )

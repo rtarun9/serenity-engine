@@ -8,6 +8,7 @@
 #include "renderpass/shading_renderpass.hpp"
 
 #include "serenity-engine/renderer/rhi/device.hpp"
+#include "serenity-engine/renderer/rhi/command_signature.hpp"
 #include "serenity-engine/renderer/shader_compiler.hpp"
 #include "serenity-engine/window/window.hpp"
 
@@ -153,6 +154,8 @@ namespace serenity::renderer
         // Textures to render into.
         rhi::Texture m_depth_texture{};
         rhi::Texture m_render_texture{};
+
+        rhi::CommandSignature m_command_signature{};
 
         window::Window &window_ref;
     };

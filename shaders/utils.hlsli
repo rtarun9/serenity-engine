@@ -3,7 +3,7 @@
 #ifndef __UTILS_HLSLI__
 #define __UTILS_HLSLI__
 
-static const float MIN_FLOAT_VALUE = 0.00001f;
+static const float MIN_FLOAT_VALUE = 0.000001f;
 static const float EPSILON = 1.0e-4;
 
 static const float PI = 3.14159265359;

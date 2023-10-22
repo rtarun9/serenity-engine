@@ -68,6 +68,7 @@ namespace serenity::scene
     struct GameObject
     {
         // Constructor takes in a gltf scene path which will be used to obtain mesh / material data.
+        GameObject() = default;
         GameObject(const std::string_view object_name, const std::string_view gltf_scene_path);
 
         void update(const float delta_time, const uint32_t frame_count);
