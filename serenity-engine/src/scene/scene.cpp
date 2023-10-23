@@ -12,6 +12,8 @@ namespace serenity::scene
             renderer::rhi::BufferCreationDesc{.usage = renderer::rhi::BufferUsage::ConstantBuffer,
                                               .name = string_to_wstring(scene_name) + L" Scene Buffer"});
 
+        m_game_objects.reserve(Scene::MAX_GAME_OBJECTS);
+
         core::Log::instance().info(std::format("Created scene {}", scene_name));
     }
 
@@ -50,11 +52,6 @@ namespace serenity::scene
                 });
             }
 
-            if (key == "player")
-            {
-                m_player = &new_game_object;
-            }
-
             add_game_object(std::move(new_game_object));
         }
 
@@ -82,7 +79,7 @@ namespace serenity::scene
             .get_buffer_at_index(m_scene_buffer_index)
             .update(reinterpret_cast<const std::byte *>(&m_scene_buffer), sizeof(interop::SceneBuffer));
 
-        for (auto &game_object : m_game_objects)
+        for (auto &[name, game_object] : m_game_objects)
         {
             game_object.update(delta_time, frame_count);
         }
@@ -128,11 +125,6 @@ namespace serenity::scene
                     .script_name = script["name"],
                     .script_path = core::FileSystem::instance().get_absolute_path(path),
                 });
-            }
-
-            if (key == "player")
-            {
-                m_player = &new_game_object;
             }
 
             add_game_object(std::move(new_game_object));

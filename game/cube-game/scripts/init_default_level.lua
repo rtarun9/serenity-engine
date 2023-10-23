@@ -14,9 +14,9 @@ game_objects = {
 	
 	floor = {
 		model_path= "data/Cube/glTF/Cube.gltf",
-		scale = {x = 1.0, y = 1.0, z = 1.0},
+		scale = {x = 10.0, y = 1.0, z = 200.0},
 		rotation = {x = 0.0, y = 0.0, z = 0.0},
-		translation = {x = 1.0, y = 1.0, z = 1.0},
+		translation = {x = 1.0, y = -2.0, z = 150.0},
 		script = {
 		}
 	},

@@ -22,7 +22,7 @@ class CubeGame final : public core::Application
         default_scene.add_light(interop::Light{
             .light_type = interop::LightType::Point,
             .color = math::XMFLOAT3A(1.0f, 1.0f, 1.0f),
-            .intensity = 1.0f,
+            .intensity = 5.0f,
         });
 
         scene::SceneManager::instance().add_scene(std::move(default_scene));
@@ -31,25 +31,51 @@ class CubeGame final : public core::Application
         // Good indication to add serialization of game objects.
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
 
-        current_scene.get_player_object().m_materials[0].material_data.metallic_roughness_factor.x = 0.0f;
-        current_scene.get_player_object().m_materials[0].material_data.metallic_roughness_factor.y = 0.0f;
+        auto &player = current_scene.get_game_object("player");
+
+        player.m_materials[0].material_data.metallic_roughness_factor.x = 0.0f;
+        player.m_materials[0].material_data.metallic_roughness_factor.y = 0.0f;
     }
 
     virtual void update(const float delta_time) override
     {
+        static bool lock_camera_to_player = false;
+
+        editor::Editor::instance().add_render_callback([&]() {
+            if (ImGui::Begin("Game Settings"))
+            {
+                ImGui::Checkbox("Lock Cam to Player", &lock_camera_to_player);
+                ImGui::End();
+            }
+        });
+
         // Ensure the singular point light in scene is always behind the player.
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
+        auto &player = current_scene.get_game_object("player");
 
-        const auto &player_position = current_scene.get_player_object().get_transform_component().translation;
+        const auto &player_position = current_scene.get_game_object("player").get_transform_component().translation;
 
         current_scene.get_lights().get_light_buffer().lights[1].world_space_position_or_direction = {
-            player_position.x - 5.0f, player_position.y, player_position.z};
+            player_position.x,
+            player_position.y,
+            player_position.z - 2.0f,
+        };
+
+        // Lock camera to player.
+        if (lock_camera_to_player)
+        {
+            current_scene.get_camera().m_camera_position = {
+                player_position.x,
+                player_position.y + 2.0f,
+                player_position.z - 10.0f,
+                1.0f,
+            };
+        }
 
         const auto projection_matrix = math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f),
                                                                       m_window->get_aspect_ratio(), 0.1f, 1000.0f);
 
-        current_scene.update(projection_matrix, delta_time, m_frame_count,
-                                                                   m_input);
+        current_scene.update(projection_matrix, delta_time, m_frame_count, m_input);
 
         renderer::Renderer::instance().update_renderpasses(m_frame_count);
     }

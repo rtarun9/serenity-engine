@@ -57,7 +57,7 @@ namespace serenity::renderer::renderpass
             return renderer::Renderer::instance().get_texture_at_index(index);
         };
 
-        for (auto game_objects = current_scene.get_game_objects(); auto &game_object : game_objects)
+        for (auto game_objects = current_scene.get_game_objects(); auto &[name, game_object] : game_objects)
         {
             for (const auto &mesh : game_object.m_meshes)
             {

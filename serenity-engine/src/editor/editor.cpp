@@ -20,6 +20,8 @@ namespace serenity::editor
         // Setup code from here :
         // https://github.com/ocornut/imgui/blob/master/examples/example_win32_directx12/main.cpp.
 
+        m_ui_callbacks.reserve(Editor::MAX_UI_RENDER_CALLBACKS);
+
         // Setup Dear ImGui context.
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
@@ -102,6 +104,11 @@ namespace serenity::editor
             renderer_panel();
             scripts_panel();
             log_panel();
+
+            for (const auto &callback : m_ui_callbacks)
+            {
+                callback();
+            }
         }
 
         ImGui::Render();
@@ -109,13 +116,15 @@ namespace serenity::editor
         auto &command_list =
             renderer::Renderer::instance().get_device().get_current_frame_direct_command_list().get_command_list();
         ImGui_ImplDX12_RenderDrawData(ImGui::GetDrawData(), command_list.Get());
+
+        m_ui_callbacks.clear();
     }
 
     void Editor::scene_panel()
     {
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
 
-        static auto selected_game_object_index = INVALID_INDEX_U32;
+        static auto selected_game_object_name = ""s;
 
         ImGui::SetNextItemOpen(true);
         if (ImGui::Begin(current_scene.get_scene_name().c_str()))
@@ -131,11 +140,9 @@ namespace serenity::editor
             ImGui::SetNextItemOpen(true);
             if (ImGui::TreeNode("Scene Hierarchy"))
             {
-                auto game_object_index = 0;
-
-                for (auto &game_object : current_scene.get_game_objects())
+                for (auto &[name, game_object] : current_scene.get_game_objects())
                 {
-                    const auto is_selected = (selected_game_object_index == game_object_index);
+                    const auto is_selected = (selected_game_object_name == name);
                     // Reference for TreeNodeEx :
                     // https://github.com/ocornut/imgui/blob/0b8c6b9bcefd420ec0e59f0596f0190f6551fc10/imgui_demo.cpp#L939C13-L939C13.
 
@@ -143,23 +150,21 @@ namespace serenity::editor
                     node_flags |= ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_OpenOnArrow |
                                   ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-                    auto node_open = (ImGui::TreeNodeEx((void *)(intptr_t)game_object_index, node_flags,
-                                                        game_object.m_game_object_name.c_str()));
+                    auto node_open =
+                        (ImGui::TreeNodeEx((void *)name.c_str(), node_flags, game_object.m_game_object_name.c_str()));
 
                     if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
                     {
-                        selected_game_object_index = game_object_index;
+                        selected_game_object_name = name;
                     }
-
-                    ++game_object_index;
                 }
                 ImGui::TreePop();
             }
 
-            if (selected_game_object_index != INVALID_INDEX_U32)
+            if (!selected_game_object_name.empty())
             {
                 m_game_object_panel.render_panel_for_game_object(
-                    current_scene.get_game_objects()[selected_game_object_index]);
+                    current_scene.get_game_objects()[selected_game_object_name]);
             }
 
             ImGui::SetNextItemOpen(true);

@@ -48,6 +48,12 @@ namespace serenity::editor
         // As the name suggests, call this function to render the editor in the engine window.
         void render();
 
+        // Note : UI callbacks are cleared after each frame, so they must be reset each frame.
+        void add_render_callback(const std::function<void()> &callback)
+        {
+            m_ui_callbacks.push_back(callback);
+        };
+
       private:
         void scene_panel();
         void renderer_panel();
@@ -61,7 +67,11 @@ namespace serenity::editor
         std::string m_ini_path{};
         GameObjectPanel m_game_object_panel{};
 
+        std::vector<std::function<void()>> m_ui_callbacks{};
+
       public:
+        static constexpr uint32_t MAX_UI_RENDER_CALLBACKS = 10u;
+
         std::vector<EditorLogMessage> m_editor_log_messages{};
     };
 } // namespace serenity::editor
