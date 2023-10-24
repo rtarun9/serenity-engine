@@ -53,7 +53,7 @@ class CubeGame final : public core::Application
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
         auto &player = current_scene.get_game_object("player");
 
-        const auto &player_position = current_scene.get_game_object("player").get_transform_component().translation;
+        auto &player_position = current_scene.get_game_object("player").get_transform_component().translation;
 
         current_scene.get_lights().get_light_buffer().lights[1].world_space_position_or_direction = {
             player_position.x,
@@ -70,6 +70,58 @@ class CubeGame final : public core::Application
                 player_position.z - 10.0f,
                 1.0f,
             };
+        }
+
+        // Custom collision logic.
+        // Note that since this game only uses cubes, this will work.
+        // Note : The origin is at the center of the cube / cuboid volume.
+
+        // Get the AABB coords for the player (static per frame).
+        const auto player_x_min = player_position.x - player.get_transform_component().scale.x;
+        const auto player_x_max = player_position.x + player.get_transform_component().scale.x;
+        
+        const auto player_y_min = player_position.y - player.get_transform_component().scale.y;
+        const auto player_y_max = player_position.y + player.get_transform_component().scale.y;
+
+        const auto player_z_min = player_position.z - player.get_transform_component().scale.z;
+        const auto player_z_max = player_position.z + player.get_transform_component().scale.z;
+
+        auto player_collisions = 0u;
+
+        for (const auto& [name, game_object] : current_scene.get_game_objects())
+        {
+            if (game_object.m_game_object_name != player.m_game_object_name)
+            {
+                const auto &object_translation = game_object.m_transform_component.translation;
+                const auto &object_scale = game_object.m_transform_component.scale;
+
+                const auto object_x_min = object_translation.x - object_scale.x;
+                const auto object_x_max = object_translation.x + object_scale.x;
+
+                const auto object_y_min = object_translation.y - object_scale.y;
+                const auto object_y_max = object_translation.y + object_scale.y;
+
+                const auto object_z_min = object_translation.z - object_scale.z;
+                const auto object_z_max = object_translation.z + object_scale.z;
+
+                // Reference : https://developer.mozilla.org/en-US/docs/Games/Techniques/3D_collision_detection.
+                const auto x_axis_collision = object_x_max >= player_x_min && object_x_min <= player_x_max;
+                const auto y_axis_collision = object_y_max >= player_y_min && object_y_min <= player_y_max;
+                const auto z_axis_collision = object_z_max >= player_z_min && object_z_min <= player_z_max;
+
+                if ((x_axis_collision + y_axis_collision + z_axis_collision) == 3)
+                {
+                    core::Log::instance().warn(std::format("Collision occured between : {} and {}",
+                                                           player.m_game_object_name, game_object.m_game_object_name));
+
+                    player_collisions++;
+                }
+            }
+        }
+
+        if (!player_collisions)
+        {
+            player_position.y -= 0.001f * delta_time * 9.8;
         }
 
         const auto projection_matrix = math::XMMatrixPerspectiveFovLH(math::XMConvertToRadians(60.0f),

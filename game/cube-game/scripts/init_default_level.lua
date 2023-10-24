@@ -11,12 +11,21 @@ game_objects = {
 		script = {
 		}
 	},
-	
+
+	cube2 = {
+		model_path= "data/Cube/glTF/Cube.gltf",
+		scale = {x = 2.0, y = 2.0, z = 2.0},
+		rotation = {x = 0.0, y = 0.0, z = 0.0},
+		translation = {x = 2.0, y = -1.0, z = 1.0},
+		script = {
+		}
+	},
+
 	floor = {
 		model_path= "data/Cube/glTF/Cube.gltf",
 		scale = {x = 10.0, y = 1.0, z = 200.0},
 		rotation = {x = 0.0, y = 0.0, z = 0.0},
-		translation = {x = 1.0, y = -2.0, z = 150.0},
+		translation = {x = 1.0, y = -2.0, z = 1.0},
 		script = {
 		}
 	},

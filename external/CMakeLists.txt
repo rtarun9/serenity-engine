@@ -80,24 +80,6 @@ target_include_directories(libimgui PUBLIC
 
 target_link_libraries(libimgui PUBLIC SDL3::SDL3)
 
-# bullet3 for physics
-FetchContent_Declare(
-  bullet
-  GIT_REPOSITORY https://github.com/bulletphysics/bullet3
-  GIT_SHALLOW    TRUE
-  GIT_PROGRESS   TRUE
-  GIT_TAG        master)
-
-set(BUILD_EXTRAS OFF CACHE BOOL "" FORCE)
-set(BUILD_PYBULLET OFF CACHE BOOL "" FORCE)
-set(BUILD_BULLET2_DEMOS OFF CACHE BOOL "" FORCE)
-set(BUILD_UNIT_TESTS OFF CACHE BOOL "" FORCE)
-set(BUILD_CPU_DEMOS OFF CACHE BOOL "" FORCE)
-set(BUILD_OPENGL3_DEMOS OFF CACHE BOOL "" FORCE)
-set(BUILD_OPENGL3_DEMOS OFF CACHE BOOL "" FORCE)
-
-FetchContent_MakeAvailable(bullet)
-
 add_library(external INTERFACE)
-target_link_libraries(external INTERFACE SDL3::SDL3 libimgui fastgltf sol2::sol2 lua_static ${BULLET_LIBRARIES})	
-target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${spdlog_SOURCE_DIR}/include ${stb_SOURCE_DIR} ${sol2_SOURCE_DIR}/include ${bullet_SOURCE_DIR})  
+target_link_libraries(external INTERFACE SDL3::SDL3 libimgui fastgltf sol2::sol2 lua_static)	
+target_include_directories(external INTERFACE ${sdl3_SOURCE_DIR}/include ${spdlog_SOURCE_DIR}/include ${stb_SOURCE_DIR} ${sol2_SOURCE_DIR}/include)  
