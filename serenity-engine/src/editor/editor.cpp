@@ -75,8 +75,6 @@ namespace serenity::editor
         ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(),
                                      ImGuiDockNodeFlags_::ImGuiDockNodeFlags_PassthruCentralNode);
 
-        static auto render_ui = true;
-
         if (ImGui::BeginMainMenuBar())
         {
             if (ImGui::BeginMenu("Controls"))
@@ -91,14 +89,14 @@ namespace serenity::editor
 
             if (ImGui::BeginMenu("Editor Settings"))
             {
-                ImGui::Checkbox("Render Editor UI", &render_ui);
+                ImGui::Checkbox("Render Editor UI", &m_render_editor_ui);
                 ImGui::EndMenu();
             }
 
             ImGui::EndMainMenuBar();
         }
 
-        if (render_ui && !ImGui::IsKeyDown(ImGuiKey_R))
+        if (m_render_editor_ui && !ImGui::IsKeyDown(ImGuiKey_R))
         {
             scene_panel();
             renderer_panel();
@@ -107,7 +105,18 @@ namespace serenity::editor
 
             for (const auto &callback : m_ui_callbacks)
             {
-                callback();
+                callback.first();
+            }
+        }
+        else
+        {
+            // In this block, only game UI's must be rendered.
+            for (const auto &callback : m_ui_callbacks)
+            {
+                if (callback.second == UIType::Game)
+                {
+                    callback.first();
+                }
             }
         }
 
@@ -319,7 +328,7 @@ namespace serenity::editor
         {
             for (auto &script : scripting::ScriptManager::instance().get_scripts())
             {
-                if (ImGui::Button(script.script_path.c_str()))
+                if (ImGui::Button(script.script_name.c_str()))
                 {
                     selected_script_path = script.script_path;
                 }

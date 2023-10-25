@@ -33,6 +33,15 @@ namespace serenity::editor
         Save
     };
 
+    // UI callbacks can be of many types.
+    // UITypeGame will be rendered at all times, while UITypeEditor will be rendered only when the
+    // m_render_editor_ui flag is set.
+    enum class UIType
+    {
+        Editor,
+        Game
+    };
+
     // The editor for serenity-engine.
     // note(rtarun9) : For now the editor is embedded within the engine, but the goal is to keep the editor as separate
     // from the engine as possible. This is because in the future it is likely that the editor and game become separate
@@ -48,10 +57,9 @@ namespace serenity::editor
         // As the name suggests, call this function to render the editor in the engine window.
         void render();
 
-        // Note : UI callbacks are cleared after each frame, so they must be reset each frame.
-        void add_render_callback(const std::function<void()> &callback)
+        void add_render_callback(const std::function<void()> &callback, const UIType &ui_type)
         {
-            m_ui_callbacks.push_back(callback);
+            m_ui_callbacks.push_back({callback, ui_type});
         };
 
       private:
@@ -67,7 +75,10 @@ namespace serenity::editor
         std::string m_ini_path{};
         GameObjectPanel m_game_object_panel{};
 
-        std::vector<std::function<void()>> m_ui_callbacks{};
+        std::vector<std::pair<std::function<void()>, UIType>> m_ui_callbacks{};
+
+        // NOTE : UITypeGame callbacks are not affected by this.
+        bool m_render_editor_ui{true};
 
       public:
         static constexpr uint32_t MAX_UI_RENDER_CALLBACKS = 10u;
