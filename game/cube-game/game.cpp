@@ -34,6 +34,26 @@ class CubeGame final : public core::Application
 
         scene::SceneManager::instance().add_scene(std::move(default_scene));
 
+        // Add scene 2 (with the obstacles in reverse position).
+        const auto scene_level_2_init_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
+            .script_name = "init_level_2",
+            .script_path = wstring_to_string(
+                core::FileSystem::instance().get_absolute_path(L"game/cube-game/scripts/init_level_2.lua")),
+        });
+
+        auto level_2 = scene::Scene("Level 2", scene_level_2_init_script_index);
+
+        // Add a point light that is right behind the player cube, but is invisible (i.e scale 0).
+        level_2.add_light(interop::Light{
+            .light_type = interop::LightType::Point,
+            .color = math::XMFLOAT3A(1.0f, 1.0f, 1.0f),
+            .intensity = 5.0f,
+        });
+
+        level_2.get_camera().m_movement_speed = 0.032f;
+
+        scene::SceneManager::instance().add_scene(std::move(level_2));
+
         // Manually modify material of player a bit.
         // Good indication to add serialization of game objects.
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
@@ -57,6 +77,8 @@ class CubeGame final : public core::Application
             [&]() {
                 if (ImGui::Begin("Game Settings"))
                 {
+                    ImGui::Text(("Current Level : "s + current_scene.get_scene_name()).c_str());
+
                     ImGui::Text("Fails : %d", m_fails);
 
                     ImGui::Checkbox("Lock Cam to Player", &m_lock_camera_to_player);
@@ -74,6 +96,20 @@ class CubeGame final : public core::Application
                         m_play_game = false;
                         m_fails = 0;
                         current_scene.reload();
+                    }
+
+                    if (ImGui::Button("Change Level"))
+                    {
+                        if (current_scene.get_scene_name() == "Default Scene")
+                        {
+                            scene::SceneManager::instance().set_current_scene("Level 2");
+                        }
+                        else
+                        {
+                            scene::SceneManager::instance().set_current_scene("Default Scene");
+                        }
+
+                        current_scene.get_camera().m_movement_speed = 0.032f;
                     }
 
                     ImGui::End();
@@ -183,22 +219,31 @@ class CubeGame final : public core::Application
             // If the player crosses that, they have won the game.
             if (player_position.z >= 350.0f)
             {
-                m_lock_camera_to_player = false;
+                // If the scene is Default Scene, then move on to the next level.
+                if (current_scene.get_scene_name() == "Default Scene")
+                {
+                    scene::SceneManager::instance().set_current_scene("Level 2");
+                }
+                else
+                {
+                    // Otherwise, the game is over.
+                    m_lock_camera_to_player = false;
 
-                editor::Editor::instance().add_render_callback(
-                    [&]() {
-                        ImGui::Begin("You Win!");
+                    editor::Editor::instance().add_render_callback(
+                        [&]() {
+                            ImGui::Begin("You Win!");
 
-                        ImGui::Text("Congratulations, you win!");
+                            ImGui::Text("Congratulations, you win!");
 
-                        if (ImGui::Button("Press to restart"))
-                        {
-                            current_scene.reload();
-                        }
+                            if (ImGui::Button("Press to restart"))
+                            {
+                                current_scene.reload();
+                            }
 
-                        ImGui::End();
-                    },
-                    editor::UIType::Game);
+                            ImGui::End();
+                        },
+                        editor::UIType::Game);
+                }
             }
             else
             {

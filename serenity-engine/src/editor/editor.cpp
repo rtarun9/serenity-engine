@@ -136,79 +136,86 @@ namespace serenity::editor
         static auto selected_game_object_name = ""s;
 
         ImGui::SetNextItemOpen(true);
-        if (ImGui::Begin(current_scene.get_scene_name().c_str()))
+        if (ImGui::Begin("Scene"))
         {
-            if (current_scene.get_scene_init_script_index().has_value())
-            {
-                if (ImGui::Button("Reload Scene"))
-                {
-                    current_scene.reload();
-                }
-            }
-
             ImGui::SetNextItemOpen(true);
-            if (ImGui::TreeNode("Scene Hierarchy"))
+            if (ImGui::TreeNode(current_scene.get_scene_name().c_str()))
             {
-                for (auto &[name, game_object] : current_scene.get_game_objects())
+                if (current_scene.get_scene_init_script_index().has_value())
                 {
-                    const auto is_selected = (selected_game_object_name == name);
-                    // Reference for TreeNodeEx :
-                    // https://github.com/ocornut/imgui/blob/0b8c6b9bcefd420ec0e59f0596f0190f6551fc10/imgui_demo.cpp#L939C13-L939C13.
-
-                    auto node_flags = is_selected ? ImGuiTreeNodeFlags_Selected : 0u;
-                    node_flags |= ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_OpenOnArrow |
-                                  ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
-
-                    auto node_open =
-                        (ImGui::TreeNodeEx((void *)name.c_str(), node_flags, game_object.m_game_object_name.c_str()));
-
-                    if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+                    if (ImGui::Button("Reload Scene"))
                     {
-                        selected_game_object_name = name;
+                        current_scene.reload();
                     }
                 }
-                ImGui::TreePop();
-            }
 
-            if (!selected_game_object_name.empty())
-            {
-                m_game_object_panel.render_panel_for_game_object(
-                    current_scene.get_game_objects()[selected_game_object_name]);
-            }
-
-            ImGui::SetNextItemOpen(true);
-            if (auto &camera = current_scene.get_camera(); ImGui::TreeNode("Camera Settings"))
-            {
-                ImGui::SliderFloat("Movement speed", &camera.m_movement_speed, 0.0001f, 1.0f);
-                ImGui::SliderFloat("Rotation speed", &camera.m_rotation_speed, 0.0001f, 0.10f);
-                ImGui::SliderFloat("Friction", &camera.m_friction_factor, 0.0001f, 1.0f);
-
-                ImGui::TreePop();
-            }
-
-            ImGui::SetNextItemOpen(true);
-            if (auto &light_buffer = current_scene.get_lights().get_light_buffer(); ImGui::TreeNode("Light Settings"))
-            {
-                if (ImGui::TreeNode("Directional Light"))
+                ImGui::SetNextItemOpen(true);
+                if (ImGui::TreeNode("Scene Hierarchy"))
                 {
-                    ImGui::SliderFloat("Sun angle", &light_buffer.sun_angle, -180.0f, 0.0f);
-                    ImGui::SliderFloat("Intensity", &light_buffer.lights[interop::SUN_LIGHT_INDEX].intensity, 0.0f,
-                                       10.0f);
+                    for (auto &[name, game_object] : current_scene.get_game_objects())
+                    {
+                        const auto is_selected = (selected_game_object_name == name);
+                        // Reference for TreeNodeEx :
+                        // https://github.com/ocornut/imgui/blob/0b8c6b9bcefd420ec0e59f0596f0190f6551fc10/imgui_demo.cpp#L939C13-L939C13.
+
+                        auto node_flags = is_selected ? ImGuiTreeNodeFlags_Selected : 0u;
+                        node_flags |= ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_OpenOnArrow |
+                                      ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+
+                        auto node_open = (ImGui::TreeNodeEx((void *)name.c_str(), node_flags,
+                                                            game_object.m_game_object_name.c_str()));
+
+                        if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
+                        {
+                            selected_game_object_name = name;
+                        }
+                    }
                     ImGui::TreePop();
                 }
 
-                for (size_t i = 1; i < light_buffer.light_count; i++)
+                if (!selected_game_object_name.empty())
                 {
-                    if (ImGui::TreeNode(std::string("Light " + std::to_string(i)).c_str()))
-                    {
-                        ImGui::SliderFloat3("Position", &light_buffer.lights[i].world_space_position_or_direction.x,
-                                            -50.0f, 50.0f);
-                        ImGui::ColorEdit3("Color", &light_buffer.lights[i].color.x);
-                        ImGui::SliderFloat("Intensity", &light_buffer.lights[i].intensity, 0.01f, 5.0f);
-                        ImGui::SliderFloat("Scale", &light_buffer.lights[i].scale, 0.01f, 10.0f);
+                    m_game_object_panel.render_panel_for_game_object(
+                        current_scene.get_game_objects()[selected_game_object_name]);
+                }
 
+                ImGui::SetNextItemOpen(true);
+                if (auto &camera = current_scene.get_camera(); ImGui::TreeNode("Camera Settings"))
+                {
+                    ImGui::SliderFloat("Movement speed", &camera.m_movement_speed, 0.0001f, 1.0f);
+                    ImGui::SliderFloat("Rotation speed", &camera.m_rotation_speed, 0.0001f, 0.10f);
+                    ImGui::SliderFloat("Friction", &camera.m_friction_factor, 0.0001f, 1.0f);
+
+                    ImGui::TreePop();
+                }
+
+                ImGui::SetNextItemOpen(true);
+                if (auto &light_buffer = current_scene.get_lights().get_light_buffer();
+                    ImGui::TreeNode("Light Settings"))
+                {
+                    if (ImGui::TreeNode("Directional Light"))
+                    {
+                        ImGui::SliderFloat("Sun angle", &light_buffer.sun_angle, -180.0f, 0.0f);
+                        ImGui::SliderFloat("Intensity", &light_buffer.lights[interop::SUN_LIGHT_INDEX].intensity, 0.0f,
+                                           10.0f);
                         ImGui::TreePop();
                     }
+
+                    for (size_t i = 1; i < light_buffer.light_count; i++)
+                    {
+                        if (ImGui::TreeNode(std::string("Light " + std::to_string(i)).c_str()))
+                        {
+                            ImGui::SliderFloat3("Position", &light_buffer.lights[i].world_space_position_or_direction.x,
+                                                -50.0f, 50.0f);
+                            ImGui::ColorEdit3("Color", &light_buffer.lights[i].color.x);
+                            ImGui::SliderFloat("Intensity", &light_buffer.lights[i].intensity, 0.01f, 5.0f);
+                            ImGui::SliderFloat("Scale", &light_buffer.lights[i].scale, 0.01f, 10.0f);
+
+                            ImGui::TreePop();
+                        }
+                    }
+
+                    ImGui::TreePop();
                 }
 
                 ImGui::TreePop();
