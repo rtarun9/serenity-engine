@@ -52,7 +52,8 @@ namespace serenity::renderer::renderpass
         core::Log::instance().info("Destroyed post processing render pass");
     }
 
-    void PostProcessingRenderpass::render(rhi::CommandList &command_list, const uint32_t render_texture_srv_index) const
+    void PostProcessingRenderpass::render(rhi::CommandList &command_list, rhi::CommandSignature &command_signature,
+                                          const uint32_t render_texture_srv_index) const
     {
         // Set pipeline and root signature state.
         command_list.set_bindless_graphics_root_signature();
@@ -72,5 +73,26 @@ namespace serenity::renderer::renderpass
             reinterpret_cast<const std::byte *>(&post_process_combine_render_resources));
 
         command_list.draw_instanced(3u, 1u);
+
+        // Moved to command signature.
+        //   const auto full_screen_index_buffer =
+        //       renderer::Renderer::instance().get_buffer_at_index(m_fullscreen_triangle_index_buffer_index);
+        //
+        //   const auto index_buffer_view = D3D12_INDEX_BUFFER_VIEW{
+        //       .BufferLocation = full_screen_index_buffer.resource.Get()->GetGPUVirtualAddress(),
+        //       .SizeInBytes = static_cast<uint32_t>(full_screen_index_buffer.size_in_bytes),
+        //       .Format = DXGI_FORMAT_R16_UINT,
+        //   };
+        //
+        //   command_signature.append_indirect_command(rhi::IndirectCommand{
+        //       .draw_arguments =
+        //           D3D12_DRAW_INDEXED_ARGUMENTS{
+        //               .IndexCountPerInstance = 3u,
+        //               .InstanceCount = 1u,
+        //               .StartIndexLocation = 0u,
+        //               .BaseVertexLocation = 0u,
+        //               .StartInstanceLocation = 0u,
+        //           },
+        //   });
     }
 } // namespace serenity::renderer::renderpass

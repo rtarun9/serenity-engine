@@ -1,6 +1,5 @@
 target_sources(serenity-engine PUBLIC
 	"${SERENITY_ENGINE_INCLUDE_PATH}/scene/game_object.hpp"
-	"game_object.cpp"
 	
 	"${SERENITY_ENGINE_INCLUDE_PATH}/scene/scene.hpp"
 	"scene.cpp"

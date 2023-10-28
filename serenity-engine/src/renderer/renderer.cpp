@@ -29,6 +29,8 @@ namespace serenity::renderer
 
     void Renderer::render()
     {
+        m_command_signature->m_indirect_commands.clear();
+
         auto &graphics_device = (*m_device.get());
         auto &swapchain = m_device->get_swapchain();
 
@@ -117,7 +119,10 @@ namespace serenity::renderer
 
         {
             // Render post processing phase.
-            m_post_processing_renderpass->render(command_list, m_render_texture.srv_index);
+            m_post_processing_renderpass->render(command_list, m_command_signature.value(), m_render_texture.srv_index);
+
+            // command_list.get_command_list()->ExecuteIndirect(m_command_signature.value().m_command_signature.Get(),
+            // 1u, )
         }
 
         {
@@ -159,6 +164,20 @@ namespace serenity::renderer
 
     void Renderer::create_resources()
     {
+        // Create command signature.
+        m_command_signature = rhi::CommandSignature(m_device->get_device());
+
+        // Create command buffers.
+        for (auto &buffer_index : m_command_buffer_indices)
+        {
+            buffer_index = create_buffer<rhi::IndirectCommand>(
+                rhi::BufferCreationDesc{
+                    .usage = rhi::BufferUsage::CommandBuffer,
+                    .name = L"Command Buffer",
+                },
+                std::array<rhi::IndirectCommand, MAX_PRIMITIVE_COUNT>{});
+        }
+
         // Create depth texture.
         m_depth_texture = m_device->create_texture(rhi::TextureCreationDesc{
             .usage = rhi::TextureUsage::DepthStencilTexture,

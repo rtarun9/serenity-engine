@@ -7,8 +7,8 @@
 #include "renderpass/post_processing_renderpass.hpp"
 #include "renderpass/shading_renderpass.hpp"
 
-#include "serenity-engine/renderer/rhi/device.hpp"
 #include "serenity-engine/renderer/rhi/command_signature.hpp"
+#include "serenity-engine/renderer/rhi/device.hpp"
 #include "serenity-engine/renderer/shader_compiler.hpp"
 #include "serenity-engine/window/window.hpp"
 
@@ -126,6 +126,9 @@ namespace serenity::renderer
         Renderer(Renderer &&other) = delete;
         Renderer &operator=(Renderer &&other) = delete;
 
+      public:
+        static const uint32_t MAX_PRIMITIVE_COUNT = 1'000u;
+
       private:
         std::unique_ptr<rhi::Device> m_device{};
         std::unique_ptr<ShaderCompiler> m_shader_compiler{};
@@ -155,7 +158,9 @@ namespace serenity::renderer
         rhi::Texture m_depth_texture{};
         rhi::Texture m_render_texture{};
 
-        rhi::CommandSignature m_command_signature{};
+        // One command buffer per frame.
+        std::array<uint32_t, rhi::Device::FRAMES_IN_FLIGHT> m_command_buffer_indices{};
+        std::optional<rhi::CommandSignature> m_command_signature{};
 
         window::Window &window_ref;
     };

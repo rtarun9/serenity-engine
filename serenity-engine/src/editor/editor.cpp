@@ -163,7 +163,7 @@ namespace serenity::editor
                                       ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 
                         auto node_open = (ImGui::TreeNodeEx((void *)name.c_str(), node_flags,
-                                                            game_object.m_game_object_name.c_str()));
+                                                            game_object.game_object_name.c_str()));
 
                         if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
                         {

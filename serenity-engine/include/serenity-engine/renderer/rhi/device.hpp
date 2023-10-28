@@ -2,6 +2,7 @@
 
 #include "command_list.hpp"
 #include "command_queue.hpp"
+#include "command_signature.hpp"
 #include "descriptor_heap.hpp"
 #include "root_signature.hpp"
 #include "swapchain.hpp"
@@ -79,7 +80,8 @@ namespace serenity::renderer::rhi
         [[nodiscard]] Texture create_texture(const TextureCreationDesc &texture_creation_desc,
                                              const std::byte *data = nullptr);
 
-        [[nodiscard]] Pipeline create_pipeline(const PipelineCreationDesc &pipeline_creation_desc, const bool ignore_shader_errors = false);
+        [[nodiscard]] Pipeline create_pipeline(const PipelineCreationDesc &pipeline_creation_desc,
+                                               const bool ignore_shader_errors = false);
 
       private:
         Device(const Device &other) = delete;
@@ -88,7 +90,7 @@ namespace serenity::renderer::rhi
         Device(Device &&other) = delete;
         Device &operator=(Device &&other) = delete;
 
-      private:
+      public:
         static constexpr uint32_t FRAMES_IN_FLIGHT = 3u;
 
         // DXGI factory is used for enumeration of adapters and other dxgi objects.
@@ -134,7 +136,8 @@ namespace serenity::renderer::rhi
     template <typename T>
     inline Buffer Device::create_buffer(const BufferCreationDesc &buffer_creation_desc, const std::span<const T> data)
     {
-        if (buffer_creation_desc.usage != BufferUsage::ConstantBuffer && data.empty())
+        if (buffer_creation_desc.usage != BufferUsage::ConstantBuffer &&
+            buffer_creation_desc.usage == BufferUsage::CommandBuffer && data.empty())
         {
             core::Log::instance().critical(
                 std::format("Attempting to create buffer with name {} with no data (Only constant "
@@ -152,7 +155,7 @@ namespace serenity::renderer::rhi
 
         // This heap will be accessible by the CPU, so the heap type will be UPLOAD.
         const auto upload_heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        const auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+        auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(size);
 
         auto upload_buffer = comptr<ID3D12Resource>{};
 
@@ -188,6 +191,11 @@ namespace serenity::renderer::rhi
         {
             // In this case, we need to create another resource that will be readable only by the GPU (for best
             // bandwidth), and copy data from upload buffer to here.
+
+            if (buffer_creation_desc.usage == BufferUsage::CommandBuffer)
+            {
+                resource_desc.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+            }
 
             const auto default_heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
             throw_if_failed(m_device->CreateCommittedResource(&default_heap_properties, D3D12_HEAP_FLAG_NONE,
@@ -249,6 +257,46 @@ namespace serenity::renderer::rhi
             m_device->CreateConstantBufferView(&cbv_desc, current_cbv_descriptor.cpu_descriptor_handle);
 
             buffer.cbv_index = current_cbv_descriptor.index;
+            m_cbv_srv_uav_descriptor_heap->offset_current_handle();
+        }
+        break;
+
+        case BufferUsage::CommandBuffer: {
+            const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{
+                .Format = DXGI_FORMAT_UNKNOWN,
+                .ViewDimension = D3D12_SRV_DIMENSION_BUFFER,
+                .Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING,
+                .Buffer =
+                    {
+                        .FirstElement = 0u,
+                        .NumElements = static_cast<uint32_t>(data.size()),
+                        .StructureByteStride = sizeof(T),
+                    },
+            };
+
+            const auto current_srv_descriptor = m_cbv_srv_uav_descriptor_heap->get_current_handle();
+            m_device->CreateShaderResourceView(buffer.resource.Get(), &srv_desc,
+                                               current_srv_descriptor.cpu_descriptor_handle);
+
+            buffer.srv_index = current_srv_descriptor.index;
+            m_cbv_srv_uav_descriptor_heap->offset_current_handle();
+
+            const auto uav_desc = D3D12_UNORDERED_ACCESS_VIEW_DESC{
+                .Format = DXGI_FORMAT_UNKNOWN,
+                .ViewDimension = D3D12_UAV_DIMENSION_BUFFER,
+                .Buffer{
+                    .FirstElement = 0u,
+                    .NumElements = static_cast<uint32_t>(data.size()),
+                    .StructureByteStride = sizeof(T),
+                    .CounterOffsetInBytes = 0u,
+                },
+            };
+
+            const auto current_uav_descriptor = m_cbv_srv_uav_descriptor_heap->get_current_handle();
+            m_device->CreateUnorderedAccessView(buffer.resource.Get(), nullptr, &uav_desc,
+                                                current_uav_descriptor.cpu_descriptor_handle);
+
+            buffer.uav_index = current_uav_descriptor.index;
             m_cbv_srv_uav_descriptor_heap->offset_current_handle();
         }
         break;

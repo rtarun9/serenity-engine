@@ -3,6 +3,7 @@
 #include "shaders/interop/constant_buffers.hlsli"
 
 #include "serenity-engine/renderer/rhi/command_list.hpp"
+#include "serenity-engine/renderer/rhi/command_signature.hpp"
 #include "serenity-engine/renderer/rhi/pipeline.hpp"
 
 namespace serenity::renderer::renderpass
@@ -24,7 +25,7 @@ namespace serenity::renderer::renderpass
             return m_post_process_buffer_index;
         }
 
-        void render(rhi::CommandList &command_list, const uint32_t render_texture_srv_index) const;
+        void render(rhi::CommandList &command_list, rhi::CommandSignature& command_signature, const uint32_t render_texture_srv_index) const;
 
       private:
         PostProcessingRenderpass(const PostProcessingRenderpass &other) = delete;

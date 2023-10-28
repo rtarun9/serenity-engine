@@ -4,12 +4,14 @@
 
 namespace serenity::renderer::rhi
 {
+    // note(rtarun9) : CommandBuffer is a separate type of buffer since for them UAV and SRV would be created.
     enum class BufferUsage : uint8_t
     {
         ConstantBuffer,
         StructuredBuffer,
         UAVBuffer,
         IndexBuffer,
+        CommandBuffer,
     };
 
     inline std::string buffer_usage_to_string(const BufferUsage &buffer_usage)

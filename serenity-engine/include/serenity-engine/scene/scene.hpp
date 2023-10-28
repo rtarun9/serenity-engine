@@ -10,7 +10,10 @@ namespace serenity::scene
 {
     // A collection of game objects, camera, lights and all things related to the scene.
     // cube map, scene buffer(s), etc.
-    // If a lua file is used to initialize the scene, then the user can optionally 'reload the scene'..
+    // If a lua file is used to initialize the scene, then the user can optionally 'reload the scene'.
+    // Since gpu driven rendering is done, scene will contain a large position / normal / material etc buffers
+    // which are internally arrays.
+    // The GameObject's can index into these 'global' buffers and access their respective elements.
     class Scene
     {
       public:
@@ -21,10 +24,7 @@ namespace serenity::scene
 
         ~Scene() = default;
 
-        void add_game_object(const GameObject &&game_object)
-        {
-            m_game_objects[game_object.m_game_object_name] = std::move(game_object);
-        }
+        GameObject create_game_object(const std::string_view game_object_name, const std::string_view gltf_scene_path);
 
         uint32_t get_scene_buffer_index() const
         {
@@ -75,11 +75,28 @@ namespace serenity::scene
                     const core::Input &input);
 
       public:
-        static constexpr uint32_t MAX_GAME_OBJECTS = 1000u;
+        static constexpr uint32_t MAX_GAME_OBJECTS = 100u;
 
       private:
         uint32_t m_scene_buffer_index{};
         interop::SceneBuffer m_scene_buffer{};
+
+        std::vector<math::XMFLOAT3> m_scene_positions_data{};
+        uint32_t m_scene_position_buffer_index{};
+
+        std::vector<math::XMFLOAT3> m_scene_normals_data{};
+        uint32_t m_scene_normal_buffer_index{};
+
+        std::vector<math::XMFLOAT2> m_scene_texture_coords_data{};
+        uint32_t m_scene_texture_coords_buffer_index{};
+
+        std::vector<uint16_t> m_scene_indices{};
+        uint32_t m_scene_index_buffer_index{};
+
+        std::vector<interop::MaterialBuffer> m_scene_material_buffers_data{};
+        uint32_t m_scene_materal_buffer_index{};
+
+        std::vector<MeshPart> m_mesh_parts{};
 
         Camera m_camera{};
 
