@@ -13,6 +13,8 @@ namespace serenity::scene
 
     struct MeshPart
     {
+        uint32_t game_object_index{};
+
         uint32_t start_vertex_position{};
         uint32_t start_vertex_normal{};
         uint32_t start_vertex_texture_coord{};

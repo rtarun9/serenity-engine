@@ -27,17 +27,24 @@ namespace interop
     static const uint INVALID_INDEX_U32 = -1;
     static const uint MAX_LIGHT_COUNT = 25u;
     static const uint SUN_LIGHT_INDEX = 0u;
-    static const uint MAX_GAME_OBJECT_COUNT = 100u;
     
     // Set the matrix packing to row major by default. Prevents needing to transpose matrices on the C++ side.
-
     struct TransformBufferData
     {
         float4x4 model_matrix;
         float4x4 transposed_inverse_model_matrix;
     };
 
-
+    struct GameObjectBuffer
+    {
+        uint start_position_index;
+        uint start_normal_index;
+        uint start_texture_coord_index;
+        uint start_material_index;
+        
+        TransformBufferData transform_buffer_data;
+    };
+    
     // Light related data.
     enum class LightType
     {
@@ -90,17 +97,13 @@ namespace interop
 
         float3 camera_position;
         float padding;
-        
-        TransformBufferData transform_buffer[MAX_GAME_OBJECT_COUNT];
     };
 
-    ConstantBufferStruct MaterialBuffer
+    struct MaterialBuffer
     {
         float4 base_color;
         
         float2 metallic_roughness_factor;
-        float2 padding;
-        
         uint albedo_texture_srv_index;
     };
 

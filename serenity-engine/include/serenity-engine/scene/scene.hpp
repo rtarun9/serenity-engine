@@ -74,10 +74,13 @@ namespace serenity::scene
         void update(const math::XMMATRIX projection_matrix, const float delta_time, const uint32_t frame_count,
                     const core::Input &input);
 
+        // Create all buffers that the scene abstraction contains.
+        void create_scene_buffers();
+
       public:
         static constexpr uint32_t MAX_GAME_OBJECTS = 100u;
 
-      private:
+      public:
         uint32_t m_scene_buffer_index{};
         interop::SceneBuffer m_scene_buffer{};
 
@@ -93,8 +96,11 @@ namespace serenity::scene
         std::vector<uint16_t> m_scene_indices{};
         uint32_t m_scene_index_buffer_index{};
 
-        std::vector<interop::MaterialBuffer> m_scene_material_buffers_data{};
+        std::vector<interop::MaterialBuffer> m_scene_material_buffer_data{};
         uint32_t m_scene_materal_buffer_index{};
+
+        std::vector<interop::GameObjectBuffer> m_scene_game_object_buffer_data{};
+        uint32_t m_scene_game_object_buffer_index{};
 
         std::vector<MeshPart> m_mesh_parts{};
 

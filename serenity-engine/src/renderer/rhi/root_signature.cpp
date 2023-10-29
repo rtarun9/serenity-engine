@@ -5,9 +5,8 @@ namespace serenity::renderer::rhi
     RootSignature::RootSignature(const comptr<ID3D12Device> &device)
     {
         // Create the bindless root signature with some static samplers and 64 32 bit root constants.
-        auto root_signature_parameters = std::array<CD3DX12_ROOT_PARAMETER1, 2u>{};
+        auto root_signature_parameters = std::array<CD3DX12_ROOT_PARAMETER1, 1u>{};
         root_signature_parameters[0].InitAsConstants(RootSignature::NUM_32_BIT_ROOT_CONSTANTS, 0u, 0u);
-        root_signature_parameters[1].InitAsConstants(1u, 1u, 0u);
 
         const auto anisotropic_sampler_desc = CD3DX12_STATIC_SAMPLER_DESC(0u);
         const auto linear_wrap_sampler_desc = CD3DX12_STATIC_SAMPLER_DESC(1u, D3D12_FILTER_MIN_MAG_MIP_LINEAR);

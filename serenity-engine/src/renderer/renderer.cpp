@@ -92,7 +92,9 @@ namespace serenity::renderer
             // Render scene objects.
             {
                 m_shading_renderpass->render(
-                    command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
+                    command_list, m_command_signature.value(),
+                    m_command_buffer_indices.at(m_device->get_swapchain().get_current_backbuffer_index()),
+                    get_buffer_at_index(scene_buffer_index).cbv_index,
                     get_texture_at_index(m_atmosphere_renderpass->get_atmosphere_texture_index()).srv_index);
             }
 
@@ -172,7 +174,7 @@ namespace serenity::renderer
         {
             buffer_index = create_buffer<rhi::IndirectCommand>(
                 rhi::BufferCreationDesc{
-                    .usage = rhi::BufferUsage::CommandBuffer,
+                    .usage = rhi::BufferUsage::DynamicStructuredBuffer,
                     .name = L"Command Buffer",
                 },
                 std::array<rhi::IndirectCommand, MAX_PRIMITIVE_COUNT>{});
