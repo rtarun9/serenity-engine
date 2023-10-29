@@ -3,6 +3,7 @@
 #include "d3d_utils.hpp"
 
 #include "buffer.hpp"
+#include "command_signature.hpp"
 #include "descriptor_heap.hpp"
 #include "pipeline.hpp"
 
@@ -19,10 +20,7 @@ namespace serenity::renderer::rhi
         explicit CommandList(const comptr<ID3D12Device> &device, const D3D12_COMMAND_LIST_TYPE command_list_type);
         ~CommandList();
 
-        comptr<ID3D12GraphicsCommandList> &get_command_list()
-        {
-            return m_command_list;
-        }
+        comptr<ID3D12GraphicsCommandList> &get_command_list() { return m_command_list; }
 
         void add_resource_barrier(const comptr<ID3D12Resource> &resource, const D3D12_RESOURCE_STATES previous_state,
                                   const D3D12_RESOURCE_STATES new_state);
@@ -73,6 +71,10 @@ namespace serenity::renderer::rhi
         void set_compute_32_bit_root_constants(const std::byte *data) const;
 
         void dispatch(const Uint3 num_groups) const;
+
+        // Common functions.
+        void execute_indirect(rhi::CommandSignature &command_signature, const Buffer &indirect_argument_buffer,
+                              const uint32_t command_count) const;
 
       private:
         CommandList(const CommandList &other) = delete;

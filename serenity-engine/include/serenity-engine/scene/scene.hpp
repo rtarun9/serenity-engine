@@ -14,6 +14,7 @@ namespace serenity::scene
     // Since gpu driven rendering is done, scene will contain a large position / normal / material etc buffers
     // which are internally arrays.
     // The GameObject's can index into these 'global' buffers and access their respective elements.
+
     class Scene
     {
       public:
@@ -84,26 +85,26 @@ namespace serenity::scene
         uint32_t m_scene_buffer_index{};
         interop::SceneBuffer m_scene_buffer{};
 
-        std::vector<math::XMFLOAT3> m_scene_positions_data{};
-        uint32_t m_scene_position_buffer_index{};
+        uint32_t m_position_buffer_index{};
+        std::vector<math::XMFLOAT3> m_positions{};
 
-        std::vector<math::XMFLOAT3> m_scene_normals_data{};
-        uint32_t m_scene_normal_buffer_index{};
+        uint32_t m_normal_buffer_index{};
+        std::vector<math::XMFLOAT3> m_normals{};
 
-        std::vector<math::XMFLOAT2> m_scene_texture_coords_data{};
-        uint32_t m_scene_texture_coords_buffer_index{};
+        uint32_t m_texture_coord_buffer_index{};
+        std::vector<math::XMFLOAT2> m_texture_coords{};
 
-        std::vector<uint16_t> m_scene_indices{};
-        uint32_t m_scene_index_buffer_index{};
+        uint32_t m_index_buffer_index{};
+        std::vector<uint16_t> m_indices{};
 
-        std::vector<interop::MaterialBuffer> m_scene_material_buffer_data{};
-        uint32_t m_scene_materal_buffer_index{};
+        uint32_t m_materal_buffer_index{};
+        std::vector<interop::MaterialBuffer> m_material_buffers{};
 
-        std::vector<interop::GameObjectBuffer> m_scene_game_object_buffer_data{};
-        uint32_t m_scene_game_object_buffer_index{};
+        uint32_t m_meshes_buffer_index{};
+        std::vector<interop::MeshBuffer> m_mesh_buffers{};
 
-        std::vector<interop::MeshBuffer> m_scene_meshes_data{};
-        uint32_t m_scene_meshes_buffer_index{};
+        uint32_t m_game_object_buffer_index{};
+        std::vector<interop::GameObjectBuffer> m_game_object_buffers{};
 
         Camera m_camera{};
 

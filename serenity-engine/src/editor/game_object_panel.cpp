@@ -4,7 +4,7 @@
 
 namespace serenity::editor
 {
-    void GameObjectPanel::render_panel_for_game_object(scene::GameObject &game_object)
+    void GameObjectPanel::render_panel_for_game_object(scene::Scene &scene, scene::GameObject &game_object)
     {
         ImGui::SetNextItemOpen(true);
         if (ImGui::Begin("Game Object Panel"))
@@ -57,23 +57,22 @@ namespace serenity::editor
 
                 if (ImGui::TreeNode("Material"))
                 {
-                    //int i = 0;
-                    //for (auto &material : game_object.m_materials)
-                    //{
-                    //    if (auto &material_buffer_data = material.material_data;
-                    //        ImGui::TreeNode(std::string("Material "s + std::to_string(i++)).c_str()))
-                    //    {
-                    //        ImGui::ColorPicker3("Base Color", &material_buffer_data.base_color.x);
-                    //        ImGui::SliderFloat("Metallic Factor", &material_buffer_data.metallic_roughness_factor.x,
-                    //                           0.0f, 1.0f);
-                    //        ImGui::SliderFloat("Roughness Factor", &material_buffer_data.metallic_roughness_factor.y,
-                    //                           0.0f, 1.0f);
-                    //
-                    //        ImGui::TreePop();
-                    //    }
-                    //}
-                    //
-                    //ImGui::TreePop();
+                    for (int i = 0; i < game_object.material_count; i++)
+                    {
+                        if (auto &material_buffer_data = scene.m_material_buffers[game_object.material_buffer_offset + i];
+                            ImGui::TreeNode(std::string("Material "s + std::to_string(i++)).c_str()))
+                        {
+                            ImGui::ColorPicker3("Base Color", &material_buffer_data.base_color.x);
+                            ImGui::SliderFloat("Metallic Factor", &material_buffer_data.metallic_roughness_factor.x,
+                                               0.0f, 1.0f);
+                            ImGui::SliderFloat("Roughness Factor", &material_buffer_data.metallic_roughness_factor.y,
+                                               0.0f, 1.0f);
+                    
+                            ImGui::TreePop();
+                        }
+                    }
+                    
+                    ImGui::TreePop();
                 }
 
                 ImGui::TreePop();

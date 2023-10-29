@@ -15,16 +15,16 @@ namespace serenity::scene
                 .name = L"Light Buffer Index",
             });
 
-        m_light_buffer.sun_angle = -90.0f;
+        const auto initial_sun_angle = -90.0f;
 
-        // Add a directional light at the start.
+        // Add a directional light at the start (index 0 will always be a directional light).
         add_light(interop::Light{
             .light_type = interop::LightType::Directional,
-            .world_space_position_or_direction = {0.0f, sinf(math::XMConvertToRadians(m_light_buffer.sun_angle)),
-                                                  cosf(math::XMConvertToRadians(m_light_buffer.sun_angle))},
+            .world_space_position_or_direction = {0.0f, sinf(math::XMConvertToRadians(initial_sun_angle)),
+                                                  cosf(math::XMConvertToRadians(initial_sun_angle))},
             .color = math::XMFLOAT3{1.0f, 1.0f, 1.0f},
             .intensity = 5.8f,
-            .scale = 0.0f,
+            .scale_or_sun_angle = initial_sun_angle,
         });
 
         // Load cube data (positions and indices) for visualization purposes.
@@ -99,8 +99,10 @@ namespace serenity::scene
     {
         auto &sun_direction = m_light_buffer.lights[interop::SUN_LIGHT_INDEX].world_space_position_or_direction;
 
-        sun_direction = {0.0f, -1.0f * sinf(math::XMConvertToRadians(m_light_buffer.sun_angle)),
-                         -1.0f * cosf(math::XMConvertToRadians(m_light_buffer.sun_angle))};
+        sun_direction = {
+            0.0f,
+            -1.0f * sinf(math::XMConvertToRadians(m_light_buffer.lights[interop::SUN_LIGHT_INDEX].scale_or_sun_angle)),
+            -1.0f * cosf(math::XMConvertToRadians(m_light_buffer.lights[interop::SUN_LIGHT_INDEX].scale_or_sun_angle))};
 
         const auto magnitude = std::sqrtf(sun_direction.x * sun_direction.x + sun_direction.y * sun_direction.y +
                                           sun_direction.z * sun_direction.z);
@@ -117,7 +119,7 @@ namespace serenity::scene
             const auto &light_world_space_position_or_direction =
                 m_light_buffer.lights[i].world_space_position_or_direction;
 
-            const auto &light_scale = m_light_buffer.lights[i].scale;
+            const auto &light_scale = m_light_buffer.lights[i].scale_or_sun_angle;
 
             m_light_buffer.model_matrix[i - 1] = math::XMMatrixScaling(light_scale, light_scale, light_scale) *
                                                  math::XMMatrixTranslation(light_world_space_position_or_direction.x,

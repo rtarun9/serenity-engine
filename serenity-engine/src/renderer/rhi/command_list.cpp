@@ -162,4 +162,11 @@ namespace serenity::renderer::rhi
     {
         m_command_list->Dispatch(num_groups.x, num_groups.y, num_groups.z);
     }
+
+    void CommandList::execute_indirect(rhi::CommandSignature &command_signature, const Buffer &indirect_argument_buffer,
+                                       const uint32_t command_count) const
+    {
+        m_command_list->ExecuteIndirect(command_signature.m_command_signature.Get(), command_count,
+                                        indirect_argument_buffer.resource.Get(), 0u, nullptr, 0u);
+    }
 } // namespace serenity::renderer::rhi

@@ -8,7 +8,7 @@ namespace serenity::scene
     Scene::Scene(const std::string_view scene_name) : m_scene_name(scene_name)
     {
         m_game_objects.reserve(Scene::MAX_GAME_OBJECTS);
-        m_scene_game_object_buffer_data.resize(Scene::MAX_GAME_OBJECTS);
+        m_game_object_buffers.resize(Scene::MAX_GAME_OBJECTS);
 
         core::Log::instance().info(std::format("Created scene {}", scene_name));
     }
@@ -65,48 +65,44 @@ namespace serenity::scene
         game_object.game_object_index = m_game_objects.size();
         game_object.game_object_name = game_object_name;
 
-        game_object.start_material_index = m_scene_material_buffer_data.size();
-
         // Load the model data (meshes + materials) and create GPU buffers / textures for them.
         const auto model_data = asset::ModelLoader::load_model(gltf_scene_path);
 
-        auto i = 0;
+        game_object.mesh_count = model_data.mesh_data.size();
+        game_object.material_count = model_data.material_data.size();
+
+        game_object.mesh_buffer_offset = m_mesh_buffers.size();
+        game_object.material_buffer_offset = m_material_buffers.size();
 
         auto meshes = std::vector<interop::MeshBuffer>{};
-
         for (const auto &mesh_data : model_data.mesh_data)
         {
             // Setup mesh_part.
-            auto mesh_part = interop::MeshBuffer{};
+            auto mesh_buffer = interop::MeshBuffer{
+                .mesh_index = static_cast<uint32_t>(m_mesh_buffers.size() + meshes.size()),
+                .game_object_index = game_object.game_object_index,
 
-            mesh_part.mesh_index = m_scene_meshes_data.size() + meshes.size();
+                .position_offset = static_cast<uint32_t>(m_positions.size()),
+                .normal_offset = static_cast<uint32_t>(m_normals.size()),
+                .texture_coord_offset = static_cast<uint32_t>(m_texture_coords.size()),
 
-            mesh_part.start_vertex_position = m_scene_positions_data.size();
-            mesh_part.start_vertex_normal = m_scene_normals_data.size();
-            mesh_part.start_vertex_texture_coord = m_scene_texture_coords_data.size();
+                .indices_offset = static_cast<uint32_t>(m_indices.size()),
+                .indices_count = static_cast<uint32_t>(mesh_data.indices.size()),
+                .material_index = static_cast<uint32_t>(m_material_buffers.size() + mesh_data.material_index)};
 
-            mesh_part.start_index = m_scene_indices.size();
-            mesh_part.indices_count = mesh_data.indices.size();
-
-            mesh_part.material_index = m_scene_material_buffer_data.size() + mesh_data.material_index;
-
-            mesh_part.game_object_index = game_object.game_object_index;
-
-            meshes.emplace_back(mesh_part);
+            meshes.emplace_back(mesh_buffer);
 
             // Add data to the scene buffers.
-            m_scene_positions_data.insert(m_scene_positions_data.end(), mesh_data.positions.begin(),
-                                          mesh_data.positions.end());
-            m_scene_normals_data.insert(m_scene_normals_data.end(), mesh_data.normals.begin(), mesh_data.normals.end());
-            m_scene_texture_coords_data.insert(m_scene_texture_coords_data.end(), mesh_data.texture_coords.begin(),
-                                               mesh_data.texture_coords.end());
+            m_positions.insert(m_positions.end(), mesh_data.positions.begin(), mesh_data.positions.end());
+            m_normals.insert(m_normals.end(), mesh_data.normals.begin(), mesh_data.normals.end());
+            m_texture_coords.insert(m_texture_coords.end(), mesh_data.texture_coords.begin(),
+                                    mesh_data.texture_coords.end());
 
-            m_scene_indices.insert(m_scene_indices.end(), mesh_data.indices.begin(), mesh_data.indices.end());
-
-            ++i;
+            m_indices.insert(m_indices.end(), mesh_data.indices.begin(), mesh_data.indices.end());
         }
+        m_mesh_buffers.insert(m_mesh_buffers.end(), meshes.begin(), meshes.end());
 
-        i = 0;
+        auto materials = std::vector<interop::MaterialBuffer>{};
         for (const auto &material_data : model_data.material_data)
         {
             auto material = interop::MaterialBuffer{};
@@ -123,7 +119,8 @@ namespace serenity::scene
                         .format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB,
                         .bytes_per_pixel = 4u,
                         .dimension = material_data.base_color_texture.dimension,
-                        .name = string_to_wstring(game_object_name) + L" Albedo Texture Material " + std::to_wstring(i),
+                        .name = string_to_wstring(game_object_name) + L" Albedo Texture Material " +
+                                std::to_wstring(materials.size()),
                     },
                     reinterpret_cast<const std::byte *>(base_color_texture_data.data()));
 
@@ -134,14 +131,10 @@ namespace serenity::scene
             material.base_color = material_data.base_color;
             material.metallic_roughness_factor = material_data.metallic_roughness_factor;
 
-            m_scene_material_buffer_data.push_back(material);
-
-            ++i;
+            materials.push_back(material);
         }
 
-        game_object.mesh = meshes.at(0);
-
-        m_scene_meshes_data.insert(m_scene_meshes_data.end(), meshes.begin(), meshes.end());
+        m_material_buffers.insert(m_material_buffers.end(), materials.begin(), materials.end());
 
         return game_object;
     }
@@ -168,28 +161,28 @@ namespace serenity::scene
             .get_buffer_at_index(m_scene_buffer_index)
             .update(reinterpret_cast<const std::byte *>(&m_scene_buffer), sizeof(interop::SceneBuffer));
 
-        m_scene_game_object_buffer_data.clear();
+        m_game_object_buffers.clear();
 
         for (auto &[name, game_object] : m_game_objects)
         {
             game_object.update(delta_time, frame_count);
 
             const auto game_object_data = interop::GameObjectBuffer{
-                .transform_buffer = game_object.transform_component.update(delta_time, frame_count),
+                .transform_buffer = game_object.transform_component.transform_buffer_data,
             };
 
-            m_scene_game_object_buffer_data.push_back(game_object_data);
+            m_game_object_buffers.push_back(game_object_data);
         }
 
         renderer::Renderer::instance()
-            .get_buffer_at_index(m_scene_game_object_buffer_index)
-            .update(reinterpret_cast<const std::byte *>(m_scene_game_object_buffer_data.data()),
-                    m_scene_game_object_buffer_data.size() * sizeof(interop::GameObjectBuffer));
+            .get_buffer_at_index(m_game_object_buffer_index)
+            .update(reinterpret_cast<const std::byte *>(m_game_object_buffers.data()),
+                    m_game_object_buffers.size() * sizeof(interop::GameObjectBuffer));
 
         renderer::Renderer::instance()
-            .get_buffer_at_index(m_scene_materal_buffer_index)
-            .update(reinterpret_cast<const std::byte *>(m_scene_material_buffer_data.data()),
-                    m_scene_material_buffer_data.size() * sizeof(interop::MaterialBuffer));
+            .get_buffer_at_index(m_materal_buffer_index)
+            .update(reinterpret_cast<const std::byte *>(m_material_buffers.data()),
+                    m_material_buffers.size() * sizeof(interop::MaterialBuffer));
     }
 
     void Scene::create_scene_buffers()
@@ -202,60 +195,60 @@ namespace serenity::scene
             });
 
         // Create scene positions buffer.
-        m_scene_position_buffer_index = renderer::Renderer::instance().create_buffer<math::XMFLOAT3>(
+        m_position_buffer_index = renderer::Renderer::instance().create_buffer<math::XMFLOAT3>(
             renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::StructuredBuffer,
                 .name = string_to_wstring(m_scene_name) + L" Position Buffer",
             },
-            m_scene_positions_data);
+            m_positions);
 
         // Create scene normal buffer.
-        m_scene_normal_buffer_index = renderer::Renderer::instance().create_buffer<math::XMFLOAT3>(
+        m_normal_buffer_index = renderer::Renderer::instance().create_buffer<math::XMFLOAT3>(
             renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::StructuredBuffer,
                 .name = string_to_wstring(m_scene_name) + L" Normal Buffer",
             },
-            m_scene_normals_data);
+            m_normals);
 
         // Create scene teture coords buffer.
-        m_scene_texture_coords_buffer_index = renderer::Renderer::instance().create_buffer<math::XMFLOAT2>(
+        m_texture_coord_buffer_index = renderer::Renderer::instance().create_buffer<math::XMFLOAT2>(
             renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::StructuredBuffer,
                 .name = string_to_wstring(m_scene_name) + L" Texture Coords Buffer",
             },
-            m_scene_texture_coords_data);
+            m_texture_coords);
 
         // Create scene indices buffer.
-        m_scene_index_buffer_index = renderer::Renderer::instance().create_buffer<uint16_t>(
+        m_index_buffer_index = renderer::Renderer::instance().create_buffer<uint16_t>(
             renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::IndexBuffer,
                 .name = string_to_wstring(m_scene_name) + L" Index Buffer",
             },
-            m_scene_indices);
+            m_indices);
 
         // Create scene materials buffer.
-        m_scene_materal_buffer_index = renderer::Renderer::instance().create_buffer<interop::MaterialBuffer>(
+        m_materal_buffer_index = renderer::Renderer::instance().create_buffer<interop::MaterialBuffer>(
             renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::DynamicStructuredBuffer,
                 .name = string_to_wstring(m_scene_name) + L" Material Buffer",
             },
-            m_scene_material_buffer_data);
+            m_material_buffers);
 
         // Create scene game object buffer.
-        m_scene_game_object_buffer_index = renderer::Renderer::instance().create_buffer<interop::GameObjectBuffer>(
+        m_game_object_buffer_index = renderer::Renderer::instance().create_buffer<interop::GameObjectBuffer>(
             renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::DynamicStructuredBuffer,
                 .name = string_to_wstring(m_scene_name) + L" Game Object Buffer",
             },
-            m_scene_game_object_buffer_data);
+            m_game_object_buffers);
 
         // Create scene meshes buffer.
-        m_scene_meshes_buffer_index = renderer::Renderer::instance().create_buffer<interop::MeshBuffer>(
+        m_meshes_buffer_index = renderer::Renderer::instance().create_buffer<interop::MeshBuffer>(
             renderer::rhi::BufferCreationDesc{
                 .usage = renderer::rhi::BufferUsage::StructuredBuffer,
                 .name = string_to_wstring(m_scene_name) + L" Scene Meshes Buffer",
             },
-            m_scene_meshes_data);
+            m_mesh_buffers);
     }
 
     void Scene::reload()

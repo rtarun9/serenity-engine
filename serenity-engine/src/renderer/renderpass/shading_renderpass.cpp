@@ -39,8 +39,7 @@ namespace serenity::renderer::renderpass
     }
 
     void ShadingRenderpass::render(rhi::CommandList &command_list, rhi::CommandSignature &command_signature,
-                                   const uint32_t command_buffer_index,
-                                   const uint32_t scene_buffer_cbv_index,
+                                   const uint32_t command_buffer_index, const uint32_t scene_buffer_cbv_index,
                                    const uint32_t atmosphere_texture_srv_index) const
     {
         // Render scene objects.
@@ -59,50 +58,46 @@ namespace serenity::renderer::renderpass
             return renderer::Renderer::instance().get_texture_at_index(index);
         };
 
-        command_list.set_index_buffer(get_buffer_at_index(current_scene.m_scene_index_buffer_index));
+        command_list.set_index_buffer(get_buffer_at_index(current_scene.m_index_buffer_index));
+
         const auto render_resources = interop::PBRShadingRenderResources{
-            .position_buffer_srv_index = get_buffer_at_index(current_scene.m_scene_position_buffer_index).srv_index,
-            .texture_coord_buffer_srv_index =
-                get_buffer_at_index(current_scene.m_scene_texture_coords_buffer_index).srv_index,
-            .normal_buffer_srv_index = get_buffer_at_index(current_scene.m_scene_normal_buffer_index).srv_index,
-            .game_object_srv_index = get_buffer_at_index(current_scene.m_scene_game_object_buffer_index).srv_index,
-            .mesh_srv_index = get_buffer_at_index(current_scene.m_scene_meshes_buffer_index).srv_index,
+            .position_buffer_srv_index = get_buffer_at_index(current_scene.m_position_buffer_index).srv_index,
+            .normal_buffer_srv_index = get_buffer_at_index(current_scene.m_normal_buffer_index).srv_index,
+            .texture_coord_buffer_srv_index = get_buffer_at_index(current_scene.m_texture_coord_buffer_index).srv_index,
+            .game_object_srv_index = get_buffer_at_index(current_scene.m_game_object_buffer_index).srv_index,
+            .mesh_buffer_srv_index = get_buffer_at_index(current_scene.m_meshes_buffer_index).srv_index,
             .scene_buffer_cbv_index = get_buffer_at_index(current_scene.get_scene_buffer_index()).cbv_index,
             .light_buffer_cbv_index =
                 get_buffer_at_index(current_scene.get_lights().get_light_buffer_index()).cbv_index,
-            .material_buffer_cbv_index = get_buffer_at_index(current_scene.m_scene_materal_buffer_index).srv_index,
+            .material_buffer_srv_index = get_buffer_at_index(current_scene.m_materal_buffer_index).srv_index,
             .atmosphere_texture_srv_index = atmosphere_texture_srv_index,
         };
 
-
         command_signature.m_indirect_commands.clear();
 
-        //for (auto game_objects = current_scene.get_game_objects();
-         //                                       auto &[name, game_object] : game_objects)
+        for (const auto &mesh : current_scene.m_mesh_buffers)
         {
-            for (const auto &mesh : current_scene.m_scene_meshes_data)
-            {
-                command_signature.m_indirect_commands.emplace_back(
-                    rhi::IndirectCommand{.object_id = mesh.mesh_index,
-                                         .draw_arguments = {
-                                             .IndexCountPerInstance = mesh.indices_count,
-                                             .InstanceCount = 1u,
-                                             .StartIndexLocation = mesh.start_index,
-                                             .BaseVertexLocation = 0u,
-                                             .StartInstanceLocation = 0u,
-                                         },});
-            };
-        }
-        
+            command_signature.m_indirect_commands.emplace_back(rhi::IndirectCommand{
+                .object_id = mesh.mesh_index,
+                .draw_arguments =
+                    {
+                        .IndexCountPerInstance = mesh.indices_count,
+                        .InstanceCount = 1u,
+                        .StartIndexLocation = mesh.indices_offset,
+                        .BaseVertexLocation = 0u,
+                        .StartInstanceLocation = 0u,
+                    },
+            });
+        };
+
         command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte *>(&render_resources));
-        
+
         renderer::Renderer::instance()
             .get_buffer_at_index(command_buffer_index)
             .update(reinterpret_cast<const std::byte *>(command_signature.m_indirect_commands.data()),
                     command_signature.m_indirect_commands.size() * sizeof(rhi::IndirectCommand));
 
-        command_list.get_command_list()->ExecuteIndirect(
-            command_signature.m_command_signature.Get(), command_signature.m_indirect_commands.size(),
-            get_buffer_at_index(command_buffer_index).resource.Get(), 0u, nullptr, 0u);
+        command_list.execute_indirect(command_signature, get_buffer_at_index(command_buffer_index),
+                                      command_signature.m_indirect_commands.size());
     }
 } // namespace serenity::renderer::renderpass

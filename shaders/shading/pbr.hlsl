@@ -2,6 +2,7 @@
 
 #include "interop/render_resources.hlsli"
 #include "interop/constant_buffers.hlsli"
+#include "interop/structured_buffers.hlsli"
 
 #include "shading/brdf.hlsli"
 #include "utils.hlsli"
@@ -25,7 +26,7 @@ VsOutput vs_main(uint vertex_id : SV_VertexID)
     StructuredBuffer<float2> texture_coord_buffer = ResourceDescriptorHeap[render_resources.texture_coord_buffer_srv_index];
     StructuredBuffer<float3> normal_buffer = ResourceDescriptorHeap[render_resources.normal_buffer_srv_index];
 
-    StructuredBuffer<interop::MeshBuffer> mesh_buffers = ResourceDescriptorHeap[render_resources.mesh_srv_index];
+    StructuredBuffer<interop::MeshBuffer> mesh_buffers = ResourceDescriptorHeap[render_resources.mesh_buffer_srv_index];
     interop::MeshBuffer mesh_buffer = mesh_buffers[render_resources.mesh_index];
 
     StructuredBuffer<interop::GameObjectBuffer> scene_game_object_buffer = ResourceDescriptorHeap[render_resources.game_object_srv_index];
@@ -35,11 +36,11 @@ VsOutput vs_main(uint vertex_id : SV_VertexID)
 
     VsOutput output;
 
-    output.position = mul(float4(position_buffer[vertex_id + mesh_buffer.start_vertex_position], 1.0f), mul(game_object_buffer.transform_buffer.model_matrix, scene_buffer.view_projection_matrix));
-    output.pixel_position = mul(float4(position_buffer[vertex_id], 1.0f), game_object_buffer.transform_buffer.model_matrix).xyz;
+    output.position = mul(float4(position_buffer[vertex_id + mesh_buffer.position_offset], 1.0f), mul(game_object_buffer.transform_buffer.model_matrix, scene_buffer.view_projection_matrix));
+    output.pixel_position = mul(float4(position_buffer[vertex_id + mesh_buffer.position_offset], 1.0f), game_object_buffer.transform_buffer.model_matrix).xyz;
     
-    output.texture_coord = texture_coord_buffer[vertex_id];
-    output.normal = mul(normal_buffer[mesh_buffer.start_vertex_normal + vertex_id], (float3x3)(game_object_buffer.transform_buffer.transposed_inverse_model_matrix));
+    output.texture_coord = texture_coord_buffer[vertex_id + mesh_buffer.texture_coord_offset];
+    output.normal = mul(normal_buffer[mesh_buffer.normal_offset + vertex_id], (float3x3)(game_object_buffer.transform_buffer.transposed_inverse_model_matrix));
     
     output.camera_position = scene_buffer.camera_position;
 
@@ -74,7 +75,7 @@ float3 compute_pbr_lighting(PBRShadingParams params, const float3 light_color)
 
 float4 ps_main(VsOutput input) : SV_Target0
 {
-    StructuredBuffer<interop::MaterialBuffer> material_buffer = ResourceDescriptorHeap[render_resources.material_buffer_cbv_index];
+    StructuredBuffer<interop::MaterialBuffer> material_buffer = ResourceDescriptorHeap[render_resources.material_buffer_srv_index];
     float4 color = material_buffer[input.material_index].base_color;
     
     if (material_buffer[input.material_index].albedo_texture_srv_index != interop::INVALID_INDEX_U32)
