@@ -29,22 +29,32 @@ namespace interop
     static const uint SUN_LIGHT_INDEX = 0u;
     
     // Set the matrix packing to row major by default. Prevents needing to transpose matrices on the C++ side.
-    struct TransformBufferData
+    struct TransformBuffer
     {
         float4x4 model_matrix;
         float4x4 transposed_inverse_model_matrix;
     };
 
     struct GameObjectBuffer
-    {
-        uint start_position_index;
-        uint start_normal_index;
-        uint start_texture_coord_index;
-        uint start_material_index;
-        
-        TransformBufferData transform_buffer_data;
+    {        
+        TransformBuffer transform_buffer;
     };
-    
+
+    struct MeshBuffer
+    {
+        uint mesh_index;
+        uint game_object_index;
+
+        uint start_vertex_position;
+        uint start_vertex_normal;
+        uint start_vertex_texture_coord;
+
+        uint start_index;
+        uint indices_count;
+
+        uint material_index;
+    };
+       
     // Light related data.
     enum class LightType
     {

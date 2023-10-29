@@ -72,12 +72,14 @@ namespace serenity::scene
 
         auto i = 0;
 
-        auto meshes = std::vector<MeshPart>{};
+        auto meshes = std::vector<interop::MeshBuffer>{};
 
         for (const auto &mesh_data : model_data.mesh_data)
         {
             // Setup mesh_part.
-            auto mesh_part = MeshPart{};
+            auto mesh_part = interop::MeshBuffer{};
+
+            mesh_part.mesh_index = m_scene_meshes_data.size() + meshes.size();
 
             mesh_part.start_vertex_position = m_scene_positions_data.size();
             mesh_part.start_vertex_normal = m_scene_normals_data.size();
@@ -86,10 +88,9 @@ namespace serenity::scene
             mesh_part.start_index = m_scene_indices.size();
             mesh_part.indices_count = mesh_data.indices.size();
 
-            mesh_part.material_index = mesh_data.material_index;
+            mesh_part.material_index = m_scene_material_buffer_data.size() + mesh_data.material_index;
 
             mesh_part.game_object_index = game_object.game_object_index;
-
 
             meshes.emplace_back(mesh_part);
 
@@ -105,12 +106,7 @@ namespace serenity::scene
             ++i;
         }
 
-        game_object.mesh = meshes.at(0);
-
-        m_mesh_parts.insert(m_mesh_parts.end(), meshes.begin(), meshes.end());
-
         i = 0;
-
         for (const auto &material_data : model_data.material_data)
         {
             auto material = interop::MaterialBuffer{};
@@ -143,6 +139,10 @@ namespace serenity::scene
             ++i;
         }
 
+        game_object.mesh = meshes.at(0);
+
+        m_scene_meshes_data.insert(m_scene_meshes_data.end(), meshes.begin(), meshes.end());
+
         return game_object;
     }
 
@@ -172,12 +172,10 @@ namespace serenity::scene
 
         for (auto &[name, game_object] : m_game_objects)
         {
+            game_object.update(delta_time, frame_count);
+
             const auto game_object_data = interop::GameObjectBuffer{
-                .start_position_index = game_object.mesh.start_vertex_position,
-                .start_normal_index = game_object.mesh.start_vertex_normal,
-                .start_texture_coord_index = game_object.mesh.start_vertex_texture_coord,
-                .start_material_index = game_object.start_material_index,
-                .transform_buffer_data = game_object.transform_component.update(delta_time, frame_count),
+                .transform_buffer = game_object.transform_component.update(delta_time, frame_count),
             };
 
             m_scene_game_object_buffer_data.push_back(game_object_data);
@@ -186,7 +184,12 @@ namespace serenity::scene
         renderer::Renderer::instance()
             .get_buffer_at_index(m_scene_game_object_buffer_index)
             .update(reinterpret_cast<const std::byte *>(m_scene_game_object_buffer_data.data()),
-                    sizeof(m_scene_game_object_buffer_data.size() * sizeof(interop::GameObjectBuffer)));
+                    m_scene_game_object_buffer_data.size() * sizeof(interop::GameObjectBuffer));
+
+        renderer::Renderer::instance()
+            .get_buffer_at_index(m_scene_materal_buffer_index)
+            .update(reinterpret_cast<const std::byte *>(m_scene_material_buffer_data.data()),
+                    m_scene_material_buffer_data.size() * sizeof(interop::MaterialBuffer));
     }
 
     void Scene::create_scene_buffers()
@@ -245,6 +248,14 @@ namespace serenity::scene
                 .name = string_to_wstring(m_scene_name) + L" Game Object Buffer",
             },
             m_scene_game_object_buffer_data);
+
+        // Create scene meshes buffer.
+        m_scene_meshes_buffer_index = renderer::Renderer::instance().create_buffer<interop::MeshBuffer>(
+            renderer::rhi::BufferCreationDesc{
+                .usage = renderer::rhi::BufferUsage::StructuredBuffer,
+                .name = string_to_wstring(m_scene_name) + L" Scene Meshes Buffer",
+            },
+            m_scene_meshes_data);
     }
 
     void Scene::reload()

@@ -65,7 +65,8 @@ namespace serenity::renderer::renderpass
             .texture_coord_buffer_srv_index =
                 get_buffer_at_index(current_scene.m_scene_texture_coords_buffer_index).srv_index,
             .normal_buffer_srv_index = get_buffer_at_index(current_scene.m_scene_normal_buffer_index).srv_index,
-            .game_object_cbv_index = get_buffer_at_index(current_scene.m_scene_game_object_buffer_index).srv_index,
+            .game_object_srv_index = get_buffer_at_index(current_scene.m_scene_game_object_buffer_index).srv_index,
+            .mesh_srv_index = get_buffer_at_index(current_scene.m_scene_meshes_buffer_index).srv_index,
             .scene_buffer_cbv_index = get_buffer_at_index(current_scene.get_scene_buffer_index()).cbv_index,
             .light_buffer_cbv_index =
                 get_buffer_at_index(current_scene.get_lights().get_light_buffer_index()).cbv_index,
@@ -79,10 +80,10 @@ namespace serenity::renderer::renderpass
         //for (auto game_objects = current_scene.get_game_objects();
          //                                       auto &[name, game_object] : game_objects)
         {
-            for (const auto &mesh : current_scene.m_mesh_parts)
+            for (const auto &mesh : current_scene.m_scene_meshes_data)
             {
                 command_signature.m_indirect_commands.emplace_back(
-                    rhi::IndirectCommand{.object_id = mesh.game_object_index,
+                    rhi::IndirectCommand{.object_id = mesh.mesh_index,
                                          .draw_arguments = {
                                              .IndexCountPerInstance = mesh.indices_count,
                                              .InstanceCount = 1u,

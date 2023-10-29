@@ -40,11 +40,12 @@ namespace interop
     
     struct PBRShadingRenderResources
     {
-        uint game_object_index;
+        uint mesh_index;
         uint position_buffer_srv_index;
         uint texture_coord_buffer_srv_index;
         uint normal_buffer_srv_index;
-        uint game_object_cbv_index;
+        uint game_object_srv_index;
+        uint mesh_srv_index;
         uint scene_buffer_cbv_index;
         uint light_buffer_cbv_index;
         uint material_buffer_cbv_index;

@@ -14,7 +14,7 @@ struct VsOutput
     float2 texture_coord : TEXTURE_COORD;
     float3 normal: NORMAL;
     float3 camera_position: CAMERA_POSITION;
-    uint start_material_index : MATERIAL_START_INDEX;
+    uint material_index : MATERIAL_INDEX;
 };
 
 ConstantBuffer<interop::PBRShadingRenderResources> render_resources : register(b0);
@@ -25,22 +25,25 @@ VsOutput vs_main(uint vertex_id : SV_VertexID)
     StructuredBuffer<float2> texture_coord_buffer = ResourceDescriptorHeap[render_resources.texture_coord_buffer_srv_index];
     StructuredBuffer<float3> normal_buffer = ResourceDescriptorHeap[render_resources.normal_buffer_srv_index];
 
-    StructuredBuffer<interop::GameObjectBuffer> scene_game_object_buffer = ResourceDescriptorHeap[render_resources.game_object_cbv_index];
-    interop::GameObjectBuffer game_object_buffer = scene_game_object_buffer[0];
+    StructuredBuffer<interop::MeshBuffer> mesh_buffers = ResourceDescriptorHeap[render_resources.mesh_srv_index];
+    interop::MeshBuffer mesh_buffer = mesh_buffers[render_resources.mesh_index];
+
+    StructuredBuffer<interop::GameObjectBuffer> scene_game_object_buffer = ResourceDescriptorHeap[render_resources.game_object_srv_index];
+    interop::GameObjectBuffer game_object_buffer = scene_game_object_buffer[mesh_buffer.game_object_index];
 
     ConstantBuffer<interop::SceneBuffer> scene_buffer= ResourceDescriptorHeap[render_resources.scene_buffer_cbv_index];
 
     VsOutput output;
 
-    output.position = mul(float4(position_buffer[game_object_buffer.start_position_index + vertex_id], 1.0f),scene_buffer.view_projection_matrix);
-    output.pixel_position = mul(float4(position_buffer[game_object_buffer.start_position_index + vertex_id], 1.0f), game_object_buffer.transform_buffer_data.model_matrix).xyz;
+    output.position = mul(float4(position_buffer[vertex_id + mesh_buffer.start_vertex_position], 1.0f), mul(game_object_buffer.transform_buffer.model_matrix, scene_buffer.view_projection_matrix));
+    output.pixel_position = mul(float4(position_buffer[vertex_id], 1.0f), game_object_buffer.transform_buffer.model_matrix).xyz;
     
-    output.texture_coord = texture_coord_buffer[game_object_buffer.start_texture_coord_index + vertex_id];
-    output.normal = mul(normal_buffer[game_object_buffer.start_normal_index + vertex_id], (float3x3)(game_object_buffer.transform_buffer_data.transposed_inverse_model_matrix));
+    output.texture_coord = texture_coord_buffer[vertex_id];
+    output.normal = mul(normal_buffer[mesh_buffer.start_vertex_normal + vertex_id], (float3x3)(game_object_buffer.transform_buffer.transposed_inverse_model_matrix));
     
     output.camera_position = scene_buffer.camera_position;
 
-    output.start_material_index = game_object_buffer.start_material_index;
+    output.material_index = mesh_buffer.material_index;
 
     return output;
 }
@@ -71,14 +74,12 @@ float3 compute_pbr_lighting(PBRShadingParams params, const float3 light_color)
 
 float4 ps_main(VsOutput input) : SV_Target0
 {
-    return float4(1.0f, 1.0f, 1.0f, 1.0f);
-    
     StructuredBuffer<interop::MaterialBuffer> material_buffer = ResourceDescriptorHeap[render_resources.material_buffer_cbv_index];
-    float4 color = material_buffer[input.start_material_index].base_color;
+    float4 color = material_buffer[input.material_index].base_color;
     
-    if (material_buffer[input.start_material_index].albedo_texture_srv_index != interop::INVALID_INDEX_U32)
+    if (material_buffer[input.material_index].albedo_texture_srv_index != interop::INVALID_INDEX_U32)
     {
-        Texture2D<float4> albedo_texture = ResourceDescriptorHeap[material_buffer[input.start_material_index].albedo_texture_srv_index];
+        Texture2D<float4> albedo_texture = ResourceDescriptorHeap[material_buffer[input.material_index].albedo_texture_srv_index];
         color *= albedo_texture.Sample(anisotropic_sampler, input.texture_coord);
     }   
 
@@ -102,8 +103,8 @@ float4 ps_main(VsOutput input) : SV_Target0
             params.pixel_to_light_direction = normalize(light.world_space_position_or_direction - input.pixel_position);
             params.pixel_to_camera_direction = normalize(input.camera_position - input.pixel_position);
             params.albedo = color.xyz;
-            params.metallic_factor = material_buffer[input.start_material_index].metallic_roughness_factor.x;
-            params.roughness_factor = material_buffer[input.start_material_index].metallic_roughness_factor.y;
+            params.metallic_factor = material_buffer[input.material_index].metallic_roughness_factor.x;
+            params.roughness_factor = material_buffer[input.material_index].metallic_roughness_factor.y;
 
             const float attenuation_factor = 1.0f / length(light.world_space_position_or_direction - input.pixel_position);
             
@@ -116,8 +117,8 @@ float4 ps_main(VsOutput input) : SV_Target0
             params.pixel_to_light_direction = normalize(light.world_space_position_or_direction);
             params.pixel_to_camera_direction = normalize(input.camera_position - input.pixel_position);
             params.albedo = color.xyz;
-            params.metallic_factor = material_buffer[input.start_material_index].metallic_roughness_factor.x;
-            params.roughness_factor = material_buffer[input.start_material_index].metallic_roughness_factor.y;
+            params.metallic_factor = material_buffer[input.material_index].metallic_roughness_factor.x;
+            params.roughness_factor = material_buffer[input.material_index].metallic_roughness_factor.y;
 
             shading_result += compute_pbr_lighting(params, atmosphere_texture.Sample(linear_wrap_sampler, input.pixel_position).xyz * light.intensity);   
         }

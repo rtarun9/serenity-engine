@@ -102,7 +102,8 @@ namespace serenity::scene
         std::vector<interop::GameObjectBuffer> m_scene_game_object_buffer_data{};
         uint32_t m_scene_game_object_buffer_index{};
 
-        std::vector<MeshPart> m_mesh_parts{};
+        std::vector<interop::MeshBuffer> m_scene_meshes_data{};
+        uint32_t m_scene_meshes_buffer_index{};
 
         Camera m_camera{};
 
