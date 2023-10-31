@@ -29,15 +29,13 @@ namespace serenity::renderer
 
     void Renderer::render()
     {
-        m_command_signature->m_indirect_commands.clear();
-
-        auto &graphics_device = (*m_device.get());
+        auto &device = (*m_device.get());
         auto &swapchain = m_device->get_swapchain();
 
         // Frame start will reset the command list and command allocator associated with the current frame.
-        graphics_device.frame_start();
+        device.frame_start();
 
-        auto &command_list = graphics_device.get_current_frame_direct_command_list();
+        auto &command_list = device.get_current_frame_direct_command_list();
         auto &back_buffer = swapchain.get_current_back_buffer();
 
         const auto back_buffer_index = swapchain.get_current_backbuffer_index();
@@ -62,13 +60,12 @@ namespace serenity::renderer
         command_list.clear_render_target_views(render_texture_descriptor_handle, std::array{0.0f, 0.0f, 0.0f, 1.0f});
 
         // Record the rendering related code.
-        const auto dsv_descriptor =
-            graphics_device.get_dsv_descriptor_heap().get_handle_at_index(m_depth_texture.dsv_index);
+        const auto dsv_descriptor = device.get_dsv_descriptor_heap().get_handle_at_index(m_depth_texture.dsv_index);
         command_list.clear_depth_stencil_view(dsv_descriptor, 1.0f);
 
         {
             command_list.set_render_targets(std::array{render_texture_descriptor_handle}, dsv_descriptor);
-            command_list.set_descriptor_heaps(std::array{&graphics_device.get_cbv_srv_uav_descriptor_heap()});
+            command_list.set_descriptor_heaps(std::array{&device.get_cbv_srv_uav_descriptor_heap()});
 
             command_list.set_primitive_topology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -137,11 +134,11 @@ namespace serenity::renderer
         command_list.execute_barriers();
 
         // Execute command list.
-        graphics_device.get_direct_command_queue().execute(std::array{&command_list});
+        device.get_direct_command_queue().execute(std::array{&command_list});
 
         swapchain.present();
 
-        graphics_device.frame_end();
+        device.frame_end();
 
         reload_pipelines();
     }
@@ -177,7 +174,7 @@ namespace serenity::renderer
                     .usage = rhi::BufferUsage::DynamicStructuredBuffer,
                     .name = L"Command Buffer",
                 },
-                std::array<rhi::IndirectCommand, MAX_PRIMITIVE_COUNT>{});
+                std::vector<rhi::IndirectCommand>(MAX_PRIMITIVE_COUNT));
         }
 
         // Create depth texture.

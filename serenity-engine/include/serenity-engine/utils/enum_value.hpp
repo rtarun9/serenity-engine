@@ -3,6 +3,7 @@
 namespace serenity
 {
     // Collection of helper functions (related to enum classes and enums).
+
     template <typename T>
     constexpr inline std::underlying_type<T>::type get_enum_class_value(const T key)
     {

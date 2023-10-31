@@ -36,11 +36,14 @@ VsOutput vs_main(uint vertex_id : SV_VertexID)
 
     VsOutput output;
 
-    output.position = mul(float4(position_buffer[vertex_id + mesh_buffer.position_offset], 1.0f), mul(game_object_buffer.transform_buffer.model_matrix, scene_buffer.view_projection_matrix));
-    output.pixel_position = mul(float4(position_buffer[vertex_id + mesh_buffer.position_offset], 1.0f), game_object_buffer.transform_buffer.model_matrix).xyz;
+    const float4x4 transform_matrix = mul(mesh_buffer.mesh_local_transform_matrix, game_object_buffer.transform_buffer.model_matrix);
+    const float4x4 normal_matrix = transpose(mul(game_object_buffer.transform_buffer.inverse_model_matrix, mesh_buffer.inverse_mesh_local_transform_matrix));
+
+    output.position = mul(float4(position_buffer[vertex_id + mesh_buffer.position_offset], 1.0f), mul(transform_matrix, scene_buffer.view_projection_matrix));
+    output.pixel_position = mul(float4(position_buffer[vertex_id + mesh_buffer.position_offset], 1.0f), transform_matrix).xyz;
     
     output.texture_coord = texture_coord_buffer[vertex_id + mesh_buffer.texture_coord_offset];
-    output.normal = mul(normal_buffer[mesh_buffer.normal_offset + vertex_id], (float3x3)(game_object_buffer.transform_buffer.transposed_inverse_model_matrix));
+    output.normal = mul(normal_buffer[mesh_buffer.normal_offset + vertex_id], (float3x3)(normal_matrix));
     
     output.camera_position = scene_buffer.camera_position;
 

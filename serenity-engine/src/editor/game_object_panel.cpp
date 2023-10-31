@@ -60,7 +60,7 @@ namespace serenity::editor
                     for (int i = 0; i < game_object.material_count; i++)
                     {
                         if (auto &material_buffer_data = scene.m_material_buffers[game_object.material_buffer_offset + i];
-                            ImGui::TreeNode(std::string("Material "s + std::to_string(i++)).c_str()))
+                            ImGui::TreeNode(std::string("Material "s + std::to_string(i)).c_str()))
                         {
                             ImGui::ColorPicker3("Base Color", &material_buffer_data.base_color.x);
                             ImGui::SliderFloat("Metallic Factor", &material_buffer_data.metallic_roughness_factor.x,

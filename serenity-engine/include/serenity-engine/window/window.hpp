@@ -32,25 +32,13 @@ namespace serenity::window
 
         void poll_events(core::Input &input);
 
-        SDL_Window *get_internal_window() const
-        {
-            return m_window;
-        }
+        SDL_Window *get_internal_window() const { return m_window; }
 
-        float get_aspect_ratio() const
-        {
-            return static_cast<float>(m_dimension.x) / static_cast<float>(m_dimension.y);
-        }
+        float get_aspect_ratio() const { return static_cast<float>(m_dimension.x) / static_cast<float>(m_dimension.y); }
 
-        Uint2 get_dimensions() const
-        {
-            return m_dimension;
-        }
+        Uint2 get_dimensions() const { return m_dimension; }
 
-        HWND get_window_handle() const
-        {
-            return m_window_handle;
-        }
+        HWND get_window_handle() const { return m_window_handle; }
 
         // Experimental : If you want to have event handling (such as for editor), you can pass the event handlers here.
         // Expected format : [&]() {... A function that takes in as input Event (SDL_Event internally) ...}

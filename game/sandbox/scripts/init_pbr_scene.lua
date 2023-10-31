@@ -24,13 +24,23 @@ game_objects = {
 			path = "game/sandbox/scripts/test2.lua"
 		}
 	},
-
+	
 	pbr_spheres= {
 		model_path= "data/sketchfab_pbr_material_reference_chart/scene.gltf",
 		scale = {x = 1.0, y = 1.0, z = 1.0},
-		rotation = {x = 0.0, y = 180.0, z = 180.0},
+		rotation = {x = 0.0, y = 0.0, z = 0.0},
 		translation = {x = 1.0, y = 0.0, z = -3.0},
 		script = {
 		}
 	},
+
+	flying_world= {
+		model_path= "data/flying_world/scene.gltf",
+		scale = {x = 0.01, y = 0.01, z = 0.01},
+		rotation = {x = 0.0, y = 90.0, z = 0.0},
+		translation = {x = 0.0, y = 0.0, z = 0.0},
+		script = {
+		}
+	},
+
 }

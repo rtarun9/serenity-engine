@@ -24,45 +24,24 @@ namespace serenity::renderer::rhi
         explicit Device(const HWND window_handle, const Uint2 dimensions);
         ~Device();
 
-        comptr<ID3D12Device> get_device() const
-        {
-            return m_device;
-        }
+        comptr<ID3D12Device> get_device() const { return m_device; }
 
         CommandList &get_current_frame_direct_command_list() const
         {
             return *(m_direct_command_lists.at(m_current_swapchain_backbuffer_index).get());
         }
 
-        CommandQueue &get_direct_command_queue()
-        {
-            return *(m_direct_command_queue.get());
-        }
+        CommandQueue &get_direct_command_queue() { return *(m_direct_command_queue.get()); }
 
-        uint64_t &get_frame_fence_value(const uint32_t frame_index)
-        {
-            return m_frame_fence_values.at(frame_index);
-        }
+        uint64_t &get_frame_fence_value(const uint32_t frame_index) { return m_frame_fence_values.at(frame_index); }
 
-        DescriptorHeap &get_cbv_srv_uav_descriptor_heap() const
-        {
-            return *(m_cbv_srv_uav_descriptor_heap.get());
-        }
+        DescriptorHeap &get_cbv_srv_uav_descriptor_heap() const { return *(m_cbv_srv_uav_descriptor_heap.get()); }
 
-        DescriptorHeap &get_rtv_descriptor_heap() const
-        {
-            return *(m_rtv_descriptor_heap.get());
-        }
+        DescriptorHeap &get_rtv_descriptor_heap() const { return *(m_rtv_descriptor_heap.get()); }
 
-        DescriptorHeap &get_dsv_descriptor_heap() const
-        {
-            return *(m_dsv_descriptor_heap.get());
-        }
+        DescriptorHeap &get_dsv_descriptor_heap() const { return *(m_dsv_descriptor_heap.get()); }
 
-        Swapchain &get_swapchain() const
-        {
-            return *(m_swapchain.get());
-        }
+        Swapchain &get_swapchain() const { return *(m_swapchain.get()); }
 
         // Resets the command buffer and allocator for the current frame. Also gets the swapchain backbuffer for this
         // frame.

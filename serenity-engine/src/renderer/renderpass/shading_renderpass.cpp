@@ -73,12 +73,12 @@ namespace serenity::renderer::renderpass
             .atmosphere_texture_srv_index = atmosphere_texture_srv_index,
         };
 
-        command_signature.m_indirect_commands.clear();
+        auto indirect_commands = std::vector<rhi::IndirectCommand>{};
 
         for (const auto &mesh : current_scene.m_mesh_buffers)
         {
-            command_signature.m_indirect_commands.emplace_back(rhi::IndirectCommand{
-                .object_id = mesh.mesh_index,
+            indirect_commands.emplace_back(rhi::IndirectCommand{
+                .mesh_id = mesh.mesh_index,
                 .draw_arguments =
                     {
                         .IndexCountPerInstance = mesh.indices_count,
@@ -94,10 +94,10 @@ namespace serenity::renderer::renderpass
 
         renderer::Renderer::instance()
             .get_buffer_at_index(command_buffer_index)
-            .update(reinterpret_cast<const std::byte *>(command_signature.m_indirect_commands.data()),
-                    command_signature.m_indirect_commands.size() * sizeof(rhi::IndirectCommand));
+            .update(reinterpret_cast<const std::byte *>(indirect_commands.data()),
+                    indirect_commands.size() * sizeof(rhi::IndirectCommand));
 
         command_list.execute_indirect(command_signature, get_buffer_at_index(command_buffer_index),
-                                      command_signature.m_indirect_commands.size());
+                                      static_cast<uint32_t>(indirect_commands.size()));
     }
 } // namespace serenity::renderer::renderpass

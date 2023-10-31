@@ -7,12 +7,12 @@ namespace serenity::core
     FileSystem::FileSystem()
     {
         // Logic : Start from the current directory, and keep moving up until you can find the directory
-        // called "data" or "game". Then, that path + "data" will be the root directory.
+        // called "data". Then, that path + "data" will be the root directory.
 
         auto current_path = std::filesystem::current_path();
         Log::instance().info(std::format("Executable path : {}", current_path.string()));
 
-        while (current_path.has_parent_path())
+        while (current_path.has_parent_path() && current_path != current_path.parent_path())
         {
             if (std::filesystem::is_directory(current_path / "data"))
             {
@@ -28,7 +28,8 @@ namespace serenity::core
 
         if (m_root_directory.empty())
         {
-            Log::instance().critical(std::format("Could not locate root directory"));
+            Log::instance().critical(
+                std::format("Could not locate root directory. Do you have a data folder in project directory?"));
         }
     }
 

@@ -88,6 +88,10 @@ namespace serenity::scene
 
                 .indices_offset = static_cast<uint32_t>(m_indices.size()),
                 .indices_count = static_cast<uint32_t>(mesh_data.indices.size()),
+                
+                .mesh_local_transform_matrix = mesh_data.mesh_local_transform_matrix,
+                .inverse_mesh_local_transform_matrix= mesh_data.inverse_mesh_local_transform_matrix,
+
                 .material_index = static_cast<uint32_t>(m_material_buffers.size() + mesh_data.material_index)};
 
             meshes.emplace_back(mesh_buffer);

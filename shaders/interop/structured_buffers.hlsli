@@ -10,7 +10,7 @@ namespace interop
     struct TransformBuffer
     {
         float4x4 model_matrix;
-        float4x4 transposed_inverse_model_matrix;
+        float4x4 inverse_model_matrix;
     };
 
     struct GameObjectBuffer
@@ -30,7 +30,14 @@ namespace interop
         uint indices_offset;
         uint indices_count;
 
+        uint padding;
+        
+        float4x4 mesh_local_transform_matrix;
+        float4x4 inverse_mesh_local_transform_matrix;
+        
         uint material_index;
+        float3 padding2;
+        float4 padding3;
     };
 
     struct MaterialBuffer

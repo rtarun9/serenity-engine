@@ -14,6 +14,9 @@ namespace serenity::asset
 
         std::vector<uint16_t> indices{};
 
+        math::XMMATRIX mesh_local_transform_matrix{};
+        math::XMMATRIX inverse_mesh_local_transform_matrix{};
+
         uint32_t material_index{};
     };
 

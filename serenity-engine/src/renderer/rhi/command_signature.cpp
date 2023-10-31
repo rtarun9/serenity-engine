@@ -8,7 +8,7 @@ namespace serenity::renderer::rhi
     CommandSignature::CommandSignature(const comptr<ID3D12Device> &device)
     {
         // For now, there will be 2 indirect arguments.
-        // 1. A single 32 bit root constant that describes the object id (primitive id to be more exact).
+        // 1. A single 32 bit root constant that describes the mesh id (primitive id to be more exact).
         // 2. The type (draw indexed).
 
         const auto indirect_argument_desc = std::array<D3D12_INDIRECT_ARGUMENT_DESC, 2u>{
@@ -26,7 +26,6 @@ namespace serenity::renderer::rhi
             },
         };
 
-        // Note : ByteStride is set to 292 because thats what the Debug layer recommends.
         const auto command_signature_desc = D3D12_COMMAND_SIGNATURE_DESC{
             .ByteStride = sizeof(IndirectCommand),
             .NumArgumentDescs = static_cast<uint32_t>(indirect_argument_desc.size()),

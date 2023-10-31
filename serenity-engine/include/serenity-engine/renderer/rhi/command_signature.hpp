@@ -4,10 +4,10 @@
 
 namespace serenity::renderer::rhi
 {
-    // Reference : https://learn.microsoft.com/en-us/windows/win32/direct3d12/indirect-drawing-and-gpu-culling-
+    // Reference : https://learn.microsoft.com/en-us/windows/win32/direct3d12/indirect-drawing
     struct IndirectCommand
     {
-        uint32_t object_id;
+        uint32_t mesh_id;
         D3D12_DRAW_INDEXED_ARGUMENTS draw_arguments{};
     };
 
@@ -18,15 +18,6 @@ namespace serenity::renderer::rhi
     struct CommandSignature
     {
         explicit CommandSignature(const comptr<ID3D12Device> &device);
-
-        void append_indirect_command(const IndirectCommand &indirect_command)
-        {
-            m_indirect_commands.emplace_back(indirect_command);
-        }
-
         comptr<ID3D12CommandSignature> m_command_signature{};
-
-        // Each primitive appends to this vector.
-        std::vector<IndirectCommand> m_indirect_commands{};
     };
 } // namespace serenity::renderer::rhi

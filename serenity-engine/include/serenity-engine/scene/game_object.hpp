@@ -32,8 +32,8 @@ namespace serenity::scene
 
             transform_buffer_data = interop::TransformBuffer{
                 .model_matrix = model_matrix,
-                .transposed_inverse_model_matrix =
-                    math::XMMatrixTranspose(math::XMMatrixInverse(nullptr, model_matrix)),
+                .inverse_model_matrix =
+                    math::XMMatrixInverse(nullptr, model_matrix),
             };
         }
     };

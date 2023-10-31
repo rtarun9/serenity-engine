@@ -106,7 +106,7 @@ namespace serenity::renderer
         Renderer &operator=(Renderer &&other) = delete;
 
       public:
-        static const uint32_t MAX_PRIMITIVE_COUNT = 1'000u;
+        static const uint32_t MAX_PRIMITIVE_COUNT = 1'00'00'000u;
 
       private:
         std::unique_ptr<rhi::Device> m_device{};

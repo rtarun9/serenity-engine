@@ -1,5 +1,3 @@
-powershell -Command "& {Expand-Archive data.zip data}"
-
 @echo off
 echo Enter the build directory. It should match 'Cmake --build <build_directory>'
 set /p build_directory= Enter Build Directory Path (Relative to project root directory): 
