@@ -66,6 +66,8 @@ namespace serenity::window
             const auto *keyboard_state = SDL_GetKeyboardState(nullptr);
             std::fill(keyboard.key_states.begin(), keyboard.key_states.end(), false);
 
+            // note(rtarun9) : Add option to skip non-callback event's (Reason : Currently when using the editor's text
+            // editor the camera also moves while typing).
             for (const auto &callback : m_event_callbacks)
             {
                 callback(Event{.internal_event = event});

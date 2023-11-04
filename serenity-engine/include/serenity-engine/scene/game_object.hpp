@@ -22,20 +22,7 @@ namespace serenity::scene
 
         interop::TransformBuffer transform_buffer_data{};
 
-        void update(const float delta_time, const uint32_t frame_count)
-        {
-            const auto model_matrix = math::XMMatrixScaling(scale.x, scale.y, scale.z) *
-                                      math::XMMatrixRotationX(math::XMConvertToRadians(rotation.x)) *
-                                      math::XMMatrixRotationY(math::XMConvertToRadians(rotation.y)) *
-                                      math::XMMatrixRotationZ(math::XMConvertToRadians(rotation.z)) *
-                                      math::XMMatrixTranslation(translation.x, translation.y, translation.z);
-
-            transform_buffer_data = interop::TransformBuffer{
-                .model_matrix = model_matrix,
-                .inverse_model_matrix =
-                    math::XMMatrixInverse(nullptr, model_matrix),
-            };
-        }
+        void update(const float delta_time, const uint32_t frame_count);
     };
 
     struct GameObject

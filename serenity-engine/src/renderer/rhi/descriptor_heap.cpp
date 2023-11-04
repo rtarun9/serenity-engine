@@ -48,13 +48,15 @@ namespace serenity::renderer::rhi
         m_current_descriptor_handle = m_descriptor_handle_for_start;
 
         core::Log::instance().info(
-            std::format("Created descriptor heap of type {}", descriptor_heap_type_to_string(descriptor_heap_type)));
+            std::format("Created descriptor heap of type {}",
+                        wstring_to_string(descriptor_heap_type_to_wstring(descriptor_heap_type))));
     }
 
     DescriptorHeap::~DescriptorHeap()
     {
-        core::Log::instance().info(std::format("Destroyed descriptor heap of type {}",
-                                               descriptor_heap_type_to_string(m_descriptor_heap_type)));
+        core::Log::instance().info(
+            std::format("Destroyed descriptor heap of type {}",
+                        wstring_to_string(descriptor_heap_type_to_wstring(m_descriptor_heap_type))));
     }
 
     uint32_t DescriptorHeap::get_descriptor_index(const DescriptorHandle &descriptor_handle) const

@@ -15,10 +15,7 @@ namespace serenity::renderer::rhi
         explicit CommandQueue(const comptr<ID3D12Device> &device, const D3D12_COMMAND_LIST_TYPE command_list_type);
         ~CommandQueue();
 
-        comptr<ID3D12CommandQueue> &get_command_queue()
-        {
-            return m_command_queue;
-        }
+        comptr<ID3D12CommandQueue> &get_command_queue() { return m_command_queue; }
 
         // Return the fence value we need to wait on to ensure that the GPU has completed execution for instructions
         // (including this current signal call).
@@ -29,7 +26,8 @@ namespace serenity::renderer::rhi
         void wait_for_fence_value(const uint64_t fence_value);
 
         // Wait for GPU to complete execution of all instructions given to it.
-        void flush();
+        // Returns updated value of the monotonically increasing fence value.
+        uint64_t flush();
 
         // Execute the command lists.
         void execute(const std::span<CommandList *const> command_lists);

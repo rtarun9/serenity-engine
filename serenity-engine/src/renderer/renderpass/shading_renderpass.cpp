@@ -58,26 +58,28 @@ namespace serenity::renderer::renderpass
             return renderer::Renderer::instance().get_texture_at_index(index);
         };
 
-        command_list.set_index_buffer(get_buffer_at_index(current_scene.m_index_buffer_index));
+        const auto scene_rsc = current_scene.get_scene_resources();
+
+        command_list.set_index_buffer(get_buffer_at_index(scene_rsc.index_buffer_index));
 
         const auto render_resources = interop::PBRShadingRenderResources{
-            .position_buffer_srv_index = get_buffer_at_index(current_scene.m_position_buffer_index).srv_index,
-            .normal_buffer_srv_index = get_buffer_at_index(current_scene.m_normal_buffer_index).srv_index,
-            .texture_coord_buffer_srv_index = get_buffer_at_index(current_scene.m_texture_coord_buffer_index).srv_index,
-            .game_object_srv_index = get_buffer_at_index(current_scene.m_game_object_buffer_index).srv_index,
-            .mesh_buffer_srv_index = get_buffer_at_index(current_scene.m_meshes_buffer_index).srv_index,
-            .scene_buffer_cbv_index = get_buffer_at_index(current_scene.get_scene_buffer_index()).cbv_index,
+            .position_buffer_srv_index = get_buffer_at_index(scene_rsc.position_buffer_index).srv_index,
+            .normal_buffer_srv_index = get_buffer_at_index(scene_rsc.normal_buffer_index).srv_index,
+            .texture_coord_buffer_srv_index = get_buffer_at_index(scene_rsc.texture_coord_buffer_index).srv_index,
+            .game_object_srv_index = get_buffer_at_index(scene_rsc.game_object_buffer_index).srv_index,
+            .mesh_buffer_srv_index = get_buffer_at_index(scene_rsc.meshes_buffer_index).srv_index,
+            .scene_buffer_cbv_index = get_buffer_at_index(scene_rsc.scene_buffer_index).cbv_index,
             .light_buffer_cbv_index =
                 get_buffer_at_index(current_scene.get_lights().get_light_buffer_index()).cbv_index,
-            .material_buffer_srv_index = get_buffer_at_index(current_scene.m_materal_buffer_index).srv_index,
+            .material_buffer_srv_index = get_buffer_at_index(scene_rsc.materal_buffer_index).srv_index,
             .atmosphere_texture_srv_index = atmosphere_texture_srv_index,
         };
 
-        auto indirect_commands = std::vector<rhi::IndirectCommand>{};
+        auto indirect_commands = std::vector<rhi::IndirectCommandArgs>{};
 
-        for (const auto &mesh : current_scene.m_mesh_buffers)
+        for (const auto &mesh : scene_rsc.mesh_buffers)
         {
-            indirect_commands.emplace_back(rhi::IndirectCommand{
+            indirect_commands.emplace_back(rhi::IndirectCommandArgs{
                 .mesh_id = mesh.mesh_index,
                 .draw_arguments =
                     {
@@ -95,7 +97,7 @@ namespace serenity::renderer::renderpass
         renderer::Renderer::instance()
             .get_buffer_at_index(command_buffer_index)
             .update(reinterpret_cast<const std::byte *>(indirect_commands.data()),
-                    indirect_commands.size() * sizeof(rhi::IndirectCommand));
+                    sizeof(rhi::IndirectCommandArgs) * indirect_commands.size());
 
         command_list.execute_indirect(command_signature, get_buffer_at_index(command_buffer_index),
                                       static_cast<uint32_t>(indirect_commands.size()));

@@ -4,7 +4,7 @@
 
 namespace serenity::renderer::rhi
 {
-    // Structured buffer is GPU only, while the dynamic structured buffer is writable by the CPU.
+    // Structured buffer is GPU only, while the dynamic structured buffer has CPU write access.
     enum class BufferUsage : uint8_t
     {
         ConstantBuffer,
@@ -25,7 +25,12 @@ namespace serenity::renderer::rhi
 
         case BufferUsage::StructuredBuffer: {
             return "Structured Buffer";
-        };
+        }
+        break;
+
+        case BufferUsage::DynamicStructuredBuffer: {
+            return "Dynamic Structured Buffer";
+        }
         break;
 
         case BufferUsage::UAVBuffer: {

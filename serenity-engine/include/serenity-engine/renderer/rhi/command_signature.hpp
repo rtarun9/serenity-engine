@@ -4,8 +4,11 @@
 
 namespace serenity::renderer::rhi
 {
-    // Reference : https://learn.microsoft.com/en-us/windows/win32/direct3d12/indirect-drawing
-    struct IndirectCommand
+    // References :
+    // https://learn.microsoft.com/en-us/windows/win32/direct3d12/indirect-drawing
+    // https://github.com/adepke/VanguardEngine/blob/437bb8abc5dd510498d445fe7facf0d428686078/VanguardEngine/Source/Rendering/Renderer.cpp#L331
+
+    struct IndirectCommandArgs
     {
         uint32_t mesh_id;
         D3D12_DRAW_INDEXED_ARGUMENTS draw_arguments{};

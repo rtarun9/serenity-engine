@@ -11,7 +11,5 @@ namespace serenity::editor
     {
       public:
         void render_panel_for_game_object(scene::Scene &scene, scene::GameObject &game_object);
-
-      private:
     };
 } // namespace serenity::editor

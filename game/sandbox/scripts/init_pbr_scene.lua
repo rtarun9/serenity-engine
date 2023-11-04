@@ -36,7 +36,7 @@ game_objects = {
 
 	flying_world= {
 		model_path= "data/flying_world/scene.gltf",
-		scale = {x = 0.01, y = 0.01, z = 0.01},
+		scale = {x = 0.1, y = 0.1, z = 0.1},
 		rotation = {x = 0.0, y = 90.0, z = 0.0},
 		translation = {x = 0.0, y = 0.0, z = 0.0},
 		script = {

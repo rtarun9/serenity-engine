@@ -1,9 +1,8 @@
 #include "serenity-engine/renderer/renderer.hpp"
 
+#include "serenity-engine/core/application.hpp"
 #include "serenity-engine/editor/editor.hpp"
 #include "serenity-engine/scene/scene_manager.hpp"
-
-#include "serenity-engine/core/application.hpp"
 
 #include "shaders/interop/render_resources.hlsli"
 
@@ -75,7 +74,7 @@ namespace serenity::renderer
             command_list.set_viewport_and_scissor_rect(viewport, scissor_rect);
 
             const auto &scene_buffer_index =
-                scene::SceneManager::instance().get_current_scene().get_scene_buffer_index();
+                scene::SceneManager::instance().get_current_scene().get_scene_resources().scene_buffer_index;
 
             const auto &light_buffer_index =
                 scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer_index();
@@ -157,8 +156,7 @@ namespace serenity::renderer
         };
 
         get_buffer_at_index(m_post_processing_renderpass->get_post_process_buffer_index())
-            .update(reinterpret_cast<const std::byte *>(&m_post_processing_renderpass->get_post_process_buffer()),
-                    sizeof(interop::PostProcessBuffer));
+            .update(reinterpret_cast<const std::byte *>(&m_post_processing_renderpass->get_post_process_buffer()), sizeof(interop::PostProcessBuffer));
     }
 
     void Renderer::create_resources()
@@ -169,12 +167,12 @@ namespace serenity::renderer
         // Create command buffers.
         for (auto &buffer_index : m_command_buffer_indices)
         {
-            buffer_index = create_buffer<rhi::IndirectCommand>(
+            buffer_index = create_buffer<rhi::IndirectCommandArgs>(
                 rhi::BufferCreationDesc{
                     .usage = rhi::BufferUsage::DynamicStructuredBuffer,
                     .name = L"Command Buffer",
                 },
-                std::vector<rhi::IndirectCommand>(MAX_PRIMITIVE_COUNT));
+                std::vector<rhi::IndirectCommandArgs>(MAX_PRIMITIVE_COUNT));
         }
 
         // Create depth texture.

@@ -21,7 +21,10 @@ namespace serenity::renderer::rhi
     // Helper functions for D3D12.
     inline void set_name(ID3D12Object *const object, const std::wstring_view name)
     {
-        throw_if_failed(object->SetName(name.data()));
+        if (SERENITY_DEBUG)
+        {
+            throw_if_failed(object->SetName(name.data()));
+        }
     }
 
     inline std::wstring command_list_type_to_wstring(const D3D12_COMMAND_LIST_TYPE command_list_type)
@@ -46,11 +49,6 @@ namespace serenity::renderer::rhi
 
         // Code should never reach here.
         return L"INVALID COMMAND QUEUE TYPE";
-    }
-
-    inline std::string command_list_type_to_string(const D3D12_COMMAND_LIST_TYPE command_list_type)
-    {
-        return wstring_to_string(command_list_type_to_wstring(command_list_type));
     }
 
     inline std::wstring descriptor_heap_type_to_wstring(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
@@ -80,10 +78,5 @@ namespace serenity::renderer::rhi
 
         // Code should never reach here.
         return L"INVALID DESCRIPTOR HEAP TYPE";
-    }
-
-    inline std::string descriptor_heap_type_to_string(const D3D12_DESCRIPTOR_HEAP_TYPE descriptor_heap_type)
-    {
-        return wstring_to_string(descriptor_heap_type_to_wstring(descriptor_heap_type));
     }
 } // namespace serenity::renderer::rhi

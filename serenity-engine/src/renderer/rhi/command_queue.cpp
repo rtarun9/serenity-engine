@@ -30,8 +30,8 @@ namespace serenity::renderer::rhi
 
     CommandQueue::~CommandQueue()
     {
-        core::Log::instance().info(
-            std::format("Destroyed command queue of type {}", command_list_type_to_string(m_command_list_type)));
+        core::Log::instance().info(std::format("Destroyed command queue of type {}",
+                                               wstring_to_string(command_list_type_to_wstring(m_command_list_type))));
     }
 
     uint64_t CommandQueue::signal()
@@ -50,10 +50,12 @@ namespace serenity::renderer::rhi
         }
     }
 
-    void CommandQueue::flush()
+    uint64_t CommandQueue::flush()
     {
         signal();
         wait_for_fence_value(m_monotonically_increasing_fence_value);
+
+        return m_monotonically_increasing_fence_value;
     }
 
     void CommandQueue::execute(const std::span<CommandList *const> command_lists)

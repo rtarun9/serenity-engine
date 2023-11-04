@@ -6,18 +6,14 @@
 
 namespace serenity::renderer::rhi
 {
-    // Abstraction for bindless root signature, which specifies that the shader (i) global expects 32 bit root constants
-    // (ii) 32 bit root constant for game object index.
+    // Abstraction for bindless root signature, which specifies that the shader expects 32 bit root constants at slot 0.
     class RootSignature : public core::SingletonInstance<RootSignature>
     {
       public:
         explicit RootSignature(const comptr<ID3D12Device> &device);
         ~RootSignature();
 
-        comptr<ID3D12RootSignature> &get_root_signature()
-        {
-            return m_root_signature;
-        }
+        comptr<ID3D12RootSignature> &get_root_signature() { return m_root_signature; }
 
       public:
         static constexpr uint32_t NUM_32_BIT_ROOT_CONSTANTS = 64u;

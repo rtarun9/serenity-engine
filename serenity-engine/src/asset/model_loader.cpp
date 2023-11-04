@@ -6,6 +6,10 @@
 #include <fastgltf/tools.hpp>
 #include <fastgltf/types.hpp>
 
+// Main references used :
+// https://github.com/spnda/fastgltf/blob/main/examples/gl_viewer/gl_viewer.cpp
+// https://github.com/JuanDiegoMontoya/Fwog/blob/main/example/common/SceneLoader.cpp
+
 // Since fastgltf does not provide template specializations for directxmath, we need to manually provide template
 // specializations.
 namespace fastgltf
@@ -45,7 +49,7 @@ namespace serenity::asset::ModelLoader
     math::XMMATRIX get_transform_matrix_from_node(const fastgltf::Node &node)
     {
         auto transform = math::XMMatrixIdentity();
-        
+
         if (auto *trs = std::get_if<fastgltf::Node::TRS>(&node.transform); trs)
         {
             const auto rotation_quaternion = math::XMMatrixRotationQuaternion(
@@ -227,7 +231,13 @@ namespace serenity::asset::ModelLoader
         }
 
         // Load meshes for all nodes.
-        for (const auto &node : asset.scenes.at(0).nodeIndices)
+        auto scene_index = 0u;
+        if (asset.defaultScene.has_value())
+        {
+            scene_index = asset.defaultScene.value();
+        }
+
+        for (const auto &node : asset.scenes.at(scene_index).nodeIndices)
         {
             const auto data = get_mesh_data_from_node(asset, asset.nodes.at(node), math::XMMatrixIdentity());
             model.mesh_data.insert(model.mesh_data.end(), data.begin(), data.end());
@@ -240,4 +250,4 @@ namespace serenity::asset::ModelLoader
 
         return model;
     }
-} // namespace serenity::asset::ModelLoader 
+} // namespace serenity::asset::ModelLoader

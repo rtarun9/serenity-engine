@@ -14,16 +14,7 @@ class CubeGame final : public core::Application
   public:
     explicit CubeGame(const core::ApplicationConfig &application_config) : core::Application(application_config)
     {
-        // Create default scene.
-        // The init_default_level.lua script will contain information of all the 'blocks' of the level, and also include
-        // the player.
-        const auto scene_init_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
-            .script_name = "init_default_level",
-            .script_path = wstring_to_string(
-                core::FileSystem::instance().get_absolute_path(L"game/cube-game/scripts/init_default_level.lua")),
-        });
-
-        auto default_scene = scene::Scene("Default Scene", scene_init_script_index);
+        auto default_scene = scene::Scene("Default Scene", "game/cube-game/scripts/init_default_level.lua");
 
         // Add a point light that is right behind the player cube, but is invisible (i.e scale 0).
         default_scene.add_light(interop::Light{
@@ -32,16 +23,10 @@ class CubeGame final : public core::Application
             .intensity = 5.0f,
         });
 
-        scene::SceneManager::instance().add_scene(std::move(default_scene));
+        scene::SceneManager::instance().add_scene(default_scene);
 
         // Add scene 2 (with the obstacles in reverse position).
-        const auto scene_level_2_init_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
-            .script_name = "init_level_2",
-            .script_path = wstring_to_string(
-                core::FileSystem::instance().get_absolute_path(L"game/cube-game/scripts/init_level_2.lua")),
-        });
-
-        auto level_2 = scene::Scene("Level 2", scene_level_2_init_script_index);
+        auto level_2 = scene::Scene("Level 2", "game/cube-game/scripts/init_level_2.lua");
 
         // Add a point light that is right behind the player cube, but is invisible (i.e scale 0).
         level_2.add_light(interop::Light{
@@ -52,7 +37,7 @@ class CubeGame final : public core::Application
 
         level_2.get_camera().m_movement_speed = 0.032f;
 
-        scene::SceneManager::instance().add_scene(std::move(level_2));
+        scene::SceneManager::instance().add_scene(level_2);
 
         // Manually modify material of player a bit.
         // Good indication to add serialization of game objects.

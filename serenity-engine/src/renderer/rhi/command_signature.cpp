@@ -27,7 +27,7 @@ namespace serenity::renderer::rhi
         };
 
         const auto command_signature_desc = D3D12_COMMAND_SIGNATURE_DESC{
-            .ByteStride = sizeof(IndirectCommand),
+            .ByteStride = sizeof(IndirectCommandArgs),
             .NumArgumentDescs = static_cast<uint32_t>(indirect_argument_desc.size()),
             .pArgumentDescs = indirect_argument_desc.data(),
         };
@@ -37,6 +37,6 @@ namespace serenity::renderer::rhi
 
         set_name(m_command_signature.Get(), L"Command Signature");
 
-        core::Log::instance().info("Created commmand signature");
+        core::Log::instance().info("Created command signature");
     }
 } // namespace serenity::renderer::rhi

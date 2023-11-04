@@ -163,7 +163,7 @@ namespace serenity::renderer::rhi
             if (data.size() > 0)
             {
                 // If some data is passed in, update the constant buffer.
-                buffer.update(reinterpret_cast<const std::byte *>(data.data()), sizeof(T));
+                buffer.update(reinterpret_cast<const std::byte *>(data.data()), size);
             }
         }
         else
