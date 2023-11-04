@@ -14,15 +14,9 @@ namespace serenity::scene
 
         void add_light(const interop::Light &light);
 
-        uint32_t get_light_buffer_index() const
-        {
-            return m_light_buffer_index;
-        }
+        uint32_t get_light_buffer_index() const { return m_light_buffer_index; }
 
-        interop::LightBuffer &get_light_buffer()
-        {
-            return m_light_buffer;
-        }
+        interop::LightBuffer &get_light_buffer() { return m_light_buffer; }
 
         void update(const math::XMMATRIX view_matrix);
 

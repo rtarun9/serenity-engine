@@ -19,22 +19,16 @@ namespace serenity::core
             if (s_instance)
             {
                 throw std::runtime_error(std::format(
-                    "Instance already exist for type {}. Did you mean to use instance()?", typeid(T).name()));
+                    "Instance already exist for type {}. Did you mean to use T::instance()?", typeid(T).name()));
             }
 
             s_instance = static_cast<T *>(this);
         }
 
-        virtual ~SingletonInstance()
-        {
-            s_instance = nullptr;
-        }
+        virtual ~SingletonInstance() { s_instance = nullptr; }
 
       public:
-        static bool exists()
-        {
-            return s_instance != nullptr;
-        }
+        static bool exists() { return s_instance != nullptr; }
 
         static T &instance()
         {

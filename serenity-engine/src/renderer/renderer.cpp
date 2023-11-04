@@ -1,9 +1,8 @@
 #include "serenity-engine/renderer/renderer.hpp"
 
+#include "serenity-engine/core/application.hpp"
 #include "serenity-engine/editor/editor.hpp"
 #include "serenity-engine/scene/scene_manager.hpp"
-
-#include "serenity-engine/core/application.hpp"
 
 #include "shaders/interop/render_resources.hlsli"
 
@@ -29,13 +28,13 @@ namespace serenity::renderer
 
     void Renderer::render()
     {
-        auto &graphics_device = (*m_device.get());
+        auto &device = (*m_device.get());
         auto &swapchain = m_device->get_swapchain();
 
         // Frame start will reset the command list and command allocator associated with the current frame.
-        graphics_device.frame_start();
+        device.frame_start();
 
-        auto &command_list = graphics_device.get_current_frame_direct_command_list();
+        auto &command_list = device.get_current_frame_direct_command_list();
         auto &back_buffer = swapchain.get_current_back_buffer();
 
         const auto back_buffer_index = swapchain.get_current_backbuffer_index();
@@ -60,13 +59,12 @@ namespace serenity::renderer
         command_list.clear_render_target_views(render_texture_descriptor_handle, std::array{0.0f, 0.0f, 0.0f, 1.0f});
 
         // Record the rendering related code.
-        const auto dsv_descriptor =
-            graphics_device.get_dsv_descriptor_heap().get_handle_at_index(m_depth_texture.dsv_index);
+        const auto dsv_descriptor = device.get_dsv_descriptor_heap().get_handle_at_index(m_depth_texture.dsv_index);
         command_list.clear_depth_stencil_view(dsv_descriptor, 1.0f);
 
         {
             command_list.set_render_targets(std::array{render_texture_descriptor_handle}, dsv_descriptor);
-            command_list.set_descriptor_heaps(std::array{&graphics_device.get_cbv_srv_uav_descriptor_heap()});
+            command_list.set_descriptor_heaps(std::array{&device.get_cbv_srv_uav_descriptor_heap()});
 
             command_list.set_primitive_topology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
@@ -76,7 +74,7 @@ namespace serenity::renderer
             command_list.set_viewport_and_scissor_rect(viewport, scissor_rect);
 
             const auto &scene_buffer_index =
-                scene::SceneManager::instance().get_current_scene().get_scene_buffer_index();
+                scene::SceneManager::instance().get_current_scene().get_scene_resources().scene_buffer_index;
 
             const auto &light_buffer_index =
                 scene::SceneManager::instance().get_current_scene().get_lights().get_light_buffer_index();
@@ -90,7 +88,9 @@ namespace serenity::renderer
             // Render scene objects.
             {
                 m_shading_renderpass->render(
-                    command_list, get_buffer_at_index(scene_buffer_index).cbv_index,
+                    command_list, m_command_signature.value(),
+                    m_command_buffer_indices.at(m_device->get_swapchain().get_current_backbuffer_index()),
+                    get_buffer_at_index(scene_buffer_index).cbv_index,
                     get_texture_at_index(m_atmosphere_renderpass->get_atmosphere_texture_index()).srv_index);
             }
 
@@ -117,7 +117,10 @@ namespace serenity::renderer
 
         {
             // Render post processing phase.
-            m_post_processing_renderpass->render(command_list, m_render_texture.srv_index);
+            m_post_processing_renderpass->render(command_list, m_command_signature.value(), m_render_texture.srv_index);
+
+            // command_list.get_command_list()->ExecuteIndirect(m_command_signature.value().m_command_signature.Get(),
+            // 1u, )
         }
 
         {
@@ -130,11 +133,11 @@ namespace serenity::renderer
         command_list.execute_barriers();
 
         // Execute command list.
-        graphics_device.get_direct_command_queue().execute(std::array{&command_list});
+        device.get_direct_command_queue().execute(std::array{&command_list});
 
         swapchain.present();
 
-        graphics_device.frame_end();
+        device.frame_end();
 
         reload_pipelines();
     }
@@ -153,12 +156,25 @@ namespace serenity::renderer
         };
 
         get_buffer_at_index(m_post_processing_renderpass->get_post_process_buffer_index())
-            .update(reinterpret_cast<const std::byte *>(&m_post_processing_renderpass->get_post_process_buffer()),
-                    sizeof(interop::PostProcessBuffer));
+            .update(reinterpret_cast<const std::byte *>(&m_post_processing_renderpass->get_post_process_buffer()), sizeof(interop::PostProcessBuffer));
     }
 
     void Renderer::create_resources()
     {
+        // Create command signature.
+        m_command_signature = rhi::CommandSignature(m_device->get_device());
+
+        // Create command buffers.
+        for (auto &buffer_index : m_command_buffer_indices)
+        {
+            buffer_index = create_buffer<rhi::IndirectCommandArgs>(
+                rhi::BufferCreationDesc{
+                    .usage = rhi::BufferUsage::DynamicStructuredBuffer,
+                    .name = L"Command Buffer",
+                },
+                std::vector<rhi::IndirectCommandArgs>(MAX_PRIMITIVE_COUNT));
+        }
+
         // Create depth texture.
         m_depth_texture = m_device->create_texture(rhi::TextureCreationDesc{
             .usage = rhi::TextureUsage::DepthStencilTexture,

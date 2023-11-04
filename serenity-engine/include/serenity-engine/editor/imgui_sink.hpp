@@ -61,9 +61,7 @@ namespace serenity::editor
             }
         }
 
-        void flush_() override
-        {
-        }
+        void flush_() override {}
     };
 
 } // namespace serenity::editor

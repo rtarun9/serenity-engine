@@ -9,77 +9,79 @@
 namespace serenity::scene
 {
     // A collection of game objects, camera, lights and all things related to the scene.
-    // cube map, scene buffer(s), etc.
-    // If a lua file is used to initialize the scene, then the user can optionally 'reload the scene'..
+    // For simplicity, the only way to add game objects is via a lua scene script.
+    // Since gpu driven rendering is done, scene will contain a large position / normal / material etc buffers
+    // which are internally arrays.
+    // The GameObject's can index into these 'global' buffers and access their respective elements.
+
+    // Struct of all the scene - global resources (scene mesh buffer, material buffer, position buffer, etc).
+    struct SceneResources
+    {
+        uint32_t scene_buffer_index{};
+        interop::SceneBuffer scene_buffer{};
+
+        uint32_t position_buffer_index{};
+        std::vector<math::XMFLOAT3> positions{};
+
+        uint32_t normal_buffer_index{};
+        std::vector<math::XMFLOAT3> normals{};
+
+        uint32_t texture_coord_buffer_index{};
+        std::vector<math::XMFLOAT2> texture_coords{};
+
+        uint32_t index_buffer_index{};
+        std::vector<uint16_t> indices{};
+
+        uint32_t materal_buffer_index{};
+        std::vector<interop::MaterialBuffer> material_buffers{};
+
+        uint32_t meshes_buffer_index{};
+        std::vector<interop::MeshBuffer> mesh_buffers{};
+
+        uint32_t game_object_buffer_index{};
+        std::vector<interop::GameObjectBuffer> game_object_buffers{};
+    };
+
     class Scene
     {
       public:
-        explicit Scene(const std::string_view scene_name);
-
         // Specify the scene parameters (game objects, etc) in a script and construct the scene from it.
-        explicit Scene(const std::string_view scene_name, const uint32_t scene_init_script_index);
+        explicit Scene(const std::string_view scene_name, const std::string_view scene_init_script_path);
 
-        ~Scene() = default;
+        SceneResources &get_scene_resources() { return m_scene_resources; }
 
-        void add_game_object(const GameObject &&game_object)
-        {
-            m_game_objects[game_object.m_game_object_name] = std::move(game_object);
-        }
+        std::optional<uint32_t> get_scene_init_script_index() const { return m_scene_init_script_index; }
 
-        uint32_t get_scene_buffer_index() const
-        {
-            return m_scene_buffer_index;
-        }
+        const std::string &get_scene_name() const { return m_scene_name; }
 
-        std::optional<uint32_t> get_scene_init_script_index() const
-        {
-            return m_scene_init_script_index;
-        }
+        Camera &get_camera() { return m_camera; }
 
-        const std::string &get_scene_name()
-        {
-            return m_scene_name;
-        }
+        std::unordered_map<std::string, GameObject> &get_game_objects() { return m_game_objects; }
+        GameObject &get_game_object(const std::string_view name) { return m_game_objects[name.data()]; }
 
-        Camera &get_camera()
-        {
-            return m_camera;
-        }
+        Lights &get_lights() { return m_lights; }
 
-        interop::SceneBuffer &get_scene_buffer()
-        {
-            return m_scene_buffer;
-        }
-
-        std::unordered_map<std::string, GameObject> &get_game_objects()
-        {
-            return m_game_objects;
-        }
-
-        Lights &get_lights()
-        {
-            return m_lights;
-        }
-
-        GameObject &get_game_object(const std::string_view name)
-        {
-            return m_game_objects[name.data()];
-        }
+        void add_light(const interop::Light &light) { m_lights.add_light(light); }
 
         void reload();
-
-        void add_light(const interop::Light &light);
 
         // Update the transform component of all game objects in the scene, as well as the scene buffer and camera.
         void update(const math::XMMATRIX projection_matrix, const float delta_time, const uint32_t frame_count,
                     const core::Input &input);
 
+      private:
+        // note(rtarun9) : Assumes that scene init script index has a value.
+        void load_scene_from_script();
+
+        void create_scene_buffers();
+
+        GameObject create_game_object(const std::string_view game_object_name, const std::string_view gltf_scene_path);
+
       public:
-        static constexpr uint32_t MAX_GAME_OBJECTS = 1000u;
+        static constexpr uint32_t MAX_GAME_OBJECTS = 100u;
 
       private:
-        uint32_t m_scene_buffer_index{};
-        interop::SceneBuffer m_scene_buffer{};
+        SceneResources m_scene_resources{};
 
         Camera m_camera{};
 
@@ -87,8 +89,8 @@ namespace serenity::scene
 
         std::unordered_map<std::string, GameObject> m_game_objects{};
 
-        std::string m_scene_name{};
-
         std::optional<uint32_t> m_scene_init_script_index{};
+
+        std::string m_scene_name{};
     };
 } // namespace serenity::scene

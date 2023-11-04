@@ -38,7 +38,8 @@ namespace serenity::renderer::renderpass
         core::Log::instance().info("Destroyed shading render pass");
     }
 
-    void ShadingRenderpass::render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
+    void ShadingRenderpass::render(rhi::CommandList &command_list, rhi::CommandSignature &command_signature,
+                                   const uint32_t command_buffer_index, const uint32_t scene_buffer_cbv_index,
                                    const uint32_t atmosphere_texture_srv_index) const
     {
         // Render scene objects.
@@ -57,30 +58,48 @@ namespace serenity::renderer::renderpass
             return renderer::Renderer::instance().get_texture_at_index(index);
         };
 
-        for (auto game_objects = current_scene.get_game_objects(); auto &[name, game_object] : game_objects)
+        const auto scene_rsc = current_scene.get_scene_resources();
+
+        command_list.set_index_buffer(get_buffer_at_index(scene_rsc.index_buffer_index));
+
+        const auto render_resources = interop::PBRShadingRenderResources{
+            .position_buffer_srv_index = get_buffer_at_index(scene_rsc.position_buffer_index).srv_index,
+            .normal_buffer_srv_index = get_buffer_at_index(scene_rsc.normal_buffer_index).srv_index,
+            .texture_coord_buffer_srv_index = get_buffer_at_index(scene_rsc.texture_coord_buffer_index).srv_index,
+            .game_object_srv_index = get_buffer_at_index(scene_rsc.game_object_buffer_index).srv_index,
+            .mesh_buffer_srv_index = get_buffer_at_index(scene_rsc.meshes_buffer_index).srv_index,
+            .scene_buffer_cbv_index = get_buffer_at_index(scene_rsc.scene_buffer_index).cbv_index,
+            .light_buffer_cbv_index =
+                get_buffer_at_index(current_scene.get_lights().get_light_buffer_index()).cbv_index,
+            .material_buffer_srv_index = get_buffer_at_index(scene_rsc.materal_buffer_index).srv_index,
+            .atmosphere_texture_srv_index = atmosphere_texture_srv_index,
+        };
+
+        auto indirect_commands = std::vector<rhi::IndirectCommandArgs>{};
+
+        for (const auto &mesh : scene_rsc.mesh_buffers)
         {
-            for (const auto &mesh : game_object.m_meshes)
-            {
-                command_list.set_index_buffer(get_buffer_at_index(mesh.index_buffer_index));
+            indirect_commands.emplace_back(rhi::IndirectCommandArgs{
+                .mesh_id = mesh.mesh_index,
+                .draw_arguments =
+                    {
+                        .IndexCountPerInstance = mesh.indices_count,
+                        .InstanceCount = 1u,
+                        .StartIndexLocation = mesh.indices_offset,
+                        .BaseVertexLocation = 0u,
+                        .StartInstanceLocation = 0u,
+                    },
+            });
+        };
 
-                const auto render_resources = interop::PBRShadingRenderResources{
-                    .position_buffer_srv_index = get_buffer_at_index(mesh.position_buffer_index).srv_index,
-                    .texture_coord_buffer_srv_index = get_buffer_at_index(mesh.texture_coords_buffer_index).srv_index,
-                    .normal_buffer_srv_index = get_buffer_at_index(mesh.normal_buffer_index).srv_index,
-                    .transform_buffer_cbv_index =
-                        get_buffer_at_index(game_object.m_transform_component.transform_buffer_index).cbv_index,
-                    .scene_buffer_cbv_index = get_buffer_at_index(current_scene.get_scene_buffer_index()).cbv_index,
-                    .light_buffer_cbv_index =
-                        get_buffer_at_index(current_scene.get_lights().get_light_buffer_index()).cbv_index,
-                    .material_buffer_cbv_index =
-                        get_buffer_at_index(game_object.m_materials.at(mesh.material_index).material_buffer_index)
-                            .cbv_index,
-                    .atmosphere_texture_srv_index = atmosphere_texture_srv_index,
-                };
+        command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte *>(&render_resources));
 
-                command_list.set_graphics_32_bit_root_constants(reinterpret_cast<const std::byte *>(&render_resources));
-                command_list.draw_indexed_instanced(mesh.indices, 1u);
-            };
-        }
+        renderer::Renderer::instance()
+            .get_buffer_at_index(command_buffer_index)
+            .update(reinterpret_cast<const std::byte *>(indirect_commands.data()),
+                    sizeof(rhi::IndirectCommandArgs) * indirect_commands.size());
+
+        command_list.execute_indirect(command_signature, get_buffer_at_index(command_buffer_index),
+                                      static_cast<uint32_t>(indirect_commands.size()));
     }
 } // namespace serenity::renderer::renderpass

@@ -162,8 +162,10 @@ namespace serenity::editor
                         node_flags |= ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_OpenOnArrow |
                                       ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
 
-                        auto node_open = (ImGui::TreeNodeEx((void *)name.c_str(), node_flags,
-                                                            game_object.m_game_object_name.c_str()));
+                        if (ImGui::TreeNodeEx((void *)name.c_str(), node_flags, game_object.game_object_name.c_str()))
+                        {
+                            ImGui::TreePop();
+                        }
 
                         if (ImGui::IsItemClicked() && !ImGui::IsItemToggledOpen())
                         {
@@ -176,7 +178,7 @@ namespace serenity::editor
                 if (!selected_game_object_name.empty())
                 {
                     m_game_object_panel.render_panel_for_game_object(
-                        current_scene.get_game_objects()[selected_game_object_name]);
+                        current_scene, current_scene.get_game_objects()[selected_game_object_name]);
                 }
 
                 ImGui::SetNextItemOpen(true);
@@ -195,7 +197,9 @@ namespace serenity::editor
                 {
                     if (ImGui::TreeNode("Directional Light"))
                     {
-                        ImGui::SliderFloat("Sun angle", &light_buffer.sun_angle, -180.0f, 0.0f);
+                        ImGui::SliderFloat("Sun angle",
+                                           &light_buffer.lights[interop::SUN_LIGHT_INDEX].scale_or_sun_angle, -180.0f,
+                                           0.0f);
                         ImGui::SliderFloat("Intensity", &light_buffer.lights[interop::SUN_LIGHT_INDEX].intensity, 0.0f,
                                            10.0f);
                         ImGui::TreePop();
@@ -209,7 +213,7 @@ namespace serenity::editor
                                                 -50.0f, 50.0f);
                             ImGui::ColorEdit3("Color", &light_buffer.lights[i].color.x);
                             ImGui::SliderFloat("Intensity", &light_buffer.lights[i].intensity, 0.01f, 5.0f);
-                            ImGui::SliderFloat("Scale", &light_buffer.lights[i].scale, 0.01f, 10.0f);
+                            ImGui::SliderFloat("Scale", &light_buffer.lights[i].scale_or_sun_angle, 0.01f, 10.0f);
 
                             ImGui::TreePop();
                         }

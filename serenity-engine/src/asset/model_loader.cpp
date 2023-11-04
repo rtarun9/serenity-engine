@@ -6,6 +6,10 @@
 #include <fastgltf/tools.hpp>
 #include <fastgltf/types.hpp>
 
+// Main references used :
+// https://github.com/spnda/fastgltf/blob/main/examples/gl_viewer/gl_viewer.cpp
+// https://github.com/JuanDiegoMontoya/Fwog/blob/main/example/common/SceneLoader.cpp
+
 // Since fastgltf does not provide template specializations for directxmath, we need to manually provide template
 // specializations.
 namespace fastgltf
@@ -46,7 +50,7 @@ namespace serenity::asset::ModelLoader
     {
         auto transform = math::XMMatrixIdentity();
 
-        if (auto *trs = std::get_if<fastgltf::Node::TRS>(&node.transform))
+        if (auto *trs = std::get_if<fastgltf::Node::TRS>(&node.transform); trs)
         {
             const auto rotation_quaternion = math::XMMatrixRotationQuaternion(
                 math::XMVectorSet(trs->rotation[0], trs->rotation[1], trs->rotation[2], trs->rotation[3]));
@@ -55,9 +59,10 @@ namespace serenity::asset::ModelLoader
                         math::XMMatrixTranslation(trs->translation[0], trs->translation[1], trs->translation[2]);
         }
 
-        else if (auto *mat = std::get_if<fastgltf::Node::TransformMatrix>(&node.transform))
+        else if (auto *mat = std::get_if<fastgltf::Node::TransformMatrix>(&node.transform); mat)
         {
             const auto &m = *mat;
+
             transform = math::XMMatrixSet(m[0], m[1], m[2], m[3], m[4], m[5], m[6], m[7], m[8], m[9], m[10], m[11],
                                           m[12], m[13], m[14], m[15]);
         }
@@ -66,14 +71,17 @@ namespace serenity::asset::ModelLoader
     }
 
     // Function to get mesh data.
-    std::vector<MeshData> get_mesh_data_from_node(const fastgltf::Asset &asset, const fastgltf::Node &node)
+    std::vector<MeshData> get_mesh_data_from_node(const fastgltf::Asset &asset, const fastgltf::Node &node,
+                                                  const math::XMMATRIX base_transform)
     {
         auto result_mesh_data = std::vector<MeshData>{};
+
+        const auto node_transform = get_transform_matrix_from_node(node) * base_transform;
 
         // Load all child nodes.
         for (const auto &child_node : node.children)
         {
-            const auto child_mesh_data = get_mesh_data_from_node(asset, asset.nodes.at(child_node));
+            const auto child_mesh_data = get_mesh_data_from_node(asset, asset.nodes.at(child_node), node_transform);
             result_mesh_data.insert(result_mesh_data.end(), child_mesh_data.begin(), child_mesh_data.end());
         }
 
@@ -90,6 +98,9 @@ namespace serenity::asset::ModelLoader
                 // Load positions.
                 const auto &position_accessor = asset.accessors[primitive.findAttribute("POSITION")->second];
                 mesh_data.positions = get_data_from_accessor<math::XMFLOAT3>(asset, position_accessor);
+
+                mesh_data.mesh_local_transform_matrix = node_transform;
+                mesh_data.inverse_mesh_local_transform_matrix = math::XMMatrixInverse(nullptr, node_transform);
 
                 // Load normals.
                 const auto &normal_accessor = asset.accessors[primitive.findAttribute("NORMAL")->second];
@@ -111,6 +122,7 @@ namespace serenity::asset::ModelLoader
                 {
                     mesh_data.material_index = 0;
                 }
+
                 result_mesh_data.emplace_back(std::move(mesh_data));
             }
         }
@@ -219,9 +231,15 @@ namespace serenity::asset::ModelLoader
         }
 
         // Load meshes for all nodes.
-        for (const auto &node : asset.nodes)
+        auto scene_index = 0u;
+        if (asset.defaultScene.has_value())
         {
-            const auto data = get_mesh_data_from_node(asset, node);
+            scene_index = asset.defaultScene.value();
+        }
+
+        for (const auto &node : asset.scenes.at(scene_index).nodeIndices)
+        {
+            const auto data = get_mesh_data_from_node(asset, asset.nodes.at(node), math::XMMatrixIdentity());
             model.mesh_data.insert(model.mesh_data.end(), data.begin(), data.end());
         }
 

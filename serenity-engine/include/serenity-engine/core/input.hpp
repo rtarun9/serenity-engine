@@ -24,15 +24,9 @@ namespace serenity::core
         // True indicates key is pressed, false indicates it is not.
         std::array<bool, get_enum_class_value(Keys::Count)> key_states{};
 
-        bool is_key_pressed(const Keys key) const
-        {
-            return key_states.at(get_enum_class_value(key));
-        }
+        bool is_key_pressed(const Keys key) const { return key_states.at(get_enum_class_value(key)); }
 
-        void set_key_state(const Keys key, const bool state)
-        {
-            key_states.at(get_enum_class_value(key)) = state;
-        }
+        void set_key_state(const Keys key, const bool state) { key_states.at(get_enum_class_value(key)) = state; }
     };
 
     struct MouseState

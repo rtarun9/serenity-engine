@@ -14,16 +14,7 @@ class CubeGame final : public core::Application
   public:
     explicit CubeGame(const core::ApplicationConfig &application_config) : core::Application(application_config)
     {
-        // Create default scene.
-        // The init_default_level.lua script will contain information of all the 'blocks' of the level, and also include
-        // the player.
-        const auto scene_init_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
-            .script_name = "init_default_level",
-            .script_path = wstring_to_string(
-                core::FileSystem::instance().get_absolute_path(L"game/cube-game/scripts/init_default_level.lua")),
-        });
-
-        auto default_scene = scene::Scene("Default Scene", scene_init_script_index);
+        auto default_scene = scene::Scene("Default Scene", "game/cube-game/scripts/init_default_level.lua");
 
         // Add a point light that is right behind the player cube, but is invisible (i.e scale 0).
         default_scene.add_light(interop::Light{
@@ -32,16 +23,10 @@ class CubeGame final : public core::Application
             .intensity = 5.0f,
         });
 
-        scene::SceneManager::instance().add_scene(std::move(default_scene));
+        scene::SceneManager::instance().add_scene(default_scene);
 
         // Add scene 2 (with the obstacles in reverse position).
-        const auto scene_level_2_init_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
-            .script_name = "init_level_2",
-            .script_path = wstring_to_string(
-                core::FileSystem::instance().get_absolute_path(L"game/cube-game/scripts/init_level_2.lua")),
-        });
-
-        auto level_2 = scene::Scene("Level 2", scene_level_2_init_script_index);
+        auto level_2 = scene::Scene("Level 2", "game/cube-game/scripts/init_level_2.lua");
 
         // Add a point light that is right behind the player cube, but is invisible (i.e scale 0).
         level_2.add_light(interop::Light{
@@ -52,17 +37,12 @@ class CubeGame final : public core::Application
 
         level_2.get_camera().m_movement_speed = 0.032f;
 
-        scene::SceneManager::instance().add_scene(std::move(level_2));
+        scene::SceneManager::instance().add_scene(level_2);
 
         // Manually modify material of player a bit.
         // Good indication to add serialization of game objects.
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
         current_scene.get_camera().m_movement_speed = 0.032f;
-
-        auto &player = current_scene.get_game_object("player");
-
-        player.m_materials[0].material_data.metallic_roughness_factor.x = 0.0f;
-        player.m_materials[0].material_data.metallic_roughness_factor.y = 0.0f;
     }
 
     virtual void update(const float delta_time) override
@@ -70,7 +50,7 @@ class CubeGame final : public core::Application
         // References to frequently accessed things.
         auto &current_scene = scene::SceneManager::instance().get_current_scene();
         auto &player = current_scene.get_game_object("player");
-        auto &player_position = current_scene.get_game_object("player").get_transform_component().translation;
+        auto &player_position = current_scene.get_game_object("player").transform_component.translation;
 
         // Game settings UI.
         editor::Editor::instance().add_render_callback(
@@ -140,23 +120,23 @@ class CubeGame final : public core::Application
         // Note : The origin is at the center of the cube / cuboid volume.
 
         // Get the AABB coords for the player (static per frame).
-        const auto player_x_min = player_position.x - player.get_transform_component().scale.x;
-        const auto player_x_max = player_position.x + player.get_transform_component().scale.x;
+        const auto player_x_min = player_position.x - player.transform_component.scale.x;
+        const auto player_x_max = player_position.x + player.transform_component.scale.x;
 
-        const auto player_y_min = player_position.y - player.get_transform_component().scale.y;
-        const auto player_y_max = player_position.y + player.get_transform_component().scale.y;
+        const auto player_y_min = player_position.y - player.transform_component.scale.y;
+        const auto player_y_max = player_position.y + player.transform_component.scale.y;
 
-        const auto player_z_min = player_position.z - player.get_transform_component().scale.z;
-        const auto player_z_max = player_position.z + player.get_transform_component().scale.z;
+        const auto player_z_min = player_position.z - player.transform_component.scale.z;
+        const auto player_z_max = player_position.z + player.transform_component.scale.z;
 
         auto player_collisions = 0u;
 
         for (const auto &[name, game_object] : current_scene.get_game_objects())
         {
-            if (game_object.m_game_object_name != player.m_game_object_name)
+            if (game_object.game_object_name != player.game_object_name)
             {
-                const auto &object_translation = game_object.m_transform_component.translation;
-                const auto &object_scale = game_object.m_transform_component.scale;
+                const auto &object_translation = game_object.transform_component.translation;
+                const auto &object_scale = game_object.transform_component.scale;
 
                 const auto object_x_min = object_translation.x - object_scale.x;
                 const auto object_x_max = object_translation.x + object_scale.x;

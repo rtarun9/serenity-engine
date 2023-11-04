@@ -3,6 +3,7 @@
 #include "serenity-engine/renderer/rhi/command_list.hpp"
 #include "serenity-engine/renderer/rhi/pipeline.hpp"
 
+#include "serenity-engine/renderer/rhi/command_signature.hpp"
 #include "serenity-engine/renderer/rhi/descriptor_heap.hpp"
 
 namespace serenity::renderer::renderpass
@@ -16,7 +17,8 @@ namespace serenity::renderer::renderpass
         explicit ShadingRenderpass();
         ~ShadingRenderpass();
 
-        void render(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,
+        void render(rhi::CommandList &command_list, rhi::CommandSignature &command_signature,
+                    const uint32_t command_buffer_index, const uint32_t scene_buffer_cbv_index,
                     const uint32_t atmosphere_texture_srv_index) const;
 
       private:

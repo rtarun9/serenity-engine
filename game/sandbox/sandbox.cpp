@@ -8,19 +8,14 @@ class SandBox final : public core::Application
   public:
     explicit SandBox(const core::ApplicationConfig &application_config) : core::Application(application_config)
     {
-        const auto pbr_scene_init_script_index = scripting::ScriptManager::instance().create_script(scripting::Script{
-            .script_name = "init_pbr_script",
-            .script_path = wstring_to_string(core::FileSystem::instance().get_absolute_path(L"game/sandbox/scripts/init_pbr_scene.lua")),
-        });
-
-        auto default_scene = scene::Scene("Default Scene", pbr_scene_init_script_index);
+        auto default_scene = scene::Scene("Default Scene", "game/sandbox/scripts/init_pbr_scene.lua");
 
         default_scene.add_light(interop::Light{
             .light_type = interop::LightType::Point,
             .world_space_position_or_direction = math::XMFLOAT3{-10.0f, 0.0f, 0.0f},
             .color = math::XMFLOAT3{1.0f, 1.0f, 1.0f},
             .intensity = 1.0f,
-            .scale = 0.2f,
+            .scale_or_sun_angle = 0.2f,
         });
 
         default_scene.add_light(interop::Light{
@@ -28,10 +23,10 @@ class SandBox final : public core::Application
             .world_space_position_or_direction = math::XMFLOAT3{10.0f, 0.0f, 0.0f},
             .color = math::XMFLOAT3{1.0f, 1.0f, 0.0f},
             .intensity = 1.0f,
-            .scale = 0.2f,
+            .scale_or_sun_angle = 0.2f,
         });
 
-        scene::SceneManager::instance().add_scene(std::move(default_scene));
+        scene::SceneManager::instance().add_scene(default_scene);
     }
 
     virtual void update(const float delta_time) override

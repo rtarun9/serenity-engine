@@ -1,7 +1,5 @@
 #include "serenity-engine/core/application.hpp"
 
-#include "serenity-engine/utils/timer.hpp"
-
 namespace serenity::core
 {
     Application::Application(const ApplicationConfig &application_config)
@@ -32,7 +30,9 @@ namespace serenity::core
 
     void Application::run()
     {
-        auto timer = Timer();
+        // note(rtarun9) : delta_time's units are milliseconds.
+        auto start_time = std::chrono::high_resolution_clock::now();
+        auto delta_time = 0.0f;
 
         auto quit = false;
         while (!quit)
@@ -44,12 +44,12 @@ namespace serenity::core
                 quit = true;
             }
 
-            const auto delta_time = timer.get_delta_time();
             update(delta_time);
-
             render();
 
-            timer.tick();
+            const auto end_time = std::chrono::high_resolution_clock::now();
+            delta_time = std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count();
+            start_time = end_time;
         }
     }
 

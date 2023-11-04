@@ -22,15 +22,9 @@ namespace serenity::renderer::renderpass
             return m_atmosphere_buffer_data;
         }
 
-        uint32_t get_atmosphere_buffer_index() const
-        {
-            return m_atmosphere_buffer_index;
-        }
+        uint32_t get_atmosphere_buffer_index() const { return m_atmosphere_buffer_index; }
 
-        uint32_t get_atmosphere_texture_index() const
-        {
-            return m_atmosphere_texture_index;
-        }
+        uint32_t get_atmosphere_texture_index() const { return m_atmosphere_texture_index; }
 
         void update(const math::XMFLOAT3 sun_direction);
         void compute(rhi::CommandList &command_list, const uint32_t scene_buffer_cbv_index,

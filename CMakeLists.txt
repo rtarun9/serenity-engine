@@ -20,4 +20,4 @@ endif()
 
 add_subdirectory(external)
 add_subdirectory(serenity-engine)
-add_subdirectory(game/cube-game)
+add_subdirectory(game)

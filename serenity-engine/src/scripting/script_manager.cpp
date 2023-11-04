@@ -1,5 +1,7 @@
 #include "serenity-engine/scripting/script_manager.hpp"
 
+#include "serenity-engine/core/file_system.hpp"
+
 namespace serenity::scripting
 {
     ScriptManager::ScriptManager()
@@ -22,24 +24,20 @@ namespace serenity::scripting
 
     uint32_t ScriptManager::create_script(const Script &script)
     {
+        const auto script_path = core::FileSystem::instance().get_absolute_path(script.script_path);
+
         if (const auto itr = std::find_if(m_scripts.begin(), m_scripts.end(),
-                                          [&](const auto a) { return a.script_path == script.script_path; });
+                                          [&](const auto a) { return a.script_path == script_path; });
             itr != m_scripts.end())
         {
-            for (int i = 0; i < m_scripts.size(); i++)
-            {
-                if (m_scripts[i].script_path == script.script_path)
-                {
-                    return i;
-                }
-            }
+            return std::distance(m_scripts.begin(), itr);
         }
 
         const auto script_index = m_scripts.size();
 
         m_scripts.emplace_back(script);
 
-        core::Log::instance().info(std::format("Created script with path : {}", script.script_path));
+        core::Log::instance().info(std::format("Created script with path : {}", script_path));
 
         return script_index;
     }

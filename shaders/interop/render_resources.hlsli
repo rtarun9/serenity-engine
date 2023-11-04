@@ -40,13 +40,20 @@ namespace interop
     
     struct PBRShadingRenderResources
     {
+        // Per mesh  data.
+        uint mesh_index;
+
+        // Scene - global data.
         uint position_buffer_srv_index;
-        uint texture_coord_buffer_srv_index;
         uint normal_buffer_srv_index;
-        uint transform_buffer_cbv_index;
+        uint texture_coord_buffer_srv_index;
+        uint game_object_srv_index;
+        uint mesh_buffer_srv_index;
         uint scene_buffer_cbv_index;
         uint light_buffer_cbv_index;
-        uint material_buffer_cbv_index;
+        uint material_buffer_srv_index;
+
+        // Texture data.
         uint atmosphere_texture_srv_index;
     };
     

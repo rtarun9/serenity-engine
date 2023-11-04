@@ -7,6 +7,6 @@ function update_transform(scale, rotation, translation, delta_time, frame_count)
 	translation.y = -1 * math.sin(frame_count * frequency) * radius
 
 	scale.x = math.sin(frame_count * frequency)
-
+	
 	return scale, rotation, translation
 end

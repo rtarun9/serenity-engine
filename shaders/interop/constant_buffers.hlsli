@@ -1,42 +1,12 @@
 // clang-format off
 
-#ifndef __CONSTANT_BUFFERS__HLSLI__
-#define __CONSTANT_BUFFERS__HLSLI__
+#ifndef __CONSTANT_BUFFERS_HLSLI__
+#define __CONSTANT_BUFFERS_HLSLI__
 
-#ifdef __cplusplus
-
-#define uint uint32_t
-
-#define float4x4 math::XMMATRIX
-
-#define float2 math::XMFLOAT2
-#define float3 math::XMFLOAT3
-#define float4 math::XMFLOAT4
-
-#define ConstantBufferStruct struct alignas(256) 
-
-#else
-
-#pragma pack_matrix(row_major)
-#define ConstantBufferStruct struct
-
-#endif
+#include "interop_common.hlsli"
 
 namespace interop
-{
-    static const uint INVALID_INDEX_U32 = -1;
-    static const uint MAX_LIGHT_COUNT = 25u;
-    static const uint SUN_LIGHT_INDEX = 0u;
-
-    // Set the matrix packing to row major by default. Prevents needing to transpose matrices on the C++ side.
-
-    ConstantBufferStruct TransformBuffer
-    {
-        float4x4 model_matrix;
-        float4x4 transposed_inverse_model_matrix;
-    };
-
-
+{    
     // Light related data.
     enum class LightType
     {
@@ -44,26 +14,24 @@ namespace interop
         Directional
     };
 
-    // scale is only applicable for point light visualization. 
+    // Note : There will be only one directional light in the scene, at index 0 in
+    // the light buffers lights array.
+    // scale_or_sun_angle for point lights is scale of visualization model.
+    // scale_or_sun_angle for directional lights is the sun angle.
     struct Light
     {
         LightType light_type;
         float3 padding;
 
         float3 world_space_position_or_direction;
-        float padding2;
+        float padding2; 
 
         float3 color;
         float intensity;
 
-        float scale;
+        float scale_or_sun_angle;
         float3 padding4;
     };
-
-    // NOTE : The light at index 0 will ALWAYS be a directional light, whose direction will be controlled
-    // by the sun_angle field in light buffer.
-    // This is just for convinence, and plus there probably wont be more than one directional light in a scene ever.
-    // The sun_angle will be in degrees and not in radians.
 
     // model_matrix is kept seperate from the lights field because instanced rendering 
     // will be used to render non-directional lights.
@@ -89,16 +57,6 @@ namespace interop
 
         float3 camera_position;
         float padding;
-    };
-
-    ConstantBufferStruct MaterialBuffer
-    {
-        float4 base_color;
-        
-        float2 metallic_roughness_factor;
-        float2 padding;
-        
-        uint albedo_texture_srv_index;
     };
 
     // The float3's A, B, C, D, E are part of the parameters required by the Perez et.al model to compute sky

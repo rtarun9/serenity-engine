@@ -1,6 +1,7 @@
 #pragma once
 
 #include "serenity-engine/scene/game_object.hpp"
+#include "serenity-engine/scene/scene.hpp"
 
 namespace serenity::editor
 {
@@ -9,8 +10,6 @@ namespace serenity::editor
     class GameObjectPanel
     {
       public:
-        void render_panel_for_game_object(scene::GameObject &game_object);
-
-      private:
+        void render_panel_for_game_object(scene::Scene &scene, scene::GameObject &game_object);
     };
 } // namespace serenity::editor

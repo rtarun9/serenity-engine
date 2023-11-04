@@ -73,7 +73,7 @@ namespace serenity::core
 
     void Log::delete_sink(const std::string_view sink_name)
     {
-        std::remove(m_logger->sinks().begin(), m_logger->sinks().end(), m_external_sinks[std::string(sink_name)]);
+        std::erase(m_logger->sinks(), m_external_sinks[std::string(sink_name)]);
         m_external_sinks[std::string(sink_name)].reset();
     }
 

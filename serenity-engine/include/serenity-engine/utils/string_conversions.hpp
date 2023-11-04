@@ -11,8 +11,7 @@ namespace serenity
         auto result = std::wstring{};
         const auto input = std::string(input_string);
 
-        const auto length = ::MultiByteToWideChar(CP_UTF8, 0, input.c_str(), -1, NULL, 0);
-        if (length > 0)
+        if (const auto length = ::MultiByteToWideChar(CP_UTF8, 0, input.c_str(), -1, NULL, 0); length > 0)
         {
             result.resize(size_t(length) - 1);
             MultiByteToWideChar(CP_UTF8, 0, input.c_str(), -1, result.data(), length);
@@ -26,8 +25,7 @@ namespace serenity
         auto result = std::string{};
         const auto input = std::wstring(input_string);
 
-        const auto length = ::WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, NULL, 0, NULL, NULL);
-        if (length > 0)
+        if (const auto length = ::WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, NULL, 0, NULL, NULL); length > 0)
         {
             result.resize(size_t(length) - 1);
             WideCharToMultiByte(CP_UTF8, 0, input.c_str(), -1, result.data(), length, NULL, NULL);

@@ -2,6 +2,7 @@
 
 #include "command_list.hpp"
 #include "command_queue.hpp"
+#include "command_signature.hpp"
 #include "descriptor_heap.hpp"
 #include "root_signature.hpp"
 #include "swapchain.hpp"
@@ -23,45 +24,24 @@ namespace serenity::renderer::rhi
         explicit Device(const HWND window_handle, const Uint2 dimensions);
         ~Device();
 
-        comptr<ID3D12Device> get_device() const
-        {
-            return m_device;
-        }
+        comptr<ID3D12Device> get_device() const { return m_device; }
 
         CommandList &get_current_frame_direct_command_list() const
         {
             return *(m_direct_command_lists.at(m_current_swapchain_backbuffer_index).get());
         }
 
-        CommandQueue &get_direct_command_queue()
-        {
-            return *(m_direct_command_queue.get());
-        }
+        CommandQueue &get_direct_command_queue() { return *(m_direct_command_queue.get()); }
 
-        uint64_t &get_frame_fence_value(const uint32_t frame_index)
-        {
-            return m_frame_fence_values.at(frame_index);
-        }
+        uint64_t &get_frame_fence_value(const uint32_t frame_index) { return m_frame_fence_values.at(frame_index); }
 
-        DescriptorHeap &get_cbv_srv_uav_descriptor_heap() const
-        {
-            return *(m_cbv_srv_uav_descriptor_heap.get());
-        }
+        DescriptorHeap &get_cbv_srv_uav_descriptor_heap() const { return *(m_cbv_srv_uav_descriptor_heap.get()); }
 
-        DescriptorHeap &get_rtv_descriptor_heap() const
-        {
-            return *(m_rtv_descriptor_heap.get());
-        }
+        DescriptorHeap &get_rtv_descriptor_heap() const { return *(m_rtv_descriptor_heap.get()); }
 
-        DescriptorHeap &get_dsv_descriptor_heap() const
-        {
-            return *(m_dsv_descriptor_heap.get());
-        }
+        DescriptorHeap &get_dsv_descriptor_heap() const { return *(m_dsv_descriptor_heap.get()); }
 
-        Swapchain &get_swapchain() const
-        {
-            return *(m_swapchain.get());
-        }
+        Swapchain &get_swapchain() const { return *(m_swapchain.get()); }
 
         // Resets the command buffer and allocator for the current frame. Also gets the swapchain backbuffer for this
         // frame.
@@ -79,7 +59,8 @@ namespace serenity::renderer::rhi
         [[nodiscard]] Texture create_texture(const TextureCreationDesc &texture_creation_desc,
                                              const std::byte *data = nullptr);
 
-        [[nodiscard]] Pipeline create_pipeline(const PipelineCreationDesc &pipeline_creation_desc, const bool ignore_shader_errors = false);
+        [[nodiscard]] Pipeline create_pipeline(const PipelineCreationDesc &pipeline_creation_desc,
+                                               const bool ignore_shader_errors = false);
 
       private:
         Device(const Device &other) = delete;
@@ -88,7 +69,7 @@ namespace serenity::renderer::rhi
         Device(Device &&other) = delete;
         Device &operator=(Device &&other) = delete;
 
-      private:
+      public:
         static constexpr uint32_t FRAMES_IN_FLIGHT = 3u;
 
         // DXGI factory is used for enumeration of adapters and other dxgi objects.
@@ -134,7 +115,7 @@ namespace serenity::renderer::rhi
     template <typename T>
     inline Buffer Device::create_buffer(const BufferCreationDesc &buffer_creation_desc, const std::span<const T> data)
     {
-        if (buffer_creation_desc.usage != BufferUsage::ConstantBuffer && data.empty())
+        if (buffer_creation_desc.usage != BufferUsage::ConstantBuffer && data.size() == 0)
         {
             core::Log::instance().critical(
                 std::format("Attempting to create buffer with name {} with no data (Only constant "
@@ -152,7 +133,7 @@ namespace serenity::renderer::rhi
 
         // This heap will be accessible by the CPU, so the heap type will be UPLOAD.
         const auto upload_heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
-        const auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(size);
+        auto resource_desc = CD3DX12_RESOURCE_DESC::Buffer(size);
 
         auto upload_buffer = comptr<ID3D12Resource>{};
 
@@ -160,8 +141,9 @@ namespace serenity::renderer::rhi
                                                           D3D12_RESOURCE_STATE_GENERIC_READ, nullptr,
                                                           IID_PPV_ARGS(&upload_buffer)));
 
-        // Fill in for constant buffer.
-        if (buffer_creation_desc.usage == BufferUsage::ConstantBuffer)
+        // Fill in for constant buffer / dynamic structured buffer.
+        if (buffer_creation_desc.usage == BufferUsage::ConstantBuffer ||
+            buffer_creation_desc.usage == BufferUsage::DynamicStructuredBuffer)
         {
             // For constant buffers, there is no GPU accesible only buffer. Due to this, the upload buffer is (despite
             // what the name might suggest) the resource we want.
@@ -181,14 +163,13 @@ namespace serenity::renderer::rhi
             if (data.size() > 0)
             {
                 // If some data is passed in, update the constant buffer.
-                buffer.update(reinterpret_cast<const std::byte *>(data.data()), sizeof(T));
+                buffer.update(reinterpret_cast<const std::byte *>(data.data()), size);
             }
         }
         else
         {
             // In this case, we need to create another resource that will be readable only by the GPU (for best
-            // bandwidth), and copy data from upload buffer to here.
-
+            // bandwidth), and copy data from upload buffer to here
             const auto default_heap_properties = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
             throw_if_failed(m_device->CreateCommittedResource(&default_heap_properties, D3D12_HEAP_FLAG_NONE,
                                                               &resource_desc, D3D12_RESOURCE_STATE_COMMON, nullptr,
@@ -216,7 +197,8 @@ namespace serenity::renderer::rhi
         // Based on buffer usage, create the descriptors.
         switch (buffer_creation_desc.usage)
         {
-        case BufferUsage::StructuredBuffer: {
+        case BufferUsage::StructuredBuffer:
+        case BufferUsage::DynamicStructuredBuffer: {
             // Create SRV for structured buffer.
             const auto srv_desc = D3D12_SHADER_RESOURCE_VIEW_DESC{
                 .Format = DXGI_FORMAT_UNKNOWN,

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "serenity-engine/renderer/rhi/command_list.hpp"
 
 #include "serenity-engine/renderer/rhi/device.hpp"
@@ -29,7 +27,7 @@ namespace serenity::renderer::rhi
     CommandList::~CommandList()
     {
         core::Log::instance().info(std::format("Destroyed command list and allocator of type {}",
-                                               command_list_type_to_string(m_command_list_type)));
+                                               wstring_to_string(command_list_type_to_wstring(m_command_list_type))));
     }
 
     void CommandList::add_resource_barrier(const comptr<ID3D12Resource> &resource,
@@ -161,5 +159,12 @@ namespace serenity::renderer::rhi
     void CommandList::dispatch(const Uint3 num_groups) const
     {
         m_command_list->Dispatch(num_groups.x, num_groups.y, num_groups.z);
+    }
+
+    void CommandList::execute_indirect(rhi::CommandSignature &command_signature, const Buffer &indirect_argument_buffer,
+                                       const uint32_t command_count) const
+    {
+        m_command_list->ExecuteIndirect(command_signature.m_command_signature.Get(), command_count,
+                                        indirect_argument_buffer.resource.Get(), 0u, nullptr, 0u);
     }
 } // namespace serenity::renderer::rhi

@@ -18,14 +18,10 @@ namespace serenity::scene
         SceneManager() = default;
         ~SceneManager() = default;
 
-        void add_scene(Scene &&scene);
+        void add_scene(const Scene &scene);
         void set_current_scene(const std::string_view scene_name);
 
-        Scene &get_current_scene()
-        {
-
-            return (*(*m_current_scene).second.get());
-        }
+        Scene &get_current_scene() { return (*(*m_current_scene).second.get()); }
 
       private:
         std::unordered_map<std::string, std::unique_ptr<Scene>> m_scenes{};

@@ -44,7 +44,6 @@
 #include "utils/enum_value.hpp"
 #include "utils/primitive_datatypes.hpp"
 #include "utils/string_conversions.hpp"
-#include "utils/timer.hpp"
 
 // Window
 #include "window/window.hpp"

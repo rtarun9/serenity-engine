@@ -7,8 +7,8 @@
 #include "renderpass/post_processing_renderpass.hpp"
 #include "renderpass/shading_renderpass.hpp"
 
-#include "serenity-engine/renderer/rhi/device.hpp"
 #include "serenity-engine/renderer/rhi/command_signature.hpp"
+#include "serenity-engine/renderer/rhi/device.hpp"
 #include "serenity-engine/renderer/shader_compiler.hpp"
 #include "serenity-engine/window/window.hpp"
 
@@ -25,30 +25,15 @@ namespace serenity::renderer
         explicit Renderer(window::Window &window);
         ~Renderer();
 
-        rhi::Device &get_device() const
-        {
-            return *(m_device.get());
-        }
+        rhi::Device &get_device() const { return *(m_device.get()); }
 
-        Uint2 get_render_area_dimensions() const
-        {
-            return window_ref.get_dimensions();
-        }
+        Uint2 get_render_area_dimensions() const { return window_ref.get_dimensions(); }
 
-        rhi::Buffer &get_buffer_at_index(const uint32_t index)
-        {
-            return m_allocated_buffers.at(index);
-        }
+        rhi::Buffer &get_buffer_at_index(const uint32_t index) { return m_allocated_buffers.at(index); }
 
-        rhi::Texture &get_texture_at_index(const uint32_t index)
-        {
-            return m_allocated_textures.at(index);
-        }
+        rhi::Texture &get_texture_at_index(const uint32_t index) { return m_allocated_textures.at(index); }
 
-        rhi::Pipeline &get_pipeline_at_index(const uint32_t index)
-        {
-            return m_pipelines.at(index);
-        }
+        rhi::Pipeline &get_pipeline_at_index(const uint32_t index) { return m_pipelines.at(index); }
 
         interop::AtmosphereRenderPassBuffer &get_atmosphere_renderpass_buffer()
         {
@@ -94,15 +79,9 @@ namespace serenity::renderer
         }
 
         // Pipelines are reloaded at the end of the frame.
-        void schedule_pipeline_for_reload(const uint32_t index)
-        {
-            m_pipeline_reload_buffer.push_back(index);
-        }
+        void schedule_pipeline_for_reload(const uint32_t index) { m_pipeline_reload_buffer.push_back(index); }
 
-        std::vector<rhi::Pipeline> &get_pipelines()
-        {
-            return m_pipelines;
-        }
+        std::vector<rhi::Pipeline> &get_pipelines() { return m_pipelines; }
 
         // Render the current scene (uses the SceneManager to fetch this information).
         void render();
@@ -125,6 +104,9 @@ namespace serenity::renderer
 
         Renderer(Renderer &&other) = delete;
         Renderer &operator=(Renderer &&other) = delete;
+
+      public:
+        static const uint32_t MAX_PRIMITIVE_COUNT = 1'00'00'000u;
 
       private:
         std::unique_ptr<rhi::Device> m_device{};
@@ -155,7 +137,9 @@ namespace serenity::renderer
         rhi::Texture m_depth_texture{};
         rhi::Texture m_render_texture{};
 
-        rhi::CommandSignature m_command_signature{};
+        // One command buffer per frame.
+        std::array<uint32_t, rhi::Device::FRAMES_IN_FLIGHT> m_command_buffer_indices{};
+        std::optional<rhi::CommandSignature> m_command_signature{};
 
         window::Window &window_ref;
     };
