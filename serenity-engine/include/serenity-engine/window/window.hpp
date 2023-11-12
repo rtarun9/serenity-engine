@@ -15,6 +15,12 @@ namespace serenity::window
         SDL_Event internal_event{};
     };
 
+    enum class EventType
+    {
+        Default,
+        SkipNextEvents,
+    };
+
     // A light weight abstraction over SDL3's window.
     // The poll_events function takes in a reference to a Input object.
     // This design is chosen because events / input is closely related to the window (while the relationship is not
@@ -42,7 +48,7 @@ namespace serenity::window
 
         // Experimental : If you want to have event handling (such as for editor), you can pass the event handlers here.
         // Expected format : [&]() {... A function that takes in as input Event (SDL_Event internally) ...}
-        void add_event_callback(std::function<void(Event)> callback);
+        void add_event_callback(std::function<EventType(Event)> callback);
 
       private:
         // Function that has shared logic by all types of constructors for window creation (assumes that m_dimension is
@@ -62,6 +68,6 @@ namespace serenity::window
 
         Uint2 m_dimension{};
 
-        std::vector<std::function<void(Event)>> m_event_callbacks{};
+        std::vector<std::function<EventType(Event)>> m_event_callbacks{};
     };
 } // namespace serenity::window

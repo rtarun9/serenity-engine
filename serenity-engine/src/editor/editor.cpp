@@ -47,7 +47,18 @@ namespace serenity::editor
 
         renderer::Renderer::instance().get_device().get_cbv_srv_uav_descriptor_heap().offset_current_handle();
 
-        window.add_event_callback([&](window::Event event) { ImGui_ImplSDL3_ProcessEvent(&event.internal_event); });
+        window.add_event_callback([&](window::Event event) {
+            const auto is_text_editor_in_use = ImGui::GetIO().WantCaptureKeyboard;
+
+            ImGui_ImplSDL3_ProcessEvent(&event.internal_event);
+
+            if (is_text_editor_in_use)
+            {
+                return window::EventType::SkipNextEvents;
+            }
+
+            return window::EventType::Default;
+        });
 
         core::Log::instance().info("Created the editor");
 

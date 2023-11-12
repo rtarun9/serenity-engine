@@ -89,7 +89,7 @@ namespace serenity::scene
 
         std::unordered_map<std::string, GameObject> m_game_objects{};
 
-        std::optional<uint32_t> m_scene_init_script_index{};
+        uint32_t m_scene_init_script_index{};
 
         std::string m_scene_name{};
     };

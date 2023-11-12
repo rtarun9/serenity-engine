@@ -91,7 +91,7 @@ namespace serenity::scene
 
     void Scene::load_scene_from_script()
     {
-        scripting::ScriptManager::instance().execute_script(m_scene_init_script_index.value());
+        scripting::ScriptManager::instance().execute_script(m_scene_init_script_index);
 
         sol::table game_objects = scripting::ScriptManager::instance().get_state()["game_objects"];
 
